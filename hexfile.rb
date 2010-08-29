@@ -1,6 +1,3 @@
-h=[1,2,3,4,2,3,5]
-b=[2,3,5,6]
-
 class String
  def to_bytearray
   array=[]
@@ -68,8 +65,3 @@ class HexInspectorFile
  end
  
 end
-
-a=HexInspectorFile.new("abcdabce1234")
-puts a.inspect
-a.find_substr("abcdef".to_bytearray)
-a.find_substr("abc".to_bytearray)
