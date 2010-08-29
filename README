@@ -3,3 +3,6 @@ A better hex inspection tool
 * Find duplicates in binary files
 * Easily compare binary files
 
+WARNING
+
+This code is rather slow and will probably be replaced by C code.
