@@ -61,14 +61,12 @@ class HexInspectorFile
    #end
    return [options, len]
  end
- 
- def size
-   @data.size
+
+ def method_missing(name, *args)
+   # Relay unknown messages to the underlying array.
+   @data.send(name, *args) 
  end
  
- def [](x)
-   @data[x]
- end
 end
 
 a=HexInspectorFile.new("abcdabce1234")
