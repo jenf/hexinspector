@@ -8,14 +8,14 @@ end
 
 class HexInspectorFile
  def initialize(string)
-  @data=string.to_bytearray
+  @data=string
   generate_cross()
  end
  
  def generate_cross()
    @cross={}
 
-   @data.each_index do |x|
+   (0..@data.size).each do |x|
      j=@data[x]
      @cross[j]=[] unless @cross.include? j
      @cross[j] << x
