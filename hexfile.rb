@@ -1,3 +1,6 @@
+require 'BuzHash.rb'
+require 'hexdump.rb'
+
 class String
  def to_bytearray
   array=[]
@@ -7,9 +10,30 @@ class String
 end
 
 class HexInspectorFile
- def initialize(string)
+ def initialize(string, generate_hash=true)
   @data=string
   generate_cross()
+  @hash_width=128 # bytes
+  @buzhashes = generate_buzhash(@hash_width) if generate_hash
+
+ end
+ 
+ def generate_buzhash(hash_width)
+  # This is far far to slow
+  buzhashes={}
+  puts 'Generating hashes'
+  (0..@data.size-1).step(hash_width) {|x|
+   str=@data[x..x+hash_width-1]
+   #dump_hex(str)
+   hash = BuzHash.buzhash(str)
+   #puts x
+   #puts hash
+   
+   buzhashes[hash]=[] unless buzhashes.include? hash
+   buzhashes[hash] << x
+  }
+  puts 'Generating hashes complete'
+  return buzhashes
  end
  
  def generate_cross()

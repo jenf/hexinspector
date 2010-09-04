@@ -56,7 +56,7 @@ class BuzHash
   end
 end
 
-
+if false
 #a=BuzHash.buzhash("\xde\xad\xbe\xef")
 #puts BuzHash.buzhash("\xef\xbe\xad\xde")
 #b=BuzHash.buzhash("\xff\xaa\x00\x22")
@@ -114,4 +114,4 @@ h.each_byte {|x|
   puts "Match at pos %i" % [n-hashlen+1] if hash==i
   n+=1
 }
-
+end
