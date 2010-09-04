@@ -34,11 +34,15 @@ class BuzHash
              0x1911A8C4,0x5E1F27D3,0x07949DC7,0xF24C2056,0xB4299EE6,0x9C7045D9,0xA8BF6307,0x7454AAD2,
              0x256425E5,0xD87DEF67,0xCFE95452,0xE7548DF7,0xA84956C7,0xD8402C60,0xCFBD0373,0x6B6CDAFE]
 
+  def self.starthash
+    return 1783936964
+  end
+  
   def self.combine(h1,h2, pos=1)
     (((h1 << pos) | (h1 >> (32-pos))) ^ h2) & 0xffffffff
   end
 
-  def self.buzhash(str, startval=nil) # 1783936964)
+  def self.buzhash(str, startval=nil)
     hash = startval
     str.each_byte {|x|
       hash = combine(hash,@@buztbl[x]) if hash != nil
@@ -50,13 +54,47 @@ class BuzHash
 
   def self.rollhash(newval, prevval, curpos, wraplen, hash)
      newhash = hash
-     newhash = BuzHash.combine(@@buztbl[prevval], hash, wraplen-1) if curpos >= wraplen
+     newhash = BuzHash.combine(@@buztbl[prevval], hash, (wraplen-1) % 32) if curpos >= wraplen
 #     puts "%s %s %s %s %s %s %s %s" % [@@buztbl[newval], @@buztbl[prevval],newval, prevval, curpos, wraplen, hash, newhash]
      newhash = BuzHash.combine(newhash, @@buztbl[newval])
   end
+  
+  attr :hash
+  def initialize(hashwidth)
+   @hashwidth = hashwidth
+   @buffer = []
+   @hash = 0
+  end
+  
+  def add_char(char)
+#   puts "%x %x %i %i" % [char, @buffer[0], @buffer.size, @hash] 
+   @hash = BuzHash.rollhash(char, @buffer[0],  @buffer.size, @hashwidth,@hash)
+   if @buffer.size > @hashwidth-1
+    @buffer = @buffer[1..-1]
+   end
+   @buffer << char
+   return @hash
+  end
+  
 end
 
 if false
+j = BuzHash.new(4)
+puts j.add_char(1)
+puts BuzHash.buzhash("\x1")
+puts j.add_char(2)
+puts BuzHash.buzhash("\x1\x2")
+puts j.add_char(3)
+puts BuzHash.buzhash("\x1\x2\x3")
+puts j.add_char(4)
+puts BuzHash.buzhash("\x1\x2\x3\x4")
+puts j.add_char(5)
+puts BuzHash.buzhash("\x2\x3\x4\x5")
+puts j.add_char(6)
+puts BuzHash.buzhash("\x3\x4\x5\x6")
+puts j.add_char(7)
+puts BuzHash.buzhash("\x4\x5\x6\x7")
+
 #a=BuzHash.buzhash("\xde\xad\xbe\xef")
 #puts BuzHash.buzhash("\xef\xbe\xad\xde")
 #b=BuzHash.buzhash("\xff\xaa\x00\x22")

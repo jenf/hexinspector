@@ -10,12 +10,124 @@ class String
 end
 
 class HexInspectorFile
+ attr :buzhashes
  def initialize(string, generate_hash=true)
   @data=string
   generate_cross()
   @hash_width=128 # bytes
   @buzhashes = generate_buzhash(@hash_width) if generate_hash
 
+ end
+ 
+ def generate_diff(dst)
+  raise 'Dst does not have a hash table' if nil == dst.buzhashes
+  diff=[]
+  srcptr=0
+  dstptr=0
+  srcsize=self.size
+  dstsize=dst.size
+  buzhash = 0
+  
+  segment_dststart=dstptr
+  segment_srcstart=srcptr
+  mode=:synced
+  diffprecision=:exact
+
+  # TODO: Check what happens on files smaller than hash_width
+  raise 'Untested condition' if srcsize < @hash_width
+  
+  # Preload the rolling hash with the first hash_width, exclude the last letter
+  buzhash = BuzHash.new(@hash_width)
+  (0..@hash_width-2).each {|x|
+   buzhash.add_char(@data[x])
+#   puts "%i %i" %[x,buzhash.hash]
+  }
+  
+#  puts dst.buzhashes.inspect
+#  puts buzhash  
+#  puts
+  # Go through each character
+  while srcptr < srcsize
+  
+   if dstptr<=dstsize
+   
+    # Update the hash
+    if srcptr+@hash_width<srcsize 
+     buzhash.add_char(@data[srcptr+@hash_width-1])
+#     puts "%i %i" % [srcptr,buzhash.hash]
+    else
+     buzhash = nil unless srcptr+@hash_width<srcsize
+    end
+    
+    case mode
+     when :synced
+     
+      if @data[srcptr]==dst[dstptr]
+       srcptr+=1
+       dstptr+=1
+      else
+       puts 'Diff at %i %i' % [srcptr,dstptr]
+       srclostsync = srcptr
+       diff << [segment_srcstart,srcptr,segment_dststart,dstptr,diffprecision]
+       mode = :unsynced_near
+      end
+      
+     when :unsynced_near
+      if (srcptr < srclostsync+16) || (srcptr+@hash_width>srcsize)
+       if @data[srcptr]==dst[dstptr]
+        puts "Resync at %i %i" % [srcptr,dstptr]
+        mode=:synced
+        diffprecision=:exact
+        segment_srcstart=srcptr
+        segment_dststart=dstptr
+       else
+        srcptr+=1
+       end
+      else
+       mode = :unsynced_far
+      end
+      
+     when :unsynced_far
+#      puts buzhash.hash
+      j = dst.buzhashes[buzhash.hash]
+      if j!=nil
+       # The contents of j are already sorted
+       j.each {|x|
+         if x>dstptr
+          dstptr=x
+          mode=:synced
+          diffprecision=:indexed
+          segment_srcstart=srcptr
+          segment_dststart=dstptr
+          puts "Sync at %i %i" % [srcptr,dstptr]
+          break
+         end
+       }
+      end
+      if mode == :unsynced_far
+       srcptr+=1
+       if (srcptr+@hash_width>srcsize)
+        mode=:unsynced_near
+       end
+      end
+      
+     else
+      puts 'Bad state'
+      srcptr+=1
+    end
+  
+   else
+    srcptr +=1
+   end
+   
+  end
+  
+  # Add the last one if we're still in sync
+  if mode==:synced
+   diff << [segment_srcstart,srcptr,segment_dststart,dstptr,diffprecision]
+  end
+  
+  return diff
  end
  
  def generate_buzhash(hash_width)
@@ -25,7 +137,8 @@ class HexInspectorFile
   (0..@data.size-1).step(hash_width) {|x|
    str=@data[x..x+hash_width-1]
    #dump_hex(str)
-   hash = BuzHash.buzhash(str)
+   hash = BuzHash.buzhash(str,0)
+   puts "%i %i" % [x,hash]
    #puts x
    #puts hash
    
