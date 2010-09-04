@@ -3,6 +3,13 @@ A better hex inspection tool
 * Find duplicates in binary files
 * Easily compare binary files
 
+Other ideas
+* File format detection (gzip, jffs2 etc)
+* CRC32/MD5/SHA1 over an selection of data
+* Improvements to regular expressions suitable for binary files
+* Value representation (big-little endian int, float, double's, ANSI/Unicode string)
+* Stuff for MPEG TS files
+
 WARNING
 
-This code is rather slow and will probably be replaced by C code.
+This code is rather slow and will probably be replaced by C code, but is more a proof of concept.
