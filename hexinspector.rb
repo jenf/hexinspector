@@ -113,30 +113,34 @@ class HexPager
     @window.mvwin(y,x)
   end
   
-  def keypress(key)
-    case key
+  def keypress(key, buffer)
+    val = case key
     when Ncurses::KEY_LEFT
        @offset-=1
        @offset=0 if @offset<0
-       true
+       [true, buffer]
     when Ncurses::KEY_RIGHT
        @offset+=1
-       true
+       [true, buffer]
      when Ncurses::KEY_UP
       @offset-=@bytewidth
       @offset=0 if @offset<0
-      true
+      [true, buffer]
      when Ncurses::KEY_DOWN
       @offset+=@bytewidth
-      true
+      [true, buffer]
      when Ncurses::KEY_NPAGE
       @offset+=@bytewidth*@height
-      true
+      [true, buffer]
      when Ncurses::KEY_PPAGE
       @offset-=@bytewidth*@height
       @offset=0 if @offset<0
+      [true, buffer]
+     when "G"[0],"g"[0]
+      @offset= buffer.to_i(0)
+      [true,""]
      else
-      false
+      [false, buffer]
     end
     
   end
@@ -171,10 +175,10 @@ class HexInspector
     @pager2 = HexPager.new(file2,(@width/2)-1,@height-5,(@width/2), 0, diff, @pager) if file2!=nil
   end
 
-  def show_ruler()
+  def show_ruler(buffer)
     bit8_val=@pager.file[@pager.offset]
     @window.attrset(HexInspector.get_color(:reversed))
-    Ncurses.mvaddstr(@height-1,0,"Byte %i/0x%08x Val : %03i/0x%02x/0%03o Substr Match: %i" % [@pager.offset,@pager.offset,bit8_val,bit8_val,bit8_val, @matches.size])
+    Ncurses.mvaddstr(@height-1,0,"Byte %i/0x%08x Val : %03i/0x%02x/0%03o Buffer: %s" % [@pager.offset,@pager.offset,bit8_val,bit8_val,bit8_val, buffer])
     @window.attrset(HexInspector.get_color(:normal))
   end
 
@@ -188,7 +192,7 @@ class HexInspector
   end
   def main_loop
    @matches=[] if @matches==nil
-
+   buffer=""
    while true
     if @window_size_changed
       @height= Ncurses.LINES
@@ -207,13 +211,14 @@ class HexInspector
     @pager.draw()
     @pager2.draw() if @pager2!=nil
 #    show_substrs()
-    show_ruler()
+    show_ruler(buffer)
 
     @window.refresh
     key=@window.getch
-    @pager2.keypress(key) if @pager2!=nil
-    if false == @pager.keypress(key)
-      case @window.getch
+    @pager2.keypress(key,buffer) if @pager2!=nil
+    (claimed, buffer) = @pager.keypress(key,buffer)
+    if false == claimed
+      case key
 
        when 's'[0]
          @pager.offset=@matches[0]
@@ -221,6 +226,8 @@ class HexInspector
          raise 'Quit'
        when Ncurses::KEY_RESIZE
          @window_size_changed=true
+       when 0..255
+         buffer << key.chr
       end
     end
    end
