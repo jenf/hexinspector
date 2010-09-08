@@ -49,9 +49,9 @@ class HexPager
   def isdifferent(pos,diff,mode=:src)
     diff.each {|x|
       if mode==:src
-        return x[-1]==:diff if pos>x[0] and pos<=x[1]
+        return x[-1]==:diff if pos>=x[0] and pos<x[1]
        elsif mode==:dst
-        return x[-1]==:diff if pos>x[2] and pos<=x[3]
+        return x[-1]==:diff if pos>=x[2] and pos<x[3]
        end
     }
     return false
@@ -211,7 +211,7 @@ class HexInspector
 
     @window.refresh
     key=@window.getch
-    
+    @pager2.keypress(key) if @pager2!=nil
     if false == @pager.keypress(key)
       case @window.getch
 

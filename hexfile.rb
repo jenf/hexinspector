@@ -137,7 +137,7 @@ class HexInspectorFile
   last=diff[0]
   diff.each {|x|
     if x!=last
-      difftoadd << [last[1]+1,x[1]-1,last[3]+1,x[3]-1,:diff]
+      difftoadd << [last[1],x[0],last[3],x[2],:diff]
     end
     last = x
   }
