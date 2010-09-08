@@ -149,6 +149,7 @@ class HexPager
       [true, buffer]
      when "G"[0],"g"[0]
       @offset= buffer.to_i(0)
+      @offset = @file.size-(@bytewidth*@height) if @offset==-1
       [true,""]
      when "["[0]
       if @diff
@@ -255,6 +256,8 @@ class HexInspector
          raise 'Quit'
        when Ncurses::KEY_RESIZE
          @window_size_changed=true
+       when "\n"[0]
+         buffer=""
        when 0..255
          buffer << key.chr
       end
