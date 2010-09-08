@@ -136,8 +136,12 @@ class HexInspectorFile
   # Add the last one if we're still in sync
   if mode==:synced
    diff << [segment_srcstart,srcptr,segment_dststart,dstptr,diffprecision]
+   # Catch cases where the destination file isn't completely read in
+   if dstptr!=dstsize
+    diff << [srcptr,srcptr,dstptr,dstsize,:diff]
+   end
   else
-#   diff << [segment_srcstart,srcsize,segment_dststart,dstsize,:diff]  
+   diff << [segment_srcstart,srcsize,segment_dststart,dstsize,:diff]  
   end
   
   return generate_diffhunks(diff)
@@ -147,7 +151,7 @@ class HexInspectorFile
   difftoadd=[]
   last=diff[0]
   diff.each {|x|
-    if x!=last
+    if x!=last and x[-1]!=:diff
       difftoadd << [last[1],x[0],last[3],x[2],:diff]
     end
     last = x
