@@ -4,17 +4,25 @@ require 'ncurses'
 
 h=open(ARGV[0])
 file=HexInspectorFile.new(h.read)
+h.close()
+
+file2=nil
+if ARGV.size==2
+ h=open(ARGV[1])
+ file2=HexInspectorFile.new(h.read)
+ h.close()
+end
 
 class HexPager
   attr_accessor :offset,:file
   def initialize(file,width,height, x=0, y=0)
     @file = file
     @width = width
-    @bytewidth = (width-(8+2+1))/3 # (8 bytes+2 gap - width)/3 (two chars + space)
+    @bytewidth = (width-(8+2+2))/3 # (8 bytes+2 gap - width)/3 (two chars + space)
     @height = height
     @x = x
     @y = y
-    @window = Ncurses::WINDOW.new(height,width, x, y)
+    @window = Ncurses::WINDOW.new(height,width, y, x)
     @offset = 0
   end
 
@@ -74,9 +82,9 @@ class HexPager
     @x = x
     @y = y
     @window.resize(height, width)
-    @bytewidth = (width-(8+2+1))/3 # (8 bytes+2 gap - width)/3 (two chars + space)
+    @bytewidth = (width-(8+2+2))/3 # (8 bytes+2 gap - width)/3 (two chars + space)
 
-    @window.move(x,y)
+    @window.mvwin(y,x)
   end
   
   def keypress(key)
@@ -117,10 +125,11 @@ class HexInspector
     Ncurses.COLOR_PAIR(self.colors[color])
   end
   
-  def initialize(window,file)
+  def initialize(window,file, file2=nil)
     @window = window
     @window_size_changed = true
     @file = file
+    @file2 = file2
 
     Ncurses.start_color()
     Ncurses.init_pair(HexInspector::colors[:diff], Ncurses::COLOR_RED, Ncurses::COLOR_BLACK);
@@ -131,7 +140,9 @@ class HexInspector
      
     @height = Ncurses.LINES()
     @width = Ncurses.COLS
-    @pager = HexPager.new(file,@width/2,@height-5,0, 0)
+    @pager = HexPager.new(file,(@width/2)-1,@height-5,0, 0) if file2!=nil
+    @pager = HexPager.new(file,@width,@height-5,0, 0) if file2==nil
+    @pager2 = HexPager.new(file2,(@width/2)-1,@height-5,(@width/2), 0) if file2!=nil
   end
 
   def show_ruler()
@@ -154,7 +165,13 @@ class HexInspector
 
    while true
     if @window_size_changed
-      @height=@window.getmaxy
+      @height= Ncurses.LINES
+      @width = Ncurses.COLS
+      
+      @pager.resize((@width/2)-1,@height-5,0,0)         if @pager2!=nil
+      @pager2.resize((@width/2)-1,@height-5,@width/2,0) if @pager2!=nil
+      @pager.resize(@width,@height-5,0,0)           if @pager2==nil
+
       @pager_lines=@height-5
       @window_size_changed=false
       
@@ -162,6 +179,7 @@ class HexInspector
 
 
     @pager.draw()
+    @pager2.draw() if @pager2!=nil
 #    show_substrs()
     show_ruler()
 
@@ -190,7 +208,7 @@ Ncurses.noecho
 Ncurses.keypad(Ncurses.stdscr, true)
 Ncurses.stdscr.intrflush(false)
 Ncurses.clear
-inspector = HexInspector.new(Ncurses.stdscr, file)
+inspector = HexInspector.new(Ncurses.stdscr, file, file2)
 begin
   inspector.main_loop
 ensure
