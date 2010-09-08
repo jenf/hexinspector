@@ -125,6 +125,8 @@ class HexInspectorFile
   # Add the last one if we're still in sync
   if mode==:synced
    diff << [segment_srcstart,srcptr,segment_dststart,dstptr,diffprecision]
+  else
+   diff << [segment_srcstart,srcsize,segment_dststart,dstsize,:diff]  
   end
   
   return generate_diffhunks(diff)

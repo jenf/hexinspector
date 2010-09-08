@@ -30,6 +30,8 @@ class HexPager
     @offset = 0
     @diff = diff
     @main = main
+    @mode = :src if @main==nil
+    @mode = :dst if @main!=nil
   end
 
   def text_color(char)
@@ -44,6 +46,17 @@ class HexPager
     end
   end
   
+  def isdifferent(pos,diff,mode=:src)
+    diff.each {|x|
+      if mode==:src
+        return x[-1]==:diff if pos>x[0] and pos<=x[1]
+       elsif mode==:dst
+        return x[-1]==:diff if pos>x[2] and pos<=x[3]
+       end
+    }
+    return false
+  end
+
   def dump_hex(lines,offset=0,width=16,startpos=0,curpos=0)
     i=0
 
@@ -61,8 +74,15 @@ class HexPager
           char = @file[x+y]
           if char!=nil
             str << "%02x "% char
-            
-            @window.attrset(HexInspector.get_color(text_color(char)))
+            if @diff!=nil
+             if isdifferent(x+y,@diff,@mode)
+              @window.attrset(HexInspector.get_color(:diff))
+             else
+              @window.attrset(HexInspector.get_color(text_color(char)))
+             end
+            else
+             @window.attrset(HexInspector.get_color(text_color(char)))
+            end
             @window.mvaddstr(i+startpos+1,1+ypos,str)
             @window.attrset(HexInspector.get_color(:normal))
             ypos+=str.size
@@ -138,7 +158,7 @@ class HexInspector
     @file2 = file2
 
     Ncurses.start_color()
-    Ncurses.init_pair(HexInspector::colors[:diff], Ncurses::COLOR_RED, Ncurses::COLOR_BLACK);
+    Ncurses.init_pair(HexInspector::colors[:diff], Ncurses::COLOR_BLACK, Ncurses::COLOR_RED);
     Ncurses.init_pair(HexInspector::colors[:reversed], Ncurses::COLOR_BLACK, Ncurses::COLOR_WHITE);
     Ncurses.init_pair(HexInspector::colors[:unprintable], Ncurses::COLOR_RED, Ncurses::COLOR_BLACK);
     Ncurses.init_pair(HexInspector::colors[:letter], Ncurses::COLOR_BLUE, Ncurses::COLOR_BLACK);
@@ -176,7 +196,7 @@ class HexInspector
       
       @pager.resize((@width/2)-1,@height-5,0,0)         if @pager2!=nil
       @pager2.resize((@width/2)-1,@height-5,@width/2,0) if @pager2!=nil
-      @pager.resize(@width,@height-5,0,0)           if @pager2==nil
+      @pager.resize(@width,@height-5,0,0)               if @pager2==nil
 
       @pager_lines=@height-5
       @window_size_changed=false
