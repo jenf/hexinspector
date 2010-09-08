@@ -37,27 +37,38 @@ class HexInspectorFile
   raise 'Untested condition' if srcsize < @hash_width
   
   # Preload the rolling hash with the first hash_width, exclude the last letter
-  buzhash = BuzHash.new(@hash_width)
+#  buzhash = BuzHash.new(@hash_width)
+  buzhash2=0
   (0..@hash_width-2).each {|x|
-   buzhash.add_char(@data[x])
-#   puts "%i %i" %[x,buzhash.hash]
+#   buzhash.add_char(@data[x])
+   buzhash2=BuzHash.rollhash(@data[x],@data[x-@hash_width], x, @hash_width, buzhash2)
+   #puts "%i %i %i" %[x,buzhash.hash, buzhash2]
   }
   
 #  puts dst.buzhashes.inspect
 #  puts buzhash  
 #  puts
   # Go through each character
+  lastptr = -1
   while srcptr < srcsize
   
    if dstptr<=dstsize
    
     # Update the hash
-    if srcptr+@hash_width<srcsize 
-     buzhash.add_char(@data[srcptr+@hash_width-1])
-#     puts "%i %i" % [srcptr,buzhash.hash]
-    else
-     buzhash = nil unless srcptr+@hash_width<srcsize
+
+    if lastptr!=srcptr
+      if srcptr+@hash_width<srcsize 
+#       buzhash.add_char(@data[srcptr+@hash_width-1])
+       buzhash2=BuzHash.rollhash(@data[srcptr+@hash_width-1],@data[srcptr-1], srcptr+@hash_width-1, @hash_width, buzhash2)
+
+
+#       puts "%i %i %i" % [srcptr,buzhash.hash, buzhash2]
+      else
+       buzhash2 = nil unless srcptr+@hash_width<srcsize
+      end
     end
+    
+    lastptr=srcptr
     
     case mode
      when :synced
@@ -89,7 +100,7 @@ class HexInspectorFile
       
      when :unsynced_far
 #      puts buzhash.hash
-      j = dst.buzhashes[buzhash.hash]
+      j = dst.buzhashes[buzhash2]
       if j!=nil
        # The contents of j are already sorted
        j.each {|x|
@@ -126,7 +137,7 @@ class HexInspectorFile
   if mode==:synced
    diff << [segment_srcstart,srcptr,segment_dststart,dstptr,diffprecision]
   else
-   diff << [segment_srcstart,srcsize,segment_dststart,dstsize,:diff]  
+#   diff << [segment_srcstart,srcsize,segment_dststart,dstsize,:diff]  
   end
   
   return generate_diffhunks(diff)
@@ -152,7 +163,7 @@ class HexInspectorFile
    str=@data[x..x+hash_width-1]
    #dump_hex(str)
    hash = BuzHash.buzhash(str,0)
-   puts "%i %i" % [x,hash]
+   #puts "%i %i" % [x,hash]
    #puts x
    #puts hash
    
