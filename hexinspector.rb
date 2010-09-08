@@ -57,6 +57,17 @@ class HexPager
     return false
   end
 
+  def get_diff_index(pos,diff, mode=:src)
+    diff.each_index {|x|
+      if mode==:src
+        return x if pos>=diff[x][0] and pos<diff[x][1]
+       elsif mode==:dst
+        return x if pos>=diff[x][2] and pos<diff[x][3]
+       end
+    }
+    return nil
+  end
+
   def dump_hex(lines,offset=0,width=16,startpos=0,curpos=0)
     i=0
 
@@ -114,7 +125,7 @@ class HexPager
   end
   
   def keypress(key, buffer)
-    val = case key
+    case key
     when Ncurses::KEY_LEFT
        @offset-=1
        @offset=0 if @offset<0
@@ -138,6 +149,24 @@ class HexPager
       [true, buffer]
      when "G"[0],"g"[0]
       @offset= buffer.to_i(0)
+      [true,""]
+     when "["[0]
+      if @diff
+       pos=get_diff_index(@offset,@diff,@mode)
+       if pos>0
+        @offset=@diff[pos-1][0] if @mode==:src
+        @offset=@diff[pos-1][2] if @mode==:dst
+       end
+      end
+      [true, ""]
+     when "]"[0]
+      if @diff
+       pos=get_diff_index(@offset,@diff,@mode)
+       if pos!=nil and pos+1<(@diff.size-1)
+        @offset=@diff[pos+1][1] if @mode==:src
+        @offset=@diff[pos+1][3] if @mode==:dst
+       end
+      end
       [true,""]
      else
       [false, buffer]
