@@ -11,7 +11,7 @@ end
 
 class HexInspectorFile
  attr :buzhashes
- def initialize(string, generate_hash=true)
+ def initialize(string, generate_hash=false)
   @data=string
   generate_cross()
   @hash_width=128 # bytes
@@ -127,9 +127,21 @@ class HexInspectorFile
    diff << [segment_srcstart,srcptr,segment_dststart,dstptr,diffprecision]
   end
   
-  return diff
+  return generate_diffhunks(diff)
  end
  
+ def generate_diffhunks(diff)
+  difftoadd=[]
+  last=diff[0]
+  diff.each {|x|
+    if x!=last
+      difftoadd << [last[1]+1,x[1]-1,last[3]+1,x[3]-1,:diff]
+    end
+    last = x
+  }
+  return diff.concat(difftoadd).sort
+ end
+
  def generate_buzhash(hash_width)
   # This is far far to slow
   buzhashes={}
