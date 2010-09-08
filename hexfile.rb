@@ -144,7 +144,30 @@ class HexInspectorFile
    diff << [segment_srcstart,srcsize,segment_dststart,dstsize,:diff]  
   end
   
+  backtrack_indexed(diff,dst)
   return generate_diffhunks(diff)
+ end
+ 
+ def backtrack_indexed(diff,dst)
+   diff.each_index {|x|
+     if diff[x][-1]==:indexed
+       srcptr=diff[x][0]
+       dstptr=diff[x][2]
+       while srcptr>0
+         if self[srcptr-1]==dst[dstptr-1]
+           srcptr-=1
+           dstptr-=1
+         else
+           break
+         end
+       end
+       diff[x][0]=srcptr
+       diff[x][2]=dstptr
+       diff[x][-1]=:exact_backtrack
+       puts "%i %i" % [srcptr,dstptr]
+       puts diff[x].inspect
+     end
+   }
  end
  
  def generate_diffhunks(diff)
