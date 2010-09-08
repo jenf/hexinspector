@@ -18,18 +18,44 @@ class HexPager
     @offset = 0
   end
 
+  def text_color(char)
+    if char>='0'[0] and char<='9'[0]
+     :number
+    elsif (char>='A'[0] and char<='Z'[0]) or (char>='a'[0] and char<='z'[0])
+     :letter
+    elsif char==255 or char<=32
+     :unprintable
+    else
+     :normal
+    end
+  end
+  
   def dump_hex(lines,offset=0,width=16,startpos=0,curpos=0)
     i=0
+
     (offset..offset+(lines*width)).step(width) do |x|
       if x < file.size
         str=""
         str << "%08x " % x
+        ypos=0
+        @window.mvaddstr(i+startpos+1,1+ypos,str)
+        ypos+=str.size
+        str=""
+        
         (0..width-1).each do |y|
           #str << " " if (y % 8)==0
-          str << "%02x "% @file[x+y] if @file[x+y]!=nil
-          str << "  " if @file[x+y]==nil
+          char = @file[x+y]
+          if char!=nil
+            str << "%02x "% char
+            
+            @window.attrset(HexInspector.get_color(text_color(char)))
+            @window.mvaddstr(i+startpos+1,1+ypos,str)
+            @window.attrset(HexInspector.get_color(:normal))
+            ypos+=str.size
+            str =""
+          end
         end
-        @window.mvaddstr(i+startpos+1,1,str)
+
       end
       i+=1
     end
@@ -69,6 +95,12 @@ class HexPager
      when Ncurses::KEY_DOWN
       @offset+=@bytewidth
       true
+     when Ncurses::KEY_NPAGE
+      @offset+=@bytewidth*@height
+      true
+     when Ncurses::KEY_PPAGE
+      @offset-=@bytewidth*@height
+      @offset=0 if @offset<0
      else
       false
     end
@@ -78,17 +110,25 @@ class HexPager
 end
 
 class HexInspector
+  class << self; attr_accessor :colors end
+  @colors={:normal=>0,:reversed=>2,:diff=>1,:letter=>3,:number=>4,:unprintable=>5}
+  
+  def self.get_color(color)
+    Ncurses.COLOR_PAIR(self.colors[color])
+  end
+  
   def initialize(window,file)
     @window = window
     @window_size_changed = true
     @file = file
-    @offset=0
+
     Ncurses.start_color()
-    @normal_col=0
-    @diff_col = 1
-    @reversed_col=2
-    Ncurses.init_pair(@diff_col, Ncurses::COLOR_RED, Ncurses::COLOR_BLACK);
-    Ncurses.init_pair(@reversed_col, Ncurses::COLOR_BLACK, Ncurses::COLOR_WHITE);
+    Ncurses.init_pair(HexInspector::colors[:diff], Ncurses::COLOR_RED, Ncurses::COLOR_BLACK);
+    Ncurses.init_pair(HexInspector::colors[:reversed], Ncurses::COLOR_BLACK, Ncurses::COLOR_WHITE);
+    Ncurses.init_pair(HexInspector::colors[:unprintable], Ncurses::COLOR_RED, Ncurses::COLOR_BLACK);
+    Ncurses.init_pair(HexInspector::colors[:letter], Ncurses::COLOR_BLUE, Ncurses::COLOR_BLACK);
+    Ncurses.init_pair(HexInspector::colors[:number], Ncurses::COLOR_GREEN, Ncurses::COLOR_BLACK);
+     
     @height = Ncurses.LINES()
     @width = Ncurses.COLS
     @pager = HexPager.new(file,@width/2,@height-5,0, 0)
@@ -96,9 +136,9 @@ class HexInspector
 
   def show_ruler()
     bit8_val=@pager.file[@pager.offset]
-    @window.attrset(Ncurses.COLOR_PAIR(@reversed_col))
+    @window.attrset(HexInspector.get_color(:reversed))
     Ncurses.mvaddstr(@height-1,0,"Byte %i/0x%08x Val : %03i/0x%02x/0%03o Substr Match: %i" % [@pager.offset,@pager.offset,bit8_val,bit8_val,bit8_val, @matches.size])
-    @window.attrset(Ncurses.COLOR_PAIR(@normal_col))
+    @window.attrset(HexInspector.get_color(:normal))
   end
 
   def show_substrs()
