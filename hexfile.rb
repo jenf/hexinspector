@@ -186,6 +186,7 @@ class HexInspectorFile
  def generate_buzhash(hash_width)
   # This is far far to slow
   buzhashes={}
+  time=Time.now
   puts 'Generating hashes'
   (0..@data.size-1).step(hash_width) {|x|
    str=@data[x..x+hash_width-1]
@@ -199,6 +200,7 @@ class HexInspectorFile
    buzhashes[hash] << x
   }
   puts 'Generating hashes complete'
+  puts Time.now-time
   return buzhashes
  end
  
