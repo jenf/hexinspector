@@ -144,6 +144,7 @@ class HexInspectorFile
    diff << [segment_srcstart,srcsize,segment_dststart,dstsize,:diff]  
   end
   
+  puts 'Backtracking'
   backtrack_indexed(diff,dst)
   return generate_diffhunks(diff)
  end

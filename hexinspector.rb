@@ -18,7 +18,7 @@ if ARGV.size==2
 end
 
 class HexPager
-  attr_accessor :offset,:file
+  attr_accessor :offset,:file,:otherpager
   def initialize(file,width,height, x=0, y=0, diff=nil, main=nil)
     @file = file
     @width = width
@@ -29,9 +29,12 @@ class HexPager
     @window = Ncurses::WINDOW.new(height,width, y, x)
     @offset = 0
     @diff = diff
-    @main = main
-    @mode = :src if @main==nil
-    @mode = :dst if @main!=nil
+    @otherpager = main
+    @mode = :src if @otherpager==nil
+    @mode = :dst if @otherpager!=nil
+    
+    # Link both pagers
+    @otherpager.otherpager=self if @otherpager!=nil
   end
 
   def text_color(char)
@@ -124,6 +127,35 @@ class HexPager
     @window.mvwin(y,x)
   end
   
+  def primary_keypress(key, buffer)
+    case key
+     when "["[0]
+      if @diff
+       pos=get_diff_index(@offset,@diff,@mode)
+       if pos>0
+        @offset=@diff[pos-1][0] if @mode==:src
+        @offset=@diff[pos-1][2] if @mode==:dst
+        @otherpager.offset=@diff[pos-1][2] if @mode==:src
+        @otherpager.offset=@diff[pos-1][0] if @mode==:dst
+       end
+      end
+      [true, ""]
+     when "]"[0]
+      if @diff
+       pos=get_diff_index(@offset,@diff,@mode)
+       if pos!=nil and pos+1<(@diff.size-1)
+        @offset=@diff[pos+1][1] if @mode==:src
+        @offset=@diff[pos+1][3] if @mode==:dst
+        @otherpager.offset=@diff[pos+1][3] if @mode==:src
+        @otherpager.offset=@diff[pos+1][1] if @mode==:dst
+       end
+      end
+      [true,""]
+     else
+      [false, buffer]
+    end
+  end
+  
   def keypress(key, buffer)
     case key
     when Ncurses::KEY_LEFT
@@ -151,24 +183,7 @@ class HexPager
       @offset= buffer.to_i(0)
       @offset = @file.size-(@bytewidth*@height) if @offset==-1
       [true,""]
-     when "["[0]
-      if @diff
-       pos=get_diff_index(@offset,@diff,@mode)
-       if pos>0
-        @offset=@diff[pos-1][0] if @mode==:src
-        @offset=@diff[pos-1][2] if @mode==:dst
-       end
-      end
-      [true, ""]
-     when "]"[0]
-      if @diff
-       pos=get_diff_index(@offset,@diff,@mode)
-       if pos!=nil and pos+1<(@diff.size-1)
-        @offset=@diff[pos+1][1] if @mode==:src
-        @offset=@diff[pos+1][3] if @mode==:dst
-       end
-      end
-      [true,""]
+
      else
       [false, buffer]
     end
@@ -208,7 +223,7 @@ class HexInspector
   def show_ruler(buffer)
     bit8_val=@pager.file[@pager.offset]
     @window.attrset(HexInspector.get_color(:reversed))
-    Ncurses.mvaddstr(@height-1,0,"Byte %i/0x%08x Val : %03i/0x%02x/0%03o Buffer: %s" % [@pager.offset,@pager.offset,bit8_val,bit8_val,bit8_val, buffer])
+    Ncurses.mvaddstr(@height-1,0,"Pager %s Byte %i/0x%08x Val : %03i/0x%02x/0%03o Buffer: %s" % [@pager==@primarypager?"Left":"Right",@pager.offset,@pager.offset,bit8_val,bit8_val,bit8_val, buffer])
     @window.attrset(HexInspector.get_color(:normal))
   end
 
@@ -222,6 +237,7 @@ class HexInspector
   end
   def main_loop
    @matches=[] if @matches==nil
+   @primarypager=@pager
    buffer=""
    while true
     if @window_size_changed
@@ -245,21 +261,28 @@ class HexInspector
 
     @window.refresh
     key=@window.getch
-    @pager2.keypress(key,buffer) if @pager2!=nil
-    (claimed, buffer) = @pager.keypress(key,buffer)
+    (claimed,buffer) = @primarypager.primary_keypress(key,buffer)
     if false == claimed
-      case key
+      @pager2.keypress(key,buffer) if @pager2!=nil
+      (claimed, buffer) = @pager.keypress(key,buffer)
+      if false == claimed
+        case key
 
-       when 's'[0]
-         @pager.offset=@matches[0]
-       when 'q'[0]
-         raise 'Quit'
-       when Ncurses::KEY_RESIZE
-         @window_size_changed=true
-       when "\n"[0]
-         buffer=""
-       when 0..255
-         buffer << key.chr
+         when 's'[0]
+           @pager.offset=@matches[0]
+         when "<"[0]
+           @primarypager=@pager
+         when ">"[0]
+           @primarypager=@pager2
+         when 'q'[0]
+           raise 'Quit'
+         when Ncurses::KEY_RESIZE
+           @window_size_changed=true
+         when "\n"[0]
+           buffer=""
+         when 0..255
+           buffer << key.chr
+        end
       end
     end
    end
