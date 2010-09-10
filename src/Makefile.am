@@ -25,10 +25,6 @@ AUTOMAKE_OPTIONS = foreign
 
 bin_PROGRAMS = hi
 
-hi_SOURCES = hi.c hi_file.c
-hi_CFLAGS = $(DEPS_CFLAGS)
-hi_LIBS = $(DEPS_LIBS)
-
-#INCLUDES = @GLIB_CFLAGS@ @GTK_CFLAGS@ @LIBSPEC_CFLAGS@ \
-#@XML_CFLAGS@ -DFUSEDATADIR="\"${pkgdatadir}\"" @SDL_CFLAGS@
-
+hi_SOURCES = hi.c hi_file.c hi_buzhash.c
+hi_CFLAGS = $(GLIB_CFLAGS)
+hi_LDADD = $(GLIB_LIBS)

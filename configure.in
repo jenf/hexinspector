@@ -41,7 +41,7 @@ if test "$ac_cv_prog_gcc" = yes; then
     fi
 fi
 
-PKG_CHECK_MODULES([DEPS], [glib-2.0 >= 2.20.0])
+AM_PATH_GLIB_2_0(2.20.0, has_glib2=yes, has_glib2=no)
 
 AC_OUTPUT([Makefile
            src/Makefile

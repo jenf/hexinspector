@@ -6,22 +6,31 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
-#include "buzhash.h"
-#include <macros.h>
+#include <hi_priv.h>
 
 /**
  * \brief Open a hexinspector file instance
+ * If options is NULL, default ones will be used
  */
-hi_file *hi_open_file(char *filename)
+hi_file *hi_open_file(char *filename,hi_file_options *options)
 {
   int fd, ret;
   struct stat buf;
   hi_file *file;
   
-  if (filename == NULL)
+  struct hi_file_options default_options = {
+    .hashbytes = 128,
+  };
+  
+  if (NULL == filename)
   {
     DPRINTF("Filename is NULL\n");
     return NULL;
+  }
+  
+  if (NULL == options)
+  {
+    options = &default_options;
   }
 
   DPRINTF("Opening file %s\n", filename);
@@ -55,6 +64,7 @@ hi_file *hi_open_file(char *filename)
   }
   
   file->size = buf.st_size;
+  file->file_options = *options;
   file->memory = mmap(NULL, file->size, PROT_READ, MAP_PRIVATE, fd, 0);
   if (NULL == file->memory)
   {
@@ -62,9 +72,16 @@ hi_file *hi_open_file(char *filename)
     goto free_filename;
   }
   
+  /* Generate utils */
+  if (FALSE == hi_buzhash_generate(file))
+  {
+    goto free_mmap;
+  }
   close(fd);
   return file;
-
+  
+free_mmap:
+  munmap(file->memory,file->size);
 free_filename:
   free(file->filename);
 free_structure:
