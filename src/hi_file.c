@@ -10,7 +10,7 @@
 #include <macros.h>
 
 /**
- * Open a hexinspector file instance
+ * \brief Open a hexinspector file instance
  */
 hi_file *hi_open_file(char *filename)
 {
@@ -75,7 +75,7 @@ close_fd:
 }
 
 /**
- * Close and release all memory associated with a hexinspector file instance
+ * \brief Close and release all memory associated with a hexinspector file instance
  */
 void hi_close_file(hi_file *file)
 {
