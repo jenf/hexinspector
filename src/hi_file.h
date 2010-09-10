@@ -42,5 +42,6 @@ typedef struct hi_file
 
 /* Functions */
 hi_file *hi_open_file(char *filename);
+void hi_close_file(hi_file *file);
 
 #endif

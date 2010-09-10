@@ -9,6 +9,9 @@
 #include "buzhash.h"
 #include <macros.h>
 
+/**
+ * Open a hexinspector file instance
+ */
 hi_file *hi_open_file(char *filename)
 {
   int fd, ret;
@@ -71,23 +74,23 @@ close_fd:
   return NULL;
 }
 
-int main(int argc, char *argv[])
+/**
+ * Close and release all memory associated with a hexinspector file instance
+ */
+void hi_close_file(hi_file *file)
 {
-  size_t i,i2;
-  uint32_t hash=0;
-  uint32_t table[256]=BUZHASH_TABLE;
-  hi_file *file;
-  
-  file = hi_open_file(argv[1]);
-  
-  for (i=0; i<file->size;i+=128)
+  if (file == NULL)
   {
-    hash=0;
-    for (i2=i;(i2<file->size && i2<i+128);i2++)
-    {
-      hash = combine(hash, table[(int)file->memory[i2]], 128 % 32);
- 
-    }
-    DPRINTF("%lu %u\n", i, hash);
+    DPRINTF("File is NULL\n");
+    return;
   }
+  
+  munmap(file->memory,file->size);
+  file->memory = NULL;
+  
+  free(file->filename);
+  file->filename = NULL;
+  
+  free(file);
 }
+

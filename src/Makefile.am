@@ -23,13 +23,9 @@
 
 AUTOMAKE_OPTIONS = foreign
 
-bin_PROGRAMS = test1
+bin_PROGRAMS = hi
 
-test1_SOURCES = test1.c 
-
-test1_LDADD = 
-
-test1_DEPENDENCIES = 
+hi_SOURCES = hi.c hi_file.c
 
 #INCLUDES = @GLIB_CFLAGS@ @GTK_CFLAGS@ @LIBSPEC_CFLAGS@ \
 #@XML_CFLAGS@ -DFUSEDATADIR="\"${pkgdatadir}\"" @SDL_CFLAGS@

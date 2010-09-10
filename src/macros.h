@@ -34,6 +34,7 @@
 #ifdef HAVE_DEBUG
 #include <errno.h>
 #include <string.h>
+#include <stdio.h>
 #define DPRINTF(...) fprintf(stderr,__VA_ARGS__)
 #define DERRNO(fmt) fprintf(stderr,"%s:%s\n", fmt, strerror(errno));
 #else
