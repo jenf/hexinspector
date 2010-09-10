@@ -30,11 +30,17 @@
 
 #ifndef HI_FILE_H
 #define HI_FILE_H
+#include <unistd.h>
 
+/* Structures, Enums etc */
 typedef struct hi_file
 {
   char *filename; /**< Filename */
+  size_t size;    /**< Size of file */
   char *memory;   /**< Memory for the hex file */
 } hi_file;
+
+/* Functions */
+hi_file *hi_open_file(char *filename);
 
 #endif

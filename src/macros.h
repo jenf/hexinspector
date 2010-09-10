@@ -30,10 +30,24 @@
 #ifndef HI_MACRO_H
 #define HI_MACRO_H
 
+
 #ifdef HAVE_DEBUG
+#include <errno.h>
+#include <string.h>
 #define DPRINTF(...) fprintf(stderr,__VA_ARGS__)
+#define DERRNO(fmt) fprintf(stderr,"%s:%s\n", fmt, strerror(errno));
 #else
 #define DPRINTF(...)
+#define DERRNO(...)
 #endif
+
+/* Branch predicition markers */
+#if __GNUC__ < 3
+#define __builtin_expect(x, n) (x)
+#else
+#define likely(x)   __builtin_expect(!!(x), 1)
+#define unlikely(x)   __builtin_expect(!!(x), 0)
+#endif
+
 
 #endif
