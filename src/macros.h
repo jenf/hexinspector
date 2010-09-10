@@ -42,6 +42,12 @@
 #define DERRNO(...)
 #endif
 
+#ifdef VERBOSE_DEBUG
+#define VDPRINTF(...) DPRINTF(__VA_ARGS__)
+#else
+#define VDPRINTF(...)
+#endif
+
 /* Branch predicition markers */
 #if __GNUC__ < 3
 #define __builtin_expect(x, n) (x)
