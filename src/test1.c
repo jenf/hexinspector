@@ -7,6 +7,12 @@
 #include <unistd.h>
 #include <stdint.h>
 #include "buzhash.h"
+#include <macros.h>
+
+hi_file *hi_open_file(char *filename)
+{
+  DPRINTF("Opening file\n", filename);
+}
 
 int main(int argc, char *argv[])
 {
@@ -16,6 +22,9 @@ int main(int argc, char *argv[])
   int i,i2;
   uint32_t hash=0;
   uint32_t table[256]=BUZHASH_TABLE;
+  hi_file *file;
+  
+  file = hi_open_file(argv[1]);
   
   fd = open(argv[1], O_RDONLY);
   fstat(fd, &buf);
@@ -30,6 +39,6 @@ int main(int argc, char *argv[])
       hash = combine(hash, table[addr[i2]], 128 % 32);
  
     }
-    printf("%i %u\n", i, hash);
+    DPRINTF("%i %u\n", i, hash);
   }
 }
