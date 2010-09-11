@@ -275,7 +275,7 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
            I'm not convinced that you have to do it all */
         
         /* Currently make it 16 */
-        for (search_size=0;search_size<TRUE?0:dst->file_options.hashbytes;search_size++)
+        for (search_size=0;search_size<dst->file_options.hashbytes;search_size++)
         {
           if (DIFF_MODE_UNSYNCED_NEAR != mode) {break;}
           
