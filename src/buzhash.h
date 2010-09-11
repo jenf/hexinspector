@@ -35,5 +35,19 @@
 /* Ensure pos is <32 bits, use mod */
 static inline uint32_t combine(uint32_t h1, uint32_t h2, int pos)
 {
+  //printf("%u %u %u %i\n",h1, (h1 << pos), (h1 >> (32-pos)), pos);
   return (((h1 << pos) | (h1 >> (32-pos))) ^ h2) & 0xffffffff;
+}
+
+/* Apply a rolling hash removing the prior byte if there are more bytes than the hashlen */
+static inline uint32_t buzhash_roll(uint32_t hash, unsigned char newvalue, unsigned char prevval, off_t curpos, off_t hashlen)
+{
+  uint32_t table[256]=BUZHASH_TABLE;  
+  /* Remove the old byte */
+  if (curpos >= hashlen)
+  {
+    /* Take one of the hashlen as we need to remove the last byte */
+    hash = combine(table[prevval], hash, (hashlen-1) % 32);
+  }
+  return combine(hash,table[newvalue], 1);
 }

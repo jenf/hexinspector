@@ -37,7 +37,8 @@
 
 typedef struct hi_file_options
 {
-  int hashbytes; /**< Number of bytes to hash */
+  int hashbytes;       /**< Number of bytes to hash */
+  int diff_jump_percent; /**< Maximum percentage of file to jump on a far diff */
 } hi_file_options;
   
 /** Structure representing the file */
@@ -45,7 +46,7 @@ typedef struct hi_file
 {
   char *filename;                     /**< Filename */
   size_t size;                        /**< Size of file */
-  char *memory;                       /**< Memory for the hex file */
+  unsigned char *memory;              /**< Memory for the hex file */
   hi_file_options file_options;       /**< Options in use for the file */
   GHashTable /*<off_t> */ *buzhashes; /**< Buzhashes used in the diff algorithm */
 } hi_file;

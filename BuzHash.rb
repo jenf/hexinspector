@@ -44,10 +44,12 @@ class BuzHash
 
   def self.buzhash(str, startval=nil)
     hash = startval
+    #i=0
     str.each_byte {|x|
       hash = combine(hash,@@buztbl[x]) if hash != nil
       hash = @@buztbl[x]               if hash == nil
-#      puts "%i %i %i" % [x,hash, @@buztbl[x]]
+      #puts "%i %i %i" % [i,hash, @@buztbl[x]]
+      #i+=1
     }
     hash
   end

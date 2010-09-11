@@ -42,7 +42,7 @@ class HexInspectorFile
   (0..@hash_width-2).each {|x|
 #   buzhash.add_char(@data[x])
    buzhash2=BuzHash.rollhash(@data[x],@data[x-@hash_width], x, @hash_width, buzhash2)
-   #puts "%i %i %i" %[x,buzhash.hash, buzhash2]
+#   puts "%i %i" %[x, buzhash2]
   }
   
 #  puts dst.buzhashes.inspect
@@ -62,7 +62,7 @@ class HexInspectorFile
        buzhash2=BuzHash.rollhash(@data[srcptr+@hash_width-1],@data[srcptr-1], srcptr+@hash_width-1, @hash_width, buzhash2)
 
 
-#       puts "%i %i %i" % [srcptr,buzhash.hash, buzhash2]
+#       puts "%i %i" % [srcptr, buzhash2]
       else
        buzhash2 = nil unless srcptr+@hash_width<srcsize
       end
@@ -84,19 +84,19 @@ class HexInspectorFile
       end
       
      when :unsynced_near
-      if (srcptr < srclostsync+16) || (srcptr+@hash_width>srcsize)
-       if @data[srcptr]==dst[dstptr]
-        puts "Resync at %i %i" % [srcptr,dstptr]
-        mode=:synced
-        diffprecision=:exact
-        segment_srcstart=srcptr
-        segment_dststart=dstptr
-       else
-        srcptr+=1
-       end
-      else
+      #if (srcptr < srclostsync+16) || (srcptr+@hash_width>srcsize)
+      # if @data[srcptr]==dst[dstptr]
+      #  puts "Resync at %i %i" % [srcptr,dstptr]
+      #  mode=:synced
+      #  diffprecision=:exact
+      #  segment_srcstart=srcptr
+      #  segment_dststart=dstptr
+      # else
+      #  srcptr+=1
+      # end
+      #else
        mode = :unsynced_far
-      end
+      #end
       
      when :unsynced_far
 #      puts buzhash.hash
@@ -192,7 +192,7 @@ class HexInspectorFile
    str=@data[x..x+hash_width-1]
    #dump_hex(str)
    hash = BuzHash.buzhash(str,0)
-   #puts "%i %i" % [x,hash]
+   puts "%i %i" % [x,hash]
    #puts x
    #puts hash
    

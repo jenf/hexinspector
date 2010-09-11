@@ -49,6 +49,7 @@ hi_file *hi_open_file(char *filename,hi_file_options *options)
   
   struct hi_file_options default_options = {
     .hashbytes = 128,
+    .diff_jump_percent = 5,
   };
   
   if (NULL == filename)
