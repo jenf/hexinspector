@@ -31,9 +31,18 @@
 #include <signal.h>
 #include <macros.h>
 
-
-static void redraw(hi_ncurses *ncurses)
+#define PAGER_WIDTH ((COLS/2)-2)
+#define PAGER_HEIGHT (LINES-RULER_LINES)
+#define RULER_LINES (5)
+static void redraw(hi_ncurses *ncurses, gboolean need_resize)
 {
+  if (need_resize)
+  {
+    hi_ncurses_fpager_resize(ncurses->src, PAGER_WIDTH, PAGER_HEIGHT, 0, 0);
+    erase();
+    refresh();
+  }
+  
   hi_ncurses_fpager_redraw(ncurses->src);
   if (ncurses->dst)
     hi_ncurses_fpager_redraw(ncurses->dst);
@@ -55,11 +64,13 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
   hi_ncurses *ncurses;
   int newch;
   gboolean quit = FALSE;
+  gboolean need_resize = TRUE;
   
   ncurses = malloc(sizeof(hi_ncurses));
   ncurses->diff = diff;
   
   (void) signal(SIGINT, finish);
+  //(void) signal(SIGWINCH, resize);
   ncurses->window = initscr();
   keypad(stdscr, TRUE);
   nonl();
@@ -68,18 +79,31 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
   refresh();
   wrefresh(mainwin);
   
-  ncurses->src = hi_ncurses_fpager_new(ncurses, file, 75, 23, 0, 0);
-  window = newwin(0,10,0,0);
+  //fprintf(stderr,"%i %i\n", COLS, LINES); 
+  ncurses->src = hi_ncurses_fpager_new(ncurses, file,  PAGER_WIDTH, PAGER_HEIGHT, 0, 0);
+  //ncurses->dst = hi_ncurses_fpager_new(ncurses, file2, COLS/2 , LINES, COLS/2, 0);
+
 
   while (FALSE == quit)
   {
-    redraw(ncurses);    
+    redraw(ncurses, need_resize);    
+    need_resize = FALSE;
+    
     newch = getch();
     switch (newch)
     {
       case 'q':
       case 'Q':
         quit = TRUE;
+        break;
+        
+        /* Just temporary */
+      case KEY_DOWN:
+        ncurses->src->offset+=8;
+        break;
+      case KEY_RESIZE:
+        /* Need to resize the pagers */
+        need_resize = TRUE;
         break;
     }
   }

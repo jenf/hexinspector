@@ -60,5 +60,7 @@ hi_ncurses_fpager *hi_ncurses_fpager_new(hi_ncurses *curses,
                                          int width, int height,
                                          int y, int x);
 void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager);
-
+void hi_ncurses_fpager_resize(hi_ncurses_fpager *pager,
+                              int width, int height,
+                              int y, int x);
 #endif
