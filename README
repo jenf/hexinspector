@@ -12,4 +12,14 @@ Other ideas
 
 WARNING
 
-This code is rather slow and will probably be replaced by C code, but is more a proof of concept.
+The ruby code is purely a prototype, and should not really be used, except with small files. It is currently being ported to C.
+
+Dependancies
+
+glib - 2.20.0 or later (For hash and balanced binary tree support)
+
+Future enhancements
+
+* Allow it to work with files that are bigger than off_t or the maximum mmap size
+* Allow the document to be opened before the hashing and diffing is completed, by moving the diff and hash into the background
+
