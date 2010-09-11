@@ -43,6 +43,8 @@ fi
 
 AM_PATH_GLIB_2_0(2.20.0, has_glib2=yes, has_glib2=no)
 
+AC_CHECK_LIB(ncurses,initscr,[NCURSES_LIBS="-lncurses"])
+AC_SUBST([NCURSES_LIBS])
 AC_OUTPUT([Makefile
            src/Makefile
            ])
