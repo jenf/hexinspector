@@ -30,6 +30,16 @@
 #include <stdlib.h>
 #include <macros.h>
 
+#define BYTES_FOR_BORDER (4)
+#define WIDTH_PER_BYTE (3)
+#define OFFSET_SIZE (8)
+static void update_bytes_per_line(hi_ncurses_fpager *pager)
+{
+  /* TODO: add other output format mechanisms */
+  pager->bytes_per_row = (pager->width-(OFFSET_SIZE+BYTES_FOR_BORDER))/WIDTH_PER_BYTE;
+  
+}
+
 hi_ncurses_fpager *hi_ncurses_fpager_new(hi_ncurses *curses,
                                          hi_file *file,
                                          int width, int height,
@@ -48,15 +58,38 @@ hi_ncurses_fpager *hi_ncurses_fpager_new(hi_ncurses *curses,
   pager->height = height;
   pager->x = x;
   pager->y = y;
-  pager->window = newwin(width, height, y, x);
-
+  pager->offset = 0;
+  pager->window = newwin(height , width,y, x);
+  update_bytes_per_line(pager);
+  
   return pager;
 }
 
 void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
 {
-  mvwprintw(pager->window,1,1,"Hi there");
+  int x, y;
+  unsigned char val;
+  off_t offset;
   box(pager->window, ACS_VLINE, ACS_HLINE);
   
+  for (y=0; y< pager->height-2; y++)
+  {
+    for (x=0; x<pager->bytes_per_row; x++)
+    {
+      offset = pager->offset+x+(pager->bytes_per_row*y);
+
+      if (offset < pager->file->size)
+      {
+          if (x == 0)
+          {
+            mvwprintw(pager->window, y+1, 1, "%08x", offset);
+          }
+          val = pager->file->memory[offset];
+          mvwprintw(pager->window,y+1,1+OFFSET_SIZE+(x*3),"%02x",val);         
+      }
+    }
+  
+  }
+
   wrefresh(pager->window);
 }

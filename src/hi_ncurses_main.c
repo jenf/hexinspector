@@ -53,6 +53,8 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
   WINDOW *window;
   WINDOW *mainwin;
   hi_ncurses *ncurses;
+  int newch;
+  gboolean quit = FALSE;
   
   ncurses = malloc(sizeof(hi_ncurses));
   ncurses->diff = diff;
@@ -66,12 +68,21 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
   refresh();
   wrefresh(mainwin);
   
-  ncurses->src = hi_ncurses_fpager_new(ncurses, file, 0, 25, 0, 0);
+  ncurses->src = hi_ncurses_fpager_new(ncurses, file, 75, 23, 0, 0);
   window = newwin(0,10,0,0);
 
-  
-  redraw(ncurses);
-  sleep(5);
+  while (FALSE == quit)
+  {
+    redraw(ncurses);    
+    newch = getch();
+    switch (newch)
+    {
+      case 'q':
+      case 'Q':
+        quit = TRUE;
+        break;
+    }
+  }
   
   finish(0);
 }
