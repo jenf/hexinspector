@@ -42,7 +42,7 @@ static void update_bytes_per_line(hi_ncurses_fpager *pager)
 
 hi_ncurses_fpager *hi_ncurses_fpager_new(hi_ncurses *curses,
                                          hi_file *file,
-                                         int width, int height,
+                                         int height, int width,
                                          int y, int x)
 {
   hi_ncurses_fpager *pager;
@@ -66,7 +66,7 @@ hi_ncurses_fpager *hi_ncurses_fpager_new(hi_ncurses *curses,
 }
 
 void hi_ncurses_fpager_resize(hi_ncurses_fpager *pager,
-                              int width, int height,
+                              int height, int width,
                               int y, int x)
 {
   pager->x = x;

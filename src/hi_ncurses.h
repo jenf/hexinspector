@@ -57,10 +57,10 @@ typedef struct hi_ncurses
 void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff);
 hi_ncurses_fpager *hi_ncurses_fpager_new(hi_ncurses *curses,
                                          hi_file *file,
-                                         int width, int height,
+                                         int height, int width,
                                          int y, int x);
 void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager);
 void hi_ncurses_fpager_resize(hi_ncurses_fpager *pager,
-                              int width, int height,
+                              int height, int width,
                               int y, int x);
 #endif

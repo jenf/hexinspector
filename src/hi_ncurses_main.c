@@ -31,20 +31,30 @@
 #include <signal.h>
 #include <macros.h>
 
-#define PAGER_WIDTH ((COLS/2)-2)
+#define PAGER_WIDTH_SOLO (COLS)
+#define PAGER_WIDTH_PAIR ((COLS/2)-2)
 #define PAGER_HEIGHT (LINES-RULER_LINES)
 #define RULER_LINES (5)
 static void redraw(hi_ncurses *ncurses, gboolean need_resize)
 {
   if (need_resize)
   {
-    hi_ncurses_fpager_resize(ncurses->src, PAGER_WIDTH, PAGER_HEIGHT, 0, 0);
+    if (ncurses->dst != NULL)
+    {
+      hi_ncurses_fpager_resize(ncurses->src, PAGER_HEIGHT, PAGER_WIDTH_PAIR, 0, 0);     
+      hi_ncurses_fpager_resize(ncurses->dst, PAGER_HEIGHT, PAGER_WIDTH_PAIR, 0, PAGER_WIDTH_PAIR);  
+    }
+    else
+    {
+      hi_ncurses_fpager_resize(ncurses->src, PAGER_HEIGHT, PAGER_WIDTH_SOLO, 0, 0);           
+    }
+
     erase();
     refresh();
   }
   
   hi_ncurses_fpager_redraw(ncurses->src);
-  if (ncurses->dst)
+  if (ncurses->dst != NULL)
     hi_ncurses_fpager_redraw(ncurses->dst);
   refresh();
 }
@@ -67,6 +77,7 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
   gboolean need_resize = TRUE;
   
   ncurses = malloc(sizeof(hi_ncurses));
+  ncurses->dst = NULL;
   ncurses->diff = diff;
   
   (void) signal(SIGINT, finish);
@@ -79,9 +90,16 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
   refresh();
   wrefresh(mainwin);
   
-  //fprintf(stderr,"%i %i\n", COLS, LINES); 
-  ncurses->src = hi_ncurses_fpager_new(ncurses, file,  PAGER_WIDTH, PAGER_HEIGHT, 0, 0);
-  //ncurses->dst = hi_ncurses_fpager_new(ncurses, file2, COLS/2 , LINES, COLS/2, 0);
+  if (file2 != NULL)
+  {
+    ncurses->src = hi_ncurses_fpager_new(ncurses, file,  PAGER_HEIGHT, PAGER_WIDTH_PAIR,  0, 0);
+    ncurses->dst = hi_ncurses_fpager_new(ncurses, file2, PAGER_HEIGHT, PAGER_WIDTH_PAIR,  0, PAGER_WIDTH_PAIR);    
+  }
+  else
+  {
+    ncurses->src = hi_ncurses_fpager_new(ncurses, file,  PAGER_HEIGHT, PAGER_WIDTH_SOLO,  0, 0); 
+  }
+
 
 
   while (FALSE == quit)
