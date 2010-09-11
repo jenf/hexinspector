@@ -25,6 +25,6 @@ AUTOMAKE_OPTIONS = foreign
 
 bin_PROGRAMS = hi
 
-hi_SOURCES = hi.c hi_file.c hi_buzhash.c
+hi_SOURCES = hi.c hi_file.c hi_buzhash.c hi_diff.c
 hi_CFLAGS = $(GLIB_CFLAGS)
 hi_LDADD = $(GLIB_LIBS)
