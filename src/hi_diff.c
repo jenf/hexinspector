@@ -55,6 +55,63 @@ static gint compare_diff_hunks(hi_diff_hunk *hunk1, hi_diff_hunk *hunk2)
   return hunk1->src_start-hunk2->src_start;
 }
 
+/** Go through the indexed hunks converting them to backtracked versions */
+gboolean backtrack_hunks(hi_diff_hunk *hunk,void *value, hi_diff *diff)
+{
+  off_t srcptr, dstptr;
+  if (hunk->type==HI_DIFF_TYPE_SAME_INDEXED)
+  {
+    hunk->type=HI_DIFF_TYPE_SAME_BACKTRACKED;
+    srcptr = hunk->src_start;
+    dstptr = hunk->dst_start;
+    while ((srcptr >0) || (dstptr > 0))
+    {
+      if (diff->src->memory[srcptr]!=diff->dst->memory[dstptr])
+      {
+        break;
+      }
+      srcptr--;
+      dstptr--;
+    }
+    DPRINTF("Original %lu %lu New %lu %lu\n", hunk->src_start, hunk->dst_start, srcptr, dstptr);
+    hunk->src_start = srcptr;
+    hunk->dst_start = dstptr;
+  }
+  
+  return FALSE;
+}
+
+void insert_hunk(hi_diff *diff, hi_diff_hunk *hunk)
+{
+  hi_diff_hunk *new;
+  DPRINTF("Add hunk ");
+  switch (hunk->type)
+  {
+    case HI_DIFF_TYPE_DIFF:
+      DPRINTF("DIFF");break;
+    case HI_DIFF_TYPE_SAME:
+      DPRINTF("SAME");break;
+    case HI_DIFF_TYPE_SAME_BACKTRACKED:
+      DPRINTF("SAME_BT");break;
+    case HI_DIFF_TYPE_SAME_INDEXED:
+      DPRINTF("SAME_IDX");break;
+  }
+  
+  new = malloc(sizeof(hi_diff_hunk));
+  memcpy(new, hunk, sizeof(hi_diff_hunk));
+  if (new != NULL)
+  {
+      g_tree_insert(diff->hunks, new, NULL); 
+  }
+
+      
+  DPRINTF(" %lu %lu %lu %lu\n",
+          (unsigned long) hunk->src_start,
+          (unsigned long) hunk->dst_start,
+          (unsigned long) hunk->src_end,
+          (unsigned long) hunk->dst_end);
+  
+}
 /** Create the diff lists */
 hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
 {
@@ -68,6 +125,14 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
   gboolean moved_since_hash_match = TRUE;
   int bytes_jump;
   hi_diff *diff;
+  
+  hi_diff_hunk working_hunk = {
+    .type = HI_DIFF_TYPE_SAME,
+    .src_start = 0,
+    .dst_start = 0,
+    .src_end = 0,
+    .dst_end = 0
+  };
   
   
   bytes_jump = (dst->file_options.diff_jump_percent*dst->size)/100;
@@ -127,7 +192,11 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
         }
         else
         {
-          DPRINTF("Diff at %lu %lu\n",(unsigned long)  srcptr, (unsigned long) dstptr);
+          working_hunk.src_end = srcptr;
+          working_hunk.dst_end = dstptr;
+          insert_hunk(diff, &working_hunk);
+
+          
           mode = DIFF_MODE_UNSYNCED_NEAR;
         }
         break;
@@ -138,7 +207,7 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
            I'm not convinced that you have to do it all */
         
         /* Currently make it 16 */
-        for (search_size=0;search_size<dst->file_options.hashbytes;search_size++)
+        for (search_size=0;search_size<TRUE?0:dst->file_options.hashbytes;search_size++)
         {
           if (DIFF_MODE_UNSYNCED_NEAR != mode) {break;}
           
@@ -155,6 +224,11 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
               srcptr_new = srcptr+srcptr_search;
               dstptr_new = dstptr+dstptr_search;
               mode = DIFF_MODE_SYNC;
+              
+              working_hunk.src_start = srcptr;
+              working_hunk.dst_start = dstptr;
+              working_hunk.type = HI_DIFF_TYPE_SAME;
+              
               DPRINTF("Near Sync at %lu %lu\n", (unsigned long) srcptr_new, (unsigned long) dstptr_new);
               break;
 
@@ -203,6 +277,10 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
                   dstptr_new = value[idx+1];
                   DPRINTF("Far Sync at %lu %lu %i\n",(unsigned long)srcptr, (unsigned long)dstptr_new, idx);
                   mode = DIFF_MODE_SYNC;
+                  working_hunk.src_start = srcptr;
+                  working_hunk.dst_start = dstptr;
+                  working_hunk.type = HI_DIFF_TYPE_SAME_INDEXED;
+                  
                   moved_since_hash_match = FALSE;
                   break;
                 }
@@ -239,13 +317,40 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
         hash = buzhash_roll(hash, src->memory[srcptr+dst->file_options.hashbytes], src->memory[srcptr ==0 ? 0 : srcptr], srcptr+dst->file_options.hashbytes, dst->file_options.hashbytes);
         VDPRINTF("%lu %lu %lu\n", (unsigned long) srcptr, (unsigned long) srcptr_new, hash);
       }
-      else
-      {
-      }
     }
     dstptr = dstptr_new;
     
   }
+  
+  /* Add the last working hunk */
+  if (mode == DIFF_MODE_SYNC)
+  {
+    working_hunk.src_end = srcptr;
+    working_hunk.dst_end = dstptr;
+    insert_hunk(diff, &working_hunk);
+    if (dstptr != dst->size)
+    {
+      working_hunk.src_start = srcptr;
+      working_hunk.src_end = srcptr;
+      working_hunk.dst_start = dstptr;
+      working_hunk.dst_end = dst->size;
+      working_hunk.type = HI_DIFF_TYPE_DIFF;
+      insert_hunk(diff, &working_hunk);
+    }
+  }
+  else
+  {
+    working_hunk.src_end = src->size;
+    working_hunk.dst_end = dst->size;
+    working_hunk.type = HI_DIFF_TYPE_DIFF;
+    insert_hunk(diff, &working_hunk);
+  }
+  
+  /* Backtrack the indexed ones */
+  g_tree_foreach(diff->hunks, (GTraverseFunc) backtrack_hunks, diff);
+  
+  /* Insert the missing diff hunks */
+  /* generate_diffhunks(diff); */
   
   return diff;
 }

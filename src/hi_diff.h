@@ -45,6 +45,8 @@ enum hi_diff_type
   HI_DIFF_TYPE_SAME,              /* The file was the same between the points */
   HI_DIFF_TYPE_SAME_BACKTRACKED,  /* The file was the same between the points (backtracked) */
   HI_DIFF_TYPE_SAME_INDEXED,      /* The file was the same between the points, but the backtracking algorithm hasn't been applied */
+  HI_DIFF_FIND_SRC,               /* A bad trick in glib to find the source easily */
+  HI_DIFF_FIND_DST                /* A bad trick in glib to find the destination easily */
 };
 
 /** Structure representing a diff hunk */
