@@ -12,7 +12,7 @@ Other ideas
 
 WARNING
 
-The ruby code is purely a prototype, and should not really be used, except with small files. It is currently being ported to C.
+There isn't an ncurses interface yet.
 
 Dependancies
 
