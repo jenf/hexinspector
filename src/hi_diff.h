@@ -33,9 +33,9 @@
 /** Structure representing the differences between two files */
 typedef struct hi_diff
 {
-  hi_file *src; /**< Source file */
-  hi_file *dst; /**< Destination file */
-  
+  hi_file *src;                     /**< Source file */
+  hi_file *dst;                     /**< Destination file */
+  GTree /*<hi_diff_hunk>*/ *hunks;  /**<List of hunks of type hi_diff_hunk */
 } hi_diff;
 
 /** The various states that a hunk can be in */

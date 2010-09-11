@@ -32,6 +32,7 @@
 #include "hi_priv.h"
 #include <stdint.h>
 #include <buzhash.h>
+#include <stdlib.h>
 
 enum diff_mode
 {
@@ -40,6 +41,21 @@ enum diff_mode
   DIFF_MODE_UNSYNCED_FAR,
 };
 
+/** Compare two diff hunks */
+static gint compare_diff_hunks(hi_diff_hunk *hunk1, hi_diff_hunk *hunk2)
+{
+  if (hunk1 == NULL)
+  {
+    return 1;
+  }
+  if (hunk2 == NULL)
+  {
+    return -1;
+  }
+  return hunk1->src_start-hunk2->src_start;
+}
+
+/** Create the diff lists */
 hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
 {
   off_t srcptr=0, dstptr=0, srcptr_new=0, dstptr_new=0;
@@ -48,10 +64,11 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
   enum diff_mode mode = DIFF_MODE_SYNC;
   uint32_t hash = 0;
   off_t *value;  
-  off_t current_value;
-  int index;
+  int idx;
   gboolean moved_since_hash_match = TRUE;
   int bytes_jump;
+  hi_diff *diff;
+  
   
   bytes_jump = (dst->file_options.diff_jump_percent*dst->size)/100;
   if (bytes_jump < dst->file_options.hashbytes)
@@ -59,7 +76,24 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
     bytes_jump = dst->file_options.hashbytes * 2;
   }
   
-  DPRINTF("Calculating diffs size %i %i Jumplimit %i\n", src->size, dst->size, bytes_jump);
+  /* Create difference structure */
+  diff = malloc(sizeof(hi_diff));
+  if (NULL == diff)
+  {
+    DPRINTF("Failure to allocate memory\n");
+    return NULL;
+  }
+  diff->hunks = g_tree_new((GCompareFunc)compare_diff_hunks); 
+  if (NULL == diff->hunks)
+  {
+    DPRINTF("Failure to create tree\n");
+    return NULL;
+  }
+  diff->src = src;
+  diff->dst = dst;
+
+  
+  DPRINTF("Calculating diffs size %lu %lu Jumplimit %i\n", (unsigned long) src->size, (unsigned long)  dst->size, bytes_jump);
   
   for (srcptr_new = 0; srcptr_new < dst->file_options.hashbytes; srcptr_new++)
   {
@@ -153,28 +187,28 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
         {
           VDPRINTF("Unsynced far mode %lu %lu\n",(unsigned long) srcptr_new, hash);
           /* Lookup the current hash value in the list */
-          value = g_hash_table_lookup(dst->buzhashes, hash);
+          value = g_hash_table_lookup(dst->buzhashes, (gpointer) hash);
           if (NULL != value)
           {
             DPRINTF("Found hash %lu %u\n", (unsigned long)srcptr, hash);
             
             /* Check for one after the current dstptr */
-            for (index = 0; index < value[0]; index++)
+            for (idx = 0; idx < value[0]; idx++)
             {
-              VDPRINTF("Value at %lu %lu %lu %i\n",(unsigned long)srcptr, (unsigned long)dstptr, (unsigned long)value[index+1], index);
-              if (value[index+1] >= dstptr)
+              VDPRINTF("Value at %lu %lu %lu %i\n",(unsigned long)srcptr, (unsigned long)dstptr, (unsigned long)value[idx+1], idx);
+              if (value[idx+1] >= dstptr)
               {
-                if (value[index+1] < dstptr+bytes_jump)
+                if (value[idx+1] < dstptr+bytes_jump)
                 {
-                  dstptr_new = value[index+1];
-                  DPRINTF("Far Sync at %lu %lu %i\n",(unsigned long)srcptr, (unsigned long)dstptr_new, index);
+                  dstptr_new = value[idx+1];
+                  DPRINTF("Far Sync at %lu %lu %i\n",(unsigned long)srcptr, (unsigned long)dstptr_new, idx);
                   mode = DIFF_MODE_SYNC;
                   moved_since_hash_match = FALSE;
                   break;
                 }
                 else
                 {
-                  DPRINTF("Would have jumped to far  %lu %lu %lu %i\n",(unsigned long)srcptr, (unsigned long)dstptr, (unsigned long)value[index+1], index);
+                  DPRINTF("Would have jumped to far  %lu %lu %lu %i\n",(unsigned long)srcptr, (unsigned long)dstptr, (unsigned long)value[idx+1], idx);
                   break;
                 }
                 
@@ -212,4 +246,6 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
     dstptr = dstptr_new;
     
   }
+  
+  return diff;
 }
