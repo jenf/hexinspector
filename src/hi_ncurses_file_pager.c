@@ -1,4 +1,4 @@
-/* hi_ncurses_main: Hexinspector
+/* hi_ncurses_file_pager.c: Hexinspector
    Copyright (c) 2010 Jen Freeman
 
    $Id$
@@ -24,55 +24,39 @@
 */
 
 /**
- * Ncurses main loop
+ * Ncurses file pager
  */
-
 #include <hi_ncurses.h>
-#include <signal.h>
+#include <stdlib.h>
 #include <macros.h>
 
-
-static void redraw(hi_ncurses *ncurses)
+hi_ncurses_fpager *hi_ncurses_fpager_new(hi_ncurses *curses,
+                                         hi_file *file,
+                                         int width, int height,
+                                         int y, int x)
 {
-  hi_ncurses_fpager_redraw(ncurses->src);
-  if (ncurses->dst)
-    hi_ncurses_fpager_redraw(ncurses->dst);
-  refresh();
+  hi_ncurses_fpager *pager;
+  pager = malloc(sizeof(hi_ncurses_fpager));
+  if (NULL == pager)
+  {
+    DPRINTF("Could not allocate pager\n");
+    return NULL;
+  }
+  
+  pager->file = file;
+  pager->width = width;
+  pager->height = height;
+  pager->x = x;
+  pager->y = y;
+  pager->window = newwin(width, height, y, x);
+
+  return pager;
 }
 
-
-static void finish(int sig)
+void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
 {
-  endwin();
-  exit(0);
+  mvwprintw(pager->window,1,1,"Hi there");
+  box(pager->window, ACS_VLINE, ACS_HLINE);
+  
+  wrefresh(pager->window);
 }
-
-
-void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
-{
-  WINDOW *window;
-  WINDOW *mainwin;
-  hi_ncurses *ncurses;
-  
-  ncurses = malloc(sizeof(hi_ncurses));
-  ncurses->diff = diff;
-  
-  (void) signal(SIGINT, finish);
-  ncurses->window = initscr();
-  keypad(stdscr, TRUE);
-  nonl();
-  cbreak();
-  echo();
-  refresh();
-  wrefresh(mainwin);
-  
-  ncurses->src = hi_ncurses_fpager_new(ncurses, file, 0, 25, 0, 0);
-  window = newwin(0,10,0,0);
-
-  
-  redraw(ncurses);
-  sleep(5);
-  
-  finish(0);
-}
-
