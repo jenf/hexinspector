@@ -41,6 +41,8 @@ enum diff_mode
 hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
 {
   off_t srcptr=0, dstptr=0, srcptr_new=0, dstptr_new=0;
+  off_t srcptr_search, dstptr_search;
+  off_t search_size;
   enum diff_mode mode = DIFF_MODE_SYNC;
   
   DPRINTF("Calculating diffs size %i %i\n", src->size, dst->size);
@@ -60,11 +62,47 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
         }
         else
         {
-          DPRINTF("Diff at %i %i\n", srcptr, dstptr);
+          DPRINTF("Diff at %lu %lu\n",(unsigned long)  srcptr, (unsigned long) dstptr);
           mode = DIFF_MODE_UNSYNCED_NEAR;
         }
         break;
-      default:
+      
+        case DIFF_MODE_UNSYNCED_NEAR:
+        /* Try all combinations of bytes up to the dst hash size
+           I'm not convinced that you have to do it all */
+        for (search_size=0;search_size<dst->file_options.hashbytes;search_size++)
+        {
+          if (DIFF_MODE_UNSYNCED_NEAR != mode) {break;}
+          
+          DPRINTF("Search %lu\n", search_size);
+          for (srcptr_search = 0; srcptr_search < search_size; srcptr_search++)
+          {
+            dstptr_search = search_size - (srcptr_search);
+            if (srcptr+srcptr_search > src->size) {continue;}
+            if (dstptr+dstptr_search > dst->size) {continue;}      
+            
+            DPRINTF("Search %lu %lu %lu\n", (unsigned long) search_size, (unsigned long)srcptr_search, (unsigned long)dstptr_search);
+            if (src->memory[srcptr+srcptr_search] == dst->memory[dstptr+dstptr_search])
+            {
+              srcptr_new = srcptr+srcptr_search;
+              dstptr_new = dstptr+dstptr_search;
+              mode = DIFF_MODE_SYNC;
+              DPRINTF("Resync at %lu %lu\n", (unsigned long) srcptr_new, (unsigned long) dstptr_new);
+              break;
+
+            }
+          }
+        }
+        
+        /* Couldn't find a match */
+        if (DIFF_MODE_UNSYNCED_NEAR == mode)
+        {
+          mode = DIFF_MODE_UNSYNCED_FAR;   
+        }
+
+        break;
+        
+        default:
         srcptr_new++;
     }
     
