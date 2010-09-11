@@ -29,8 +29,48 @@
 
 #include <hi_file.h>
 #include <hi_diff.h>
+#include "hi_priv.h"
+
+enum diff_mode
+{
+  DIFF_MODE_SYNC,
+  DIFF_MODE_UNSYNCED_NEAR,
+  DIFF_MODE_UNSYNCED_FAR,
+};
 
 hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
 {
+  off_t srcptr=0, dstptr=0, srcptr_new=0, dstptr_new=0;
+  enum diff_mode mode = DIFF_MODE_SYNC;
   
+  DPRINTF("Calculating diffs size %i %i\n", src->size, dst->size);
+  while ((srcptr < src->size) && (dstptr < dst->size))
+  {
+    srcptr_new = srcptr;
+    dstptr_new = dstptr;
+    
+    switch (mode)
+    {
+        /* Files are currently exact */
+        case DIFF_MODE_SYNC:
+        if (src->memory[srcptr] == dst->memory[dstptr])
+        {
+          srcptr_new ++;
+          dstptr_new ++;
+        }
+        else
+        {
+          DPRINTF("Diff at %i %i\n", srcptr, dstptr);
+          mode = DIFF_MODE_UNSYNCED_NEAR;
+        }
+        break;
+      default:
+        srcptr_new++;
+    }
+    
+    /* TODO: Update rolling buzhash */
+    srcptr = srcptr_new;
+    dstptr = dstptr_new;
+    
+  }
 }
