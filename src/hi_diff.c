@@ -41,6 +41,27 @@ enum diff_mode
   DIFF_MODE_UNSYNCED_FAR,
 };
 
+/* Debug function to dump hunks */
+static void dump_hunk(hi_diff_hunk *hunk)
+{
+  switch (hunk->type)
+  {
+    case HI_DIFF_TYPE_DIFF:
+      DPRINTF("DIFF");break;
+    case HI_DIFF_TYPE_SAME:
+      DPRINTF("SAME");break;
+    case HI_DIFF_TYPE_SAME_BACKTRACKED:
+      DPRINTF("SAME_BT");break;
+    case HI_DIFF_TYPE_SAME_INDEXED:
+      DPRINTF("SAME_IDX");break;
+  }     
+  DPRINTF(" %lu %lu %lu %lu\n",
+          (unsigned long) hunk->src_start,
+          (unsigned long) hunk->dst_start,
+          (unsigned long) hunk->src_end,
+          (unsigned long) hunk->dst_end); 
+}
+
 /** Compare two diff hunks */
 static gint compare_diff_hunks(hi_diff_hunk *hunk1, hi_diff_hunk *hunk2)
 {
@@ -81,21 +102,72 @@ gboolean backtrack_hunks(hi_diff_hunk *hunk,void *value, hi_diff *diff)
   return FALSE;
 }
 
+struct missing_diff_userdata
+{
+  hi_diff *diff;
+  hi_diff_hunk *last;
+  GSList *list;
+};
+
+/* For each item add the diffs */
+gboolean insert_missing_diffs_each(hi_diff_hunk *hunk, void *value, struct missing_diff_userdata *userdata)
+{
+  hi_diff_hunk *new_hunk;
+
+  if ((userdata->last != NULL) && (hunk->type != HI_DIFF_TYPE_DIFF))
+  {
+    new_hunk=malloc(sizeof(hi_diff_hunk));
+    new_hunk->type      = HI_DIFF_TYPE_DIFF;
+    new_hunk->src_start = userdata->last->src_end;
+    new_hunk->src_end   = hunk->src_start;
+    new_hunk->dst_start = userdata->last->dst_end;
+    new_hunk->dst_end   = userdata->last->dst_start;
+    DPRINTF("New Diff ");
+    dump_hunk(new_hunk);
+    userdata->list = g_slist_prepend(userdata->list, new_hunk);
+  }
+  userdata->last = hunk;
+  return FALSE;
+}
+
+void insert_missing_diffs_to_tree(hi_diff_hunk *hunk, hi_diff *diff)
+{
+  DPRINTF("Insert ");
+  dump_hunk(hunk);
+  g_tree_insert(diff->hunks, hunk, NULL);
+}
+
+/** Add the missing diffs */
+void insert_missing_diffs(hi_diff *diff)
+{
+  GSList *list;
+  struct missing_diff_userdata userdata={
+    .diff = diff,
+    .last = NULL,
+    .list = NULL
+  };
+  
+  g_tree_foreach(diff->hunks, (GTraverseFunc) insert_missing_diffs_each, &userdata);
+  
+  list = userdata.list;
+  
+  if (list != NULL)
+  {
+     /* Add the added items */
+    g_slist_foreach(userdata.list,(GFunc) insert_missing_diffs_to_tree, diff);
+    g_slist_free(userdata.list);   
+  }
+
+}
+
+
+
+/* insert a hunk into the tree */
 void insert_hunk(hi_diff *diff, hi_diff_hunk *hunk)
 {
   hi_diff_hunk *new;
   DPRINTF("Add hunk ");
-  switch (hunk->type)
-  {
-    case HI_DIFF_TYPE_DIFF:
-      DPRINTF("DIFF");break;
-    case HI_DIFF_TYPE_SAME:
-      DPRINTF("SAME");break;
-    case HI_DIFF_TYPE_SAME_BACKTRACKED:
-      DPRINTF("SAME_BT");break;
-    case HI_DIFF_TYPE_SAME_INDEXED:
-      DPRINTF("SAME_IDX");break;
-  }
+
   
   new = malloc(sizeof(hi_diff_hunk));
   memcpy(new, hunk, sizeof(hi_diff_hunk));
@@ -103,15 +175,11 @@ void insert_hunk(hi_diff *diff, hi_diff_hunk *hunk)
   {
       g_tree_insert(diff->hunks, new, NULL); 
   }
+  dump_hunk(hunk);
 
-      
-  DPRINTF(" %lu %lu %lu %lu\n",
-          (unsigned long) hunk->src_start,
-          (unsigned long) hunk->dst_start,
-          (unsigned long) hunk->src_end,
-          (unsigned long) hunk->dst_end);
   
 }
+
 /** Create the diff lists */
 hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
 {
@@ -350,7 +418,7 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
   g_tree_foreach(diff->hunks, (GTraverseFunc) backtrack_hunks, diff);
   
   /* Insert the missing diff hunks */
-  /* generate_diffhunks(diff); */
+  insert_missing_diffs(diff);
   
   return diff;
 }
