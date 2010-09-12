@@ -79,20 +79,16 @@ static gint compare_diff_hunks(hi_diff_hunk *hunk1, hi_diff_hunk *hunk2)
   if (hunk1->type == HI_DIFF_FIND_SRC)
   {
     if ((hunk1->src_start >= hunk2->src_start) &&
-        (hunk1->src_start <= hunk2->src_end))
+        (hunk1->src_start < hunk2->src_end))
     {
-      DPRINTF("Found src!");
-      dump_hunk(hunk2);
       return 0;
     }
   }
   if (hunk1->type == HI_DIFF_FIND_DST)
   {
     if ((hunk1->dst_start >= hunk2->dst_start) &&
-        (hunk1->dst_start <= hunk2->dst_end))
+        (hunk1->dst_start < hunk2->dst_end))
     {
-      DPRINTF("Found dst!");
-      dump_hunk(hunk2);
       return 0;
     }
     if (hunk1->dst_start-hunk2->dst_start == 0)
@@ -161,6 +157,23 @@ gboolean insert_missing_diffs_each(hi_diff_hunk *hunk, void *value, struct missi
     DPRINTF("New Diff ");
     dump_hunk(new_hunk);
     userdata->list = g_slist_prepend(userdata->list, new_hunk);
+  }
+  
+  /* Cases where the first byte is not the same. */
+  if ((userdata->last == NULL) && (hunk->type != HI_DIFF_TYPE_DIFF))
+  {
+    if ((hunk->src_start != 0) || (hunk->dst_start !=0))
+    {
+      new_hunk=malloc(sizeof(hi_diff_hunk));
+      new_hunk->type = HI_DIFF_TYPE_DIFF;
+      new_hunk->src_start = 0;
+      new_hunk->dst_start = 0;
+      new_hunk->src_end   = hunk->src_start;
+      new_hunk->dst_end   = hunk->dst_start;
+      DPRINTF("New Diff ");
+      dump_hunk(new_hunk);
+      userdata->list = g_slist_prepend(userdata->list, new_hunk);
+    }
   }
   userdata->last = hunk;
   return FALSE;
@@ -328,9 +341,14 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
         }
         else
         {
-          working_hunk.src_end = srcptr;
-          working_hunk.dst_end = dstptr;
-          insert_hunk(diff, &working_hunk);
+          if ((srcptr != working_hunk.src_start) &&
+             (dstptr != working_hunk.dst_start))
+          {
+              working_hunk.src_end = srcptr;
+              working_hunk.dst_end = dstptr;
+              insert_hunk(diff, &working_hunk);            
+          }
+
 
           
           mode = DIFF_MODE_UNSYNCED_NEAR;
@@ -400,7 +418,7 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
           value = g_hash_table_lookup(dst->buzhashes, (gpointer) hash);
           if (NULL != value)
           {
-            DPRINTF("Found hash %lu %u\n", (unsigned long)srcptr, hash);
+            VDPRINTF("Found hash %lu %u\n", (unsigned long)srcptr, hash);
             
             /* Check for one after the current dstptr */
             for (idx = 0; idx < value[0]; idx++)
