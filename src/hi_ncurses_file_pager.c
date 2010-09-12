@@ -148,6 +148,20 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
   wrefresh(pager->window);
 }
 
+static relative_move_pager(hi_ncurses_fpager *pager, off_t move)
+{
+  pager->offset += move;
+  if (pager->offset < 0)
+  {
+    pager->offset = 0;
+  }
+  if (pager->offset >= pager->file->size)
+  {
+    /* Make it -bytes_per_row so it shows the entire last line */
+    pager->offset = pager->file->size-pager->bytes_per_row;
+  }
+}
+
 /** Act on a key, returns TRUE if key was claimed */
 gboolean hi_ncurses_fpager_key_event(hi_ncurses_fpager *pager,
                                      int key,
@@ -157,8 +171,26 @@ gboolean hi_ncurses_fpager_key_event(hi_ncurses_fpager *pager,
   gboolean claimed = FALSE;
   switch (key)
   {
+    case KEY_NPAGE:
+      /* Keep the last line on the screen */
+      relative_move_pager(pager, pager->bytes_per_row * pager->height-3);
+      break;
+    case KEY_PPAGE:
+      /* Keep the last line on the screen */
+      relative_move_pager(pager, -(pager->bytes_per_row * pager->height-3));
+      break;     
+    case KEY_LEFT:
+      relative_move_pager(pager, -1);
+      break;
+    case KEY_RIGHT:
+      relative_move_pager(pager, 1);
+      break;
+      
+    case KEY_UP:
+      relative_move_pager(pager, -pager->bytes_per_row);
+      break;
     case KEY_DOWN:
-      pager->offset+=8;
+      relative_move_pager(pager, pager->bytes_per_row);
       claimed = TRUE;
       break;      
   }
