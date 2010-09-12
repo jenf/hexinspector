@@ -1,14 +1,27 @@
 A better hex inspection tool
 
-* Find duplicates in binary files
 * Easily compare binary files
 
-Other ideas
-* File format detection (gzip, jffs2 etc)
-* CRC32/MD5/SHA1 over an selection of data
-* Improvements to regular expressions suitable for binary files
-* Value representation (big-little endian int, float, double's, ANSI/Unicode string)
-* Stuff for MPEG TS files
+Todo
+* Bit representation on ruler
+* Floating point representation on ruler
+* Display modes
+  * Canonical hex+ASCII display
+  * Octal display
+  * Decimal mode
+  * Character mode
+  * Bitmode (from xxd)
+* Highlight modes
+  * MPEG-TS packet detection
+* Fix issue where previous diff gets stuck on the last byte of the file
+* Fix issue where diff's of zero bytes are erronously shown as 1 byte.
+* Add selection mode
+  * CRC32/MD5/SHA1 of selection
+  * File format detection (gzip, jffs2 etc)
+  * ANSI/Unicode string
+* Search mode, improvements to regular expressions suitable for binary files
+* Restore find duplicates in binary files
+* Add proper command line arguments, --help support
 
 Dependancies
 
