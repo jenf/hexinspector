@@ -56,6 +56,7 @@ static void redraw(hi_ncurses *ncurses, gboolean need_resize)
   hi_ncurses_fpager_redraw(ncurses->src);
   if (ncurses->dst != NULL)
     hi_ncurses_fpager_redraw(ncurses->dst);
+  
   refresh();
 }
 
@@ -74,14 +75,13 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
   hi_ncurses *ncurses;
   int newch;
   gboolean quit = FALSE;
-  gboolean need_resize = TRUE;
+  gboolean need_resize = FALSE;
   
   ncurses = malloc(sizeof(hi_ncurses));
   ncurses->dst = NULL;
   ncurses->diff = diff;
   
   (void) signal(SIGINT, finish);
-  //(void) signal(SIGWINCH, resize);
   ncurses->window = initscr();
   //start_color();
   keypad(stdscr, TRUE);
@@ -90,7 +90,6 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
   echo();
 
   refresh();
-  wrefresh(mainwin);
   
   //init_pair(hi_ncurses_colour_diff,COLOR_BLUE,COLOR_RED);
   //color_set(hi_ncurses_colour_diff,NULL);
