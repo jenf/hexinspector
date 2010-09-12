@@ -205,17 +205,24 @@ void insert_hunk(hi_diff *diff, hi_diff_hunk *hunk)
 
 /** Retrieve a hunk by position */
 hi_diff_hunk *hi_diff_get_hunk(hi_diff *diff,
-                               int pos,
-                               enum hi_diff_type type)
+                               hi_file *file,
+                               int pos)
 {
   hi_diff_hunk *found;
   hi_diff_hunk search_hunk = {
-    .type = type,
     .src_start = pos,
     .dst_start = pos,
     .src_end = 0,
     .dst_end = 0
   };
+  if (diff->src == file)
+  {
+    search_hunk.type = HI_DIFF_FIND_SRC;
+  }
+  else
+  {
+    search_hunk.type = HI_DIFF_FIND_DST;
+  }
   
   found = g_tree_lookup(diff->hunks, &search_hunk);
   

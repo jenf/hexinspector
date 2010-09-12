@@ -83,16 +83,19 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
   
   (void) signal(SIGINT, finish);
   ncurses->window = initscr();
-  //start_color();
+  start_color();
+  init_pair(hi_ncurses_colour_diff,COLOR_BLACK,COLOR_RED);
+  
   keypad(stdscr, TRUE);
   nonl();
   cbreak();
   echo();
 
+  
   refresh();
   
-  //init_pair(hi_ncurses_colour_diff,COLOR_BLUE,COLOR_RED);
-  //color_set(hi_ncurses_colour_diff,NULL);
+
+
   if (file2 != NULL)
   {
     ncurses->src = hi_ncurses_fpager_new(ncurses, file,  PAGER_HEIGHT, PAGER_WIDTH_PAIR,  0, 0);

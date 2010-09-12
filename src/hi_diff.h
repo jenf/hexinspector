@@ -63,7 +63,7 @@ typedef struct hi_diff_hunk
 
 hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst);
 hi_diff_hunk *hi_diff_get_hunk(hi_diff *diff,
-                               int pos,
-                               enum hi_diff_type);
+                               hi_file *file,
+                               int pos);
 
 #endif

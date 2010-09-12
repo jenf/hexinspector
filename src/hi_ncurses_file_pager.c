@@ -85,7 +85,11 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
   int x, y;
   unsigned char val;
   off_t offset;
-  //werase(pager->window);
+  char buffer[256];
+  
+  werase(pager->window);
+
+  /* TODO Add bold here if we are the focused pager */
   box(pager->window, ACS_VLINE, ACS_HLINE);
   
   for (y=0; y< pager->height-2; y++)
@@ -98,10 +102,21 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
       {
           if (x == 0)
           {
-            mvwprintw(pager->window, y+1, 1, "%08x", offset);
+
+            
+            snprintf(buffer, 256, "%08x", offset);
+            wmove(pager->window, y+1,1);
+            waddstr(pager->window, buffer);
+            
+
           }
           val = pager->file->memory[offset];
-          mvwprintw(pager->window,y+1,1+OFFSET_SIZE+(x*3),"%02x",val);         
+        
+          wcolor_set(pager->window, hi_ncurses_colour_diff,NULL);
+        
+          mvwprintw(pager->window,y+1,2+OFFSET_SIZE+(x*3),"%02x",val);  
+        
+          wcolor_set(pager->window, hi_ncurses_colour_normal,NULL);        
       }
     }
   
