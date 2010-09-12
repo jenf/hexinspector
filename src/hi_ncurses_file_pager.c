@@ -271,38 +271,45 @@ static void move_to_next_diff(hi_ncurses_fpager *pager, gboolean forwards)
 /** Act on a key, returns TRUE if key was claimed */
 gboolean hi_ncurses_fpager_key_event(hi_ncurses_fpager *pager,
                                      int key,
-                                     char *buffer,
-                                     size_t buffer_len)
+                                     long long buffer_val)
 {
+  signed long long requested_offset;
+  
   gboolean claimed = FALSE;
   switch (key)
   {
     case KEY_NPAGE:
       /* Keep the last line on the screen */
-      relative_move_pager(pager, pager->bytes_per_row * pager->height-3);
+      relative_move_pager(pager, (pager->bytes_per_row * pager->height-3) *  buffer_val);
+      pager->curses->buffer[0]=0;
       claimed = TRUE;
       break;
     case KEY_PPAGE:
       /* Keep the last line on the screen */
-      relative_move_pager(pager, -(pager->bytes_per_row * pager->height-3));
+      relative_move_pager(pager, -(pager->bytes_per_row * pager->height-3) * buffer_val);
+      pager->curses->buffer[0]=0;
       claimed = TRUE;
       break;     
     case KEY_LEFT:
-      relative_move_pager(pager, -1);
+      relative_move_pager(pager, -1*buffer_val);
+      pager->curses->buffer[0]=0;
       claimed = TRUE;
       break;
     case KEY_RIGHT:
-      relative_move_pager(pager, 1);
+      relative_move_pager(pager, 1*buffer_val);
+      pager->curses->buffer[0]=0;
       claimed = TRUE;
       break;
     
 
     case KEY_UP:
-      relative_move_pager(pager, -pager->bytes_per_row);
+      relative_move_pager(pager, -pager->bytes_per_row*buffer_val);
+      pager->curses->buffer[0]=0;
       claimed = TRUE;
       break;
     case KEY_DOWN:
-      relative_move_pager(pager, pager->bytes_per_row);
+      relative_move_pager(pager, pager->bytes_per_row*buffer_val);
+      pager->curses->buffer[0]=0;
       claimed = TRUE;
       break;   
       
@@ -313,6 +320,19 @@ gboolean hi_ncurses_fpager_key_event(hi_ncurses_fpager *pager,
     case ']':
       move_to_next_diff(pager, TRUE);
       claimed = TRUE;
+      break;
+    case 'G':
+    case 'g':
+      requested_offset = strtoll(pager->curses->buffer, NULL, 0);
+      if (buffer_val < 0)
+      {
+        set_offset(pager, pager->file->size+requested_offset);
+      }
+      else
+      {
+        set_offset(pager, (off_t) buffer_val);
+      }
+      pager->curses->buffer[0]=0; 
       break;
       
   }

@@ -34,6 +34,7 @@
 #include <hi_file.h>
 #include <hi_diff.h>
 
+#define KEYBUFFER_LEN (256)
 enum hi_ncurses_colour
 {
   hi_ncurses_colour_normal =0,
@@ -64,7 +65,7 @@ typedef struct hi_ncurses
   hi_ncurses_fpager *src;
   hi_ncurses_fpager *dst;
   hi_ncurses_fpager *focused_pager;
-  
+  char                  buffer[KEYBUFFER_LEN];
   hi_diff               *diff;
   WINDOW                *window;
   WINDOW                *ruler;
@@ -82,6 +83,5 @@ void hi_ncurses_fpager_resize(hi_ncurses_fpager *pager,
                               int y, int x);
 gboolean hi_ncurses_fpager_key_event(hi_ncurses_fpager *pager,
                                      int key,
-                                     char *buffer,
-                                     size_t buffer_len);
+                                     long long buffer_val);
 #endif

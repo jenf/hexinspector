@@ -82,10 +82,11 @@ static void hi_ncurses_redraw_ruler(hi_ncurses *ncurses)
               value32_le, (int32_t)value32_le, value32_le, value32_le);
   }
   
-  mvwprintw(ncurses->ruler,RULER_LINES-1,0,"0x%08x/0x%08x %i/%i (%.2f%%)",
+  mvwprintw(ncurses->ruler,RULER_LINES-1,0,"0x%08x/0x%08x %i/%i (%.2f%%) \"%s\"",
             (unsigned int) offset, (unsigned int) file->size,
             (unsigned int) offset, (unsigned int) file->size,
-            (((double) offset)/file->size)*100);
+            (((double) offset)/file->size)*100,
+            ncurses->buffer);
   wrefresh(ncurses->ruler);
 }
 
@@ -135,11 +136,13 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
   gboolean quit = FALSE;
   gboolean need_resize = FALSE;
   gboolean key_claimed;
-  char buffer[256];
+  long long buffer_val = 0;
+  int len;
   
   ncurses = malloc(sizeof(hi_ncurses));
   ncurses->dst = NULL;
   ncurses->diff = diff;
+  ncurses->buffer[0]=0;
   
   (void) signal(SIGINT, finish);
   ncurses->window = initscr();
@@ -175,17 +178,33 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
   ncurses->focused_pager = ncurses->src;
 
 
-
   while (FALSE == quit)
   {
     redraw(ncurses, need_resize);    
     need_resize = FALSE;
+    buffer_val = strtoll(ncurses->buffer, NULL, 0);  
+    
+    /* Special case imply 1 if there is no buffer */
+    if (ncurses->buffer[0]==0)
+    {
+      buffer_val = 1;
+    }
     
     newch = getch();
-    key_claimed = hi_ncurses_fpager_key_event(ncurses->focused_pager, newch, buffer, 256);
+    key_claimed = hi_ncurses_fpager_key_event(ncurses->focused_pager, newch, buffer_val);
     
     if (FALSE == key_claimed)
     {
+      if (isxdigit(newch) || newch=='x' || newch=='-')
+      {
+        len = strlen(ncurses->buffer);
+        if (len+1 < KEYBUFFER_LEN)
+        {
+          ncurses->buffer[len]=newch;
+          ncurses->buffer[len+1]=0;          
+        }
+      }
+   
       switch (newch)
       {
         case 'q':
