@@ -129,6 +129,11 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
             hunk = hi_diff_get_hunk(pager->diff, pager->file, offset);
             if (hunk != NULL && hunk->type == HI_DIFF_TYPE_DIFF)
             {
+              /* TODO: Fix this */
+              if ((pager->diff->dst==pager->file) && (hunk->dst_start==hunk->dst_end))
+              {
+                diff = FALSE;
+              }
               diff = TRUE;
             }
             

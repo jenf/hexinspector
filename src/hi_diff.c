@@ -91,6 +91,7 @@ static gint compare_diff_hunks(hi_diff_hunk *hunk1, hi_diff_hunk *hunk2)
     {
       return 0;
     }
+    
     if (hunk1->dst_start-hunk2->dst_start == 0)
     {
       return hunk1->dst_end - hunk2->dst_end;
@@ -196,6 +197,7 @@ gboolean insert_missing_diffs_each(hi_diff_hunk *hunk, void *value, struct diff_
 
 void insert_missing_diffs_to_tree(hi_diff_hunk *hunk, hi_diff *diff)
 {
+
   DPRINTF("Insert ");
   dump_hunk(hunk);
   g_tree_insert(diff->hunks, hunk, hunk);
@@ -494,7 +496,6 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
   }
   
   /* Add the last working hunk */
-  DPRINTF("Final mode %i\n", mode);
   if (mode == DIFF_MODE_SYNC)
   {
     working_hunk.src_end = srcptr;
