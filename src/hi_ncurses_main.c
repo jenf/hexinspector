@@ -36,6 +36,16 @@
 #define PAGER_WIDTH_PAIR ((COLS/2)-2)
 #define PAGER_HEIGHT (LINES-RULER_LINES)
 #define RULER_LINES (5)
+
+static void hi_ncurses_redraw_ruler(hi_ncurses *ncurses)
+{
+  mvwprintw(ncurses->ruler,4,0,"%08x/%08x %i/%i (%.2f%%)",
+            (unsigned int) ncurses->focused_pager->offset, (unsigned int) ncurses->focused_pager->file->size,
+            (unsigned int) ncurses->focused_pager->offset, (unsigned int) ncurses->focused_pager->file->size,
+            (((double) ncurses->focused_pager->offset)/ncurses->focused_pager->file->size)*100);
+  wrefresh(ncurses->ruler);
+}
+
 static void redraw(hi_ncurses *ncurses, gboolean need_resize)
 {
   if (need_resize)
@@ -58,6 +68,7 @@ static void redraw(hi_ncurses *ncurses, gboolean need_resize)
   if (ncurses->dst != NULL)
     hi_ncurses_fpager_redraw(ncurses->dst);
   
+  hi_ncurses_redraw_ruler(ncurses);
   refresh();
 }
 
@@ -67,6 +78,7 @@ static void finish(int sig)
   endwin();
   exit(0);
 }
+
 
 
 void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
@@ -102,7 +114,8 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
   refresh();
   
 
-
+  ncurses->ruler = newwin(RULER_LINES, 0, PAGER_HEIGHT, 0);
+  
   if (file2 != NULL)
   {
     ncurses->src = hi_ncurses_fpager_new(ncurses, file,  diff, PAGER_HEIGHT, PAGER_WIDTH_PAIR,  0, 0);

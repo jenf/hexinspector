@@ -67,6 +67,7 @@ typedef struct hi_ncurses
   
   hi_diff               *diff;
   WINDOW                *window;
+  WINDOW                *ruler;
 } hi_ncurses;
 
 void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff);
