@@ -31,24 +31,56 @@
 #include <signal.h>
 #include <macros.h>
 #include <stdlib.h>
+#include <stdint.h>
+
+/* 4 byte ruler currently needs 105 characters */
+#define RULER_LINES ((COLS) > 105 ? 5: 6)
 
 #define PAGER_WIDTH_SOLO (COLS)
 #define PAGER_WIDTH_PAIR ((COLS/2)-2)
 #define PAGER_HEIGHT (LINES-RULER_LINES)
-#define RULER_LINES (5)
+
 
 static void hi_ncurses_redraw_ruler(hi_ncurses *ncurses)
 {
+  unsigned char value8;
+  uint16_t value16_be,value16_le;
+  uint32_t value32_be,value32_le;
+  unsigned int value;
   hi_file *file;
   off_t offset;
   
   offset = ncurses->focused_pager->offset;
   file = ncurses->focused_pager->file;
   
-  mvwprintw(ncurses->ruler,0,0,"1 byte: %03i/%03o/%02x/'%c'",
-            file->memory[offset], file->memory[offset], file->memory[offset],
+  value8 = file->memory[offset];
+  
+  werase(ncurses->ruler);
+  mvwprintw(ncurses->ruler,0,0,"1b: %03u/%+03i/%#03o/0x%02x/'%c'",
+            value8, (signed char) value8, value8, value8,
             isprint(file->memory[offset]) ? file->memory[offset] : ' ');
-  mvwprintw(ncurses->ruler,4,0,"%08x/%08x %i/%i (%.2f%%)",
+  if (offset+1 < file->size)
+  {
+    value16_be = file->memory[offset] | (file->memory[offset+1] << 8);
+    value16_le = file->memory[offset+1] | (file->memory[offset] << 8);
+    mvwprintw(ncurses->ruler,1,0,"2b: BE: %05u/%+06i/%#07o/0x%04x"
+              " LE: %05u/%+06i/%#07o/0x%04x",
+              value16_be, (int16_t)value16_be, value16_be, value16_be,
+              value16_le, (int16_t)value16_le, value16_le, value16_le);
+  }
+  if (offset+3 < file->size)
+  {
+    value32_be = file->memory[offset] | (file->memory[offset+1] << 8) |
+                 (file->memory[offset+2] << 16) | (file->memory[offset+3] << 24);
+    value32_le = file->memory[offset+3] | (file->memory[offset+2] << 8) |
+                  (file->memory[offset+1] << 16) | (file->memory[offset] << 24);    
+    mvwprintw(ncurses->ruler,2,0,"4b: BE: %010u/%+011i/%#012o/0x%08x"
+              " LE: %010u/%+011i/%#012o/0x%08x",
+              value32_be, (int32_t)value32_be, value32_be, value32_be,
+              value32_le, (int32_t)value32_le, value32_le, value32_le);
+  }
+  
+  mvwprintw(ncurses->ruler,RULER_LINES-1,0,"0x%08x/0x%08x %i/%i (%.2f%%)",
             (unsigned int) offset, (unsigned int) file->size,
             (unsigned int) offset, (unsigned int) file->size,
             (((double) offset)/file->size)*100);
@@ -68,7 +100,9 @@ static void redraw(hi_ncurses *ncurses, gboolean need_resize)
     {
       hi_ncurses_fpager_resize(ncurses->src, PAGER_HEIGHT, PAGER_WIDTH_SOLO, 0, 0);           
     }
-
+    
+    mvwin(ncurses->ruler, PAGER_HEIGHT, 0);
+    wresize(ncurses->ruler, RULER_LINES, COLS);
     erase();
     refresh();
   }
