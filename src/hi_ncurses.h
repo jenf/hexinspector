@@ -41,6 +41,7 @@ enum hi_ncurses_colour
   hi_ncurses_colour_red    =2,
   hi_ncurses_colour_blue   =3,
   hi_ncurses_colour_green  =4,
+  hi_ncurses_colour_yellow =5
 };
 
 typedef struct hi_ncurses_fpager

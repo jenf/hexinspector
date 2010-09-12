@@ -51,6 +51,8 @@ static enum hi_ncurses_colour colorize_ctype(hi_ncurses_fpager *pager,
     return hi_ncurses_colour_red;
   if (isdigit(val))
     return hi_ncurses_colour_green;
+  if (isspace(val))
+    return hi_ncurses_colour_yellow;
   return hi_ncurses_colour_normal;
 }
 

@@ -89,8 +89,9 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
   start_color();
   init_pair(hi_ncurses_colour_diff,COLOR_BLACK,COLOR_RED);
   init_pair(hi_ncurses_colour_red ,COLOR_RED  ,COLOR_BLACK);
-  init_pair(hi_ncurses_colour_blue,COLOR_BLUE ,COLOR_BLACK);
+  init_pair(hi_ncurses_colour_blue,COLOR_CYAN ,COLOR_BLACK);
   init_pair(hi_ncurses_colour_green,COLOR_GREEN,COLOR_BLACK);
+  init_pair(hi_ncurses_colour_yellow,COLOR_YELLOW,COLOR_BLACK);
   
   keypad(stdscr, TRUE);
   nonl();
