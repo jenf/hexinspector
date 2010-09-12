@@ -85,6 +85,7 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
   int x, y;
   unsigned char val;
   off_t offset;
+  //werase(pager->window);
   box(pager->window, ACS_VLINE, ACS_HLINE);
   
   for (y=0; y< pager->height-2; y++)

@@ -65,6 +65,7 @@ static void dump_hunk(hi_diff_hunk *hunk)
 /** Compare two diff hunks */
 static gint compare_diff_hunks(hi_diff_hunk *hunk1, hi_diff_hunk *hunk2)
 {
+
   if (hunk1 == NULL)
   {
     return 1;
@@ -73,6 +74,26 @@ static gint compare_diff_hunks(hi_diff_hunk *hunk1, hi_diff_hunk *hunk2)
   {
     return -1;
   }
+  
+  /* This is based on the assumption in glib that the lookup hunk1 is the one passed */
+  if (hunk1->type == HI_DIFF_FIND_SRC)
+  {
+    if ((hunk1->src_start >= hunk2->src_start) &&
+        (hunk1->src_start <  hunk2->src_end))
+    {
+        return 0;
+    }
+  }
+  if (hunk1->type == HI_DIFF_FIND_DST)
+  {
+    if ((hunk1->dst_start >= hunk2->dst_start) &&
+        (hunk1->dst_start <  hunk2->dst_end))
+    {
+      return 0;
+    }
+    return hunk1->dst_start-hunk2->dst_start;
+  }
+  
   return hunk1->src_start-hunk2->src_start;
 }
 
@@ -109,6 +130,8 @@ struct missing_diff_userdata
   GSList *list;
 };
 
+
+                               
 /* For each item add the diffs */
 gboolean insert_missing_diffs_each(hi_diff_hunk *hunk, void *value, struct missing_diff_userdata *userdata)
 {
@@ -134,7 +157,7 @@ void insert_missing_diffs_to_tree(hi_diff_hunk *hunk, hi_diff *diff)
 {
   DPRINTF("Insert ");
   dump_hunk(hunk);
-  g_tree_insert(diff->hunks, hunk, NULL);
+  g_tree_insert(diff->hunks, hunk, hunk);
 }
 
 /** Add the missing diffs */
@@ -173,12 +196,37 @@ void insert_hunk(hi_diff *diff, hi_diff_hunk *hunk)
   memcpy(new, hunk, sizeof(hi_diff_hunk));
   if (new != NULL)
   {
-      g_tree_insert(diff->hunks, new, NULL); 
+      g_tree_insert(diff->hunks, new, new); 
   }
   dump_hunk(hunk);
 
   
 }
+
+/** Retrieve a hunk by position */
+hi_diff_hunk *hi_diff_get_hunk(hi_diff *diff,
+                               int pos,
+                               enum hi_diff_type type)
+{
+  hi_diff_hunk *found;
+  hi_diff_hunk search_hunk = {
+    .type = type,
+    .src_start = pos,
+    .dst_start = pos,
+    .src_end = 0,
+    .dst_end = 0
+  };
+  
+  found = g_tree_lookup(diff->hunks, &search_hunk);
+  
+  if (NULL != found)
+  {
+    DPRINTF("Found ");
+    dump_hunk(found);
+  }
+  return found;
+}
+
 
 /** Create the diff lists */
 hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)

@@ -34,6 +34,12 @@
 #include <hi_file.h>
 #include <hi_diff.h>
 
+enum hi_ncurses_colour
+{
+  hi_ncurses_colour_normal,
+  hi_ncurses_colour_diff
+};
+
 typedef struct hi_ncurses_fpager
 {
   hi_file *file;
