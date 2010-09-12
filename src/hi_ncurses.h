@@ -52,12 +52,15 @@ typedef struct hi_ncurses_fpager
   int      height;
   int      x;
   int      y;
+  struct hi_ncurses_fpager *linked_pager;
 } hi_ncurses_fpager;
 
 typedef struct hi_ncurses
 {
   hi_ncurses_fpager *src;
   hi_ncurses_fpager *dst;
+  hi_ncurses_fpager *focused_pager;
+  
   hi_diff               *diff;
   WINDOW                *window;
 } hi_ncurses;

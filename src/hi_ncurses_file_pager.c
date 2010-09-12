@@ -63,6 +63,7 @@ hi_ncurses_fpager *hi_ncurses_fpager_new(hi_ncurses *curses,
   pager->y = y;
   pager->offset = 0;
   pager->window = newwin(height , width,y, x);
+  pager->linked_pager = NULL;
   update_bytes_per_line(pager);
   
   return pager;
@@ -94,7 +95,13 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
   gboolean diff;
 
   /* TODO Add bold here if we are the focused pager */
+  if (pager == pager->curses->focused_pager)
+    wattron(pager->window, A_REVERSE);
+  
   box(pager->window, ACS_VLINE, ACS_HLINE);
+  
+  if (pager == pager->curses->focused_pager)
+    wattroff(pager->window, A_REVERSE);
   
   for (y=0; y< pager->height-2; y++)
   {
