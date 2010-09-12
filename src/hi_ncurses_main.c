@@ -39,10 +39,19 @@
 
 static void hi_ncurses_redraw_ruler(hi_ncurses *ncurses)
 {
+  hi_file *file;
+  off_t offset;
+  
+  offset = ncurses->focused_pager->offset;
+  file = ncurses->focused_pager->file;
+  
+  mvwprintw(ncurses->ruler,0,0,"1 byte: %03i/%03o/%02x/'%c'",
+            file->memory[offset], file->memory[offset], file->memory[offset],
+            isprint(file->memory[offset]) ? file->memory[offset] : ' ');
   mvwprintw(ncurses->ruler,4,0,"%08x/%08x %i/%i (%.2f%%)",
-            (unsigned int) ncurses->focused_pager->offset, (unsigned int) ncurses->focused_pager->file->size,
-            (unsigned int) ncurses->focused_pager->offset, (unsigned int) ncurses->focused_pager->file->size,
-            (((double) ncurses->focused_pager->offset)/ncurses->focused_pager->file->size)*100);
+            (unsigned int) offset, (unsigned int) file->size,
+            (unsigned int) offset, (unsigned int) file->size,
+            (((double) offset)/file->size)*100);
   wrefresh(ncurses->ruler);
 }
 
