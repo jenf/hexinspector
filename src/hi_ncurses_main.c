@@ -98,12 +98,12 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
 
   if (file2 != NULL)
   {
-    ncurses->src = hi_ncurses_fpager_new(ncurses, file,  PAGER_HEIGHT, PAGER_WIDTH_PAIR,  0, 0);
-    ncurses->dst = hi_ncurses_fpager_new(ncurses, file2, PAGER_HEIGHT, PAGER_WIDTH_PAIR,  0, PAGER_WIDTH_PAIR);    
+    ncurses->src = hi_ncurses_fpager_new(ncurses, file,  diff, PAGER_HEIGHT, PAGER_WIDTH_PAIR,  0, 0);
+    ncurses->dst = hi_ncurses_fpager_new(ncurses, file2, diff, PAGER_HEIGHT, PAGER_WIDTH_PAIR,  0, PAGER_WIDTH_PAIR);    
   }
   else
   {
-    ncurses->src = hi_ncurses_fpager_new(ncurses, file,  PAGER_HEIGHT, PAGER_WIDTH_SOLO,  0, 0); 
+    ncurses->src = hi_ncurses_fpager_new(ncurses, file,  diff, PAGER_HEIGHT, PAGER_WIDTH_SOLO,  0, 0); 
   }
 
 

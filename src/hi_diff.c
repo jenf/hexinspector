@@ -79,19 +79,32 @@ static gint compare_diff_hunks(hi_diff_hunk *hunk1, hi_diff_hunk *hunk2)
   if (hunk1->type == HI_DIFF_FIND_SRC)
   {
     if ((hunk1->src_start >= hunk2->src_start) &&
-        (hunk1->src_start <  hunk2->src_end))
+        (hunk1->src_start <= hunk2->src_end))
     {
-        return 0;
+      DPRINTF("Found src!");
+      dump_hunk(hunk2);
+      return 0;
     }
   }
   if (hunk1->type == HI_DIFF_FIND_DST)
   {
     if ((hunk1->dst_start >= hunk2->dst_start) &&
-        (hunk1->dst_start <  hunk2->dst_end))
+        (hunk1->dst_start <= hunk2->dst_end))
     {
+      DPRINTF("Found dst!");
+      dump_hunk(hunk2);
       return 0;
     }
+    if (hunk1->dst_start-hunk2->dst_start == 0)
+    {
+      return hunk1->dst_end - hunk2->dst_end;
+    }
     return hunk1->dst_start-hunk2->dst_start;
+  }
+  
+  if (hunk1->src_start-hunk2->src_start == 0)
+  {
+    return hunk1->src_end - hunk2->src_end;
   }
   
   return hunk1->src_start-hunk2->src_start;
@@ -144,7 +157,7 @@ gboolean insert_missing_diffs_each(hi_diff_hunk *hunk, void *value, struct missi
     new_hunk->src_start = userdata->last->src_end;
     new_hunk->src_end   = hunk->src_start;
     new_hunk->dst_start = userdata->last->dst_end;
-    new_hunk->dst_end   = userdata->last->dst_start;
+    new_hunk->dst_end   = hunk->dst_start;
     DPRINTF("New Diff ");
     dump_hunk(new_hunk);
     userdata->list = g_slist_prepend(userdata->list, new_hunk);
@@ -228,7 +241,7 @@ hi_diff_hunk *hi_diff_get_hunk(hi_diff *diff,
   
   if (NULL != found)
   {
-    DPRINTF("Found ");
+    DPRINTF("Found %lu", pos);
     dump_hunk(found);
   }
   return found;
@@ -348,8 +361,8 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
               dstptr_new = dstptr+dstptr_search;
               mode = DIFF_MODE_SYNC;
               
-              working_hunk.src_start = srcptr;
-              working_hunk.dst_start = dstptr;
+              working_hunk.src_start = srcptr_new;
+              working_hunk.dst_start = dstptr_new;
               working_hunk.type = HI_DIFF_TYPE_SAME;
               
               DPRINTF("Near Sync at %lu %lu\n", (unsigned long) srcptr_new, (unsigned long) dstptr_new);

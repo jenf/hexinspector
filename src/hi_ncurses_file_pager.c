@@ -42,6 +42,7 @@ static void update_bytes_per_line(hi_ncurses_fpager *pager)
 
 hi_ncurses_fpager *hi_ncurses_fpager_new(hi_ncurses *curses,
                                          hi_file *file,
+                                         hi_diff *diff,
                                          int height, int width,
                                          int y, int x)
 {
@@ -54,6 +55,8 @@ hi_ncurses_fpager *hi_ncurses_fpager_new(hi_ncurses *curses,
   }
   
   pager->file = file;
+  pager->diff = diff;
+  pager->curses = curses;
   pager->width = width;
   pager->height = height;
   pager->x = x;
@@ -86,8 +89,9 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
   unsigned char val;
   off_t offset;
   char buffer[256];
-  
+  hi_diff_hunk *hunk;
   werase(pager->window);
+  gboolean diff;
 
   /* TODO Add bold here if we are the focused pager */
   box(pager->window, ACS_VLINE, ACS_HLINE);
@@ -112,11 +116,23 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
           }
           val = pager->file->memory[offset];
         
-          wcolor_set(pager->window, hi_ncurses_colour_diff,NULL);
+          diff = FALSE;
+          if (pager->diff)
+          {
+            hunk = hi_diff_get_hunk(pager->diff, pager->file, offset);
+            if (hunk != NULL && hunk->type == HI_DIFF_TYPE_DIFF)
+            {
+              diff = TRUE;
+            }
+            
+          }
+        
+          if (TRUE == diff)
+            wcolor_set(pager->window, hi_ncurses_colour_diff,NULL);
         
           mvwprintw(pager->window,y+1,2+OFFSET_SIZE+(x*3),"%02x",val);  
-        
-          wcolor_set(pager->window, hi_ncurses_colour_normal,NULL);        
+          if (TRUE == diff)
+            wcolor_set(pager->window, hi_ncurses_colour_normal,NULL);        
       }
     }
   

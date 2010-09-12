@@ -43,6 +43,8 @@ enum hi_ncurses_colour
 typedef struct hi_ncurses_fpager
 {
   hi_file *file;
+  hi_diff *diff;
+  struct hi_ncurses *curses;
   off_t    offset;
   WINDOW  *window;
   int      width;
@@ -63,6 +65,7 @@ typedef struct hi_ncurses
 void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff);
 hi_ncurses_fpager *hi_ncurses_fpager_new(hi_ncurses *curses,
                                          hi_file *file,
+                                         hi_diff *diff,
                                          int height, int width,
                                          int y, int x);
 void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager);
