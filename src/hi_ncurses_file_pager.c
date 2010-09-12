@@ -94,7 +94,7 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
   werase(pager->window);
   gboolean diff;
 
-  /* TODO Add bold here if we are the focused pager */
+  /* Make the pager we're selected highlighted */
   if (pager == pager->curses->focused_pager)
     wattron(pager->window, A_REVERSE);
   

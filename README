@@ -10,10 +10,6 @@ Other ideas
 * Value representation (big-little endian int, float, double's, ANSI/Unicode string)
 * Stuff for MPEG TS files
 
-WARNING
-
-There isn't an ncurses interface yet.
-
 Dependancies
 
 glib - 2.20.0 or later (For hash and balanced binary tree support)
@@ -23,3 +19,16 @@ Future enhancements
 * Allow it to work with files that are bigger than off_t or the maximum mmap size
 * Allow the document to be opened before the hashing and diffing is completed, by moving the diff and hash into the background
 
+Ncurses README
+
+All modes
+ q/Q = Quit
+ Arrow keys pager around the file
+Unimplemented
+ g/G = Goto
+
+Diff mode
+ f/F = Switch focus between the two pagers
+Unimplemented
+ [   = Previous diff
+ ]   = Next diff

@@ -125,6 +125,12 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
         quit = TRUE;
         break;
         
+      case 'F':
+      case 'f':
+        if (ncurses->dst)
+          ncurses->focused_pager = (ncurses->src==ncurses->focused_pager ? ncurses->dst : ncurses->src);
+        break;
+        
         /* Just temporary */
       case KEY_DOWN:
         ncurses->src->offset+=8;
