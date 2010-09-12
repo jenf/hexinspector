@@ -34,7 +34,8 @@
 #include <stdint.h>
 
 /* 4 byte ruler currently needs 105 characters */
-#define RULER_LINES ((COLS) > 105 ? 5: 6)
+#define RULERCOLS_32BIT (106)
+#define RULER_LINES ((COLS) > RULERCOLS_32BIT ? 5: 6)
 
 #define PAGER_WIDTH_SOLO (COLS)
 #define PAGER_WIDTH_PAIR ((COLS/2)-2)
@@ -74,9 +75,10 @@ static void hi_ncurses_redraw_ruler(hi_ncurses *ncurses)
                  (file->memory[offset+2] << 16) | (file->memory[offset+3] << 24);
     value32_le = file->memory[offset+3] | (file->memory[offset+2] << 8) |
                   (file->memory[offset+1] << 16) | (file->memory[offset] << 24);    
-    mvwprintw(ncurses->ruler,2,0,"4b: BE: %010u/%+011i/%#012o/0x%08x"
-              " LE: %010u/%+011i/%#012o/0x%08x",
-              value32_be, (int32_t)value32_be, value32_be, value32_be,
+    mvwprintw(ncurses->ruler,2,0,"4b: BE: %010u/%+011i/%#012o/0x%08x",
+              value32_be, (int32_t)value32_be, value32_be, value32_be);
+    mvwprintw(ncurses->ruler,RULER_LINES-3,(COLS) > RULERCOLS_32BIT ? 55 : 0,
+              "4b: LE: %010u/%+011i/%#012o/0x%08x",
               value32_le, (int32_t)value32_le, value32_le, value32_le);
   }
   
