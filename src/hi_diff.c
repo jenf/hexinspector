@@ -42,7 +42,7 @@ enum diff_mode
 };
 
 /* Debug function to dump hunks */
-void dump_hunk(hi_diff_hunk *hunk)
+static void dump_hunk(hi_diff_hunk *hunk)
 {
   switch (hunk->type)
   {

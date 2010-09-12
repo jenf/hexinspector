@@ -13,6 +13,11 @@ Other ideas
 Dependancies
 
 glib - 2.20.0 or later (For hash and balanced binary tree support)
+ncurses - Tested with version 5
+
+Platform
+
+Tested on Ubuntu Linux and MacOS X
 
 Future enhancements
 

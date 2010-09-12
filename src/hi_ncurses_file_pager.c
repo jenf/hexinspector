@@ -148,7 +148,6 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
   wrefresh(pager->window);
 }
 
-void dump_hunk(hi_diff_hunk *hunk);
 static relative_move_pager(hi_ncurses_fpager *pager, off_t move)
 {
   hi_diff_hunk *hunk;
@@ -209,6 +208,11 @@ static relative_move_pager(hi_ncurses_fpager *pager, off_t move)
   }
 }
 
+static void move_to_next_diff(hi_ncurses_fpager *pager, gboolean forwards)
+{
+  
+}
+
 /** Act on a key, returns TRUE if key was claimed */
 gboolean hi_ncurses_fpager_key_event(hi_ncurses_fpager *pager,
                                      int key,
@@ -221,25 +225,41 @@ gboolean hi_ncurses_fpager_key_event(hi_ncurses_fpager *pager,
     case KEY_NPAGE:
       /* Keep the last line on the screen */
       relative_move_pager(pager, pager->bytes_per_row * pager->height-3);
+      claimed = TRUE;
       break;
     case KEY_PPAGE:
       /* Keep the last line on the screen */
       relative_move_pager(pager, -(pager->bytes_per_row * pager->height-3));
+      claimed = TRUE;
       break;     
     case KEY_LEFT:
       relative_move_pager(pager, -1);
+      claimed = TRUE;
       break;
     case KEY_RIGHT:
       relative_move_pager(pager, 1);
+      claimed = TRUE;
       break;
-      
+    
+
     case KEY_UP:
       relative_move_pager(pager, -pager->bytes_per_row);
+      claimed = TRUE;
       break;
     case KEY_DOWN:
       relative_move_pager(pager, pager->bytes_per_row);
       claimed = TRUE;
-      break;      
+      break;   
+      
+    case '[':
+      move_to_next_diff(pager, FALSE);
+      claimed = TRUE;
+      break;
+    case ']':
+      move_to_next_diff(pager, TRUE);
+      claimed = TRUE;
+      break;
+      
   }
 
   return claimed;
