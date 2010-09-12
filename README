@@ -23,7 +23,7 @@ Ncurses README
 
 All modes
  q/Q = Quit
- Arrow keys pager around the file
+ Page Up/Page Down/Arrow keys pager around the file
 Unimplemented
  g/G = Goto
 
