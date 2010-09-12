@@ -77,6 +77,8 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
   int newch;
   gboolean quit = FALSE;
   gboolean need_resize = FALSE;
+  gboolean key_claimed;
+  char buffer[256];
   
   ncurses = malloc(sizeof(hi_ncurses));
   ncurses->dst = NULL;
@@ -118,27 +120,32 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
     need_resize = FALSE;
     
     newch = getch();
-    switch (newch)
+    key_claimed = hi_ncurses_fpager_key_event(ncurses->focused_pager, newch, buffer, 256);
+    
+    if (FALSE == key_claimed)
     {
-      case 'q':
-      case 'Q':
-        quit = TRUE;
-        break;
-        
-      case 'F':
-      case 'f':
-        if (ncurses->dst)
-          ncurses->focused_pager = (ncurses->src==ncurses->focused_pager ? ncurses->dst : ncurses->src);
-        break;
-        
-        /* Just temporary */
-      case KEY_DOWN:
-        ncurses->src->offset+=8;
-        break;
-      case KEY_RESIZE:
-        /* Need to resize the pagers */
-        need_resize = TRUE;
-        break;
+      switch (newch)
+      {
+        case 'q':
+        case 'Q':
+          quit = TRUE;
+          break;
+          
+        case 'F':
+        case 'f':
+          if (ncurses->dst)
+            ncurses->focused_pager = (ncurses->src==ncurses->focused_pager ? ncurses->dst : ncurses->src);
+          break;
+          
+          /* Just temporary */
+        case KEY_DOWN:
+          ncurses->src->offset+=8;
+          break;
+        case KEY_RESIZE:
+          /* Need to resize the pagers */
+          need_resize = TRUE;
+          break;
+      }
     }
   }
   

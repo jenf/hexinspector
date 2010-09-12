@@ -115,7 +115,7 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
           {
 
             
-            snprintf(buffer, 256, "%08x", offset);
+            snprintf(buffer, 256, "%08x", (unsigned int) offset);
             wmove(pager->window, y+1,1);
             waddstr(pager->window, buffer);
             
@@ -146,4 +146,22 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
   }
 
   wrefresh(pager->window);
+}
+
+/** Act on a key, returns TRUE if key was claimed */
+gboolean hi_ncurses_fpager_key_event(hi_ncurses_fpager *pager,
+                                     int key,
+                                     char *buffer,
+                                     size_t buffer_len)
+{
+  gboolean claimed = FALSE;
+  switch (key)
+  {
+    case KEY_DOWN:
+      pager->offset+=8;
+      claimed = TRUE;
+      break;      
+  }
+
+  return claimed;
 }

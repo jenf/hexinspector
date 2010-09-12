@@ -75,4 +75,8 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager);
 void hi_ncurses_fpager_resize(hi_ncurses_fpager *pager,
                               int height, int width,
                               int y, int x);
+gboolean hi_ncurses_fpager_key_event(hi_ncurses_fpager *pager,
+                                     int key,
+                                     char *buffer,
+                                     size_t buffer_len);
 #endif

@@ -232,7 +232,7 @@ void insert_hunk(hi_diff *diff, hi_diff_hunk *hunk)
 /** Retrieve a hunk by position */
 hi_diff_hunk *hi_diff_get_hunk(hi_diff *diff,
                                hi_file *file,
-                               int pos)
+                               off_t pos)
 {
   hi_diff_hunk *found;
   hi_diff_hunk search_hunk = {
