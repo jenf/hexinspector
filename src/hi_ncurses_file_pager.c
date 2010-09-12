@@ -29,6 +29,7 @@
 #include <hi_ncurses.h>
 #include <stdlib.h>
 #include <macros.h>
+#include <ctype.h>
 
 #define BYTES_FOR_BORDER (4)
 #define WIDTH_PER_BYTE (3)
@@ -38,6 +39,19 @@ static void update_bytes_per_line(hi_ncurses_fpager *pager)
   /* TODO: add other output format mechanisms */
   pager->bytes_per_row = (pager->width-(OFFSET_SIZE+BYTES_FOR_BORDER))/WIDTH_PER_BYTE;
   
+}
+
+static enum hi_ncurses_colour colorize_ctype(hi_ncurses_fpager *pager,
+                                             off_t offset,
+                                             char val)
+{
+  if (isalpha(val))
+    return hi_ncurses_colour_blue;
+  if (!isprint(val))
+    return hi_ncurses_colour_red;
+  if (isdigit(val))
+    return hi_ncurses_colour_green;
+  return hi_ncurses_colour_normal;
 }
 
 hi_ncurses_fpager *hi_ncurses_fpager_new(hi_ncurses *curses,
@@ -140,11 +154,14 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
           }
         
           if (TRUE == diff)
-            wcolor_set(pager->window, hi_ncurses_colour_diff,NULL);
+            wattron(pager->window, A_REVERSE);
+          wcolor_set(pager->window, colorize_ctype(pager, offset, val), NULL);
         
           mvwprintw(pager->window,y+1,2+OFFSET_SIZE+(x*3),"%02x",val);  
+          wcolor_set(pager->window, hi_ncurses_colour_normal,NULL);
           if (TRUE == diff)
-            wcolor_set(pager->window, hi_ncurses_colour_normal,NULL);        
+            wattroff(pager->window, A_REVERSE);
+            
       }
     }
   
