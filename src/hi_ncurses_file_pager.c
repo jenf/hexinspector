@@ -148,19 +148,19 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
   wrefresh(pager->window);
 }
 
-static relative_move_pager(hi_ncurses_fpager *pager, off_t move)
+/** Set the offset and move the linked pager to the correct location */
+static void set_offset(hi_ncurses_fpager *pager, off_t offset)
 {
   hi_diff_hunk *hunk;
   
-  pager->offset += move;
+  pager->offset = offset;
   if (pager->offset < 0)
   {
     pager->offset = 0;
   }
   if (pager->offset >= pager->file->size)
   {
-    /* Make it -bytes_per_row so it shows the entire last line */
-    pager->offset = pager->file->size-pager->bytes_per_row;
+    pager->offset = pager->file->size;
   }
   
   /* Make the other pager move to the right position */
@@ -171,7 +171,7 @@ static relative_move_pager(hi_ncurses_fpager *pager, off_t move)
     {
       if (pager->diff->src == pager->file)
       {
-
+        
         if (hunk->type == HI_DIFF_TYPE_DIFF)
         {
           pager->linked_pager->offset = hunk->dst_start;
@@ -200,17 +200,48 @@ static relative_move_pager(hi_ncurses_fpager *pager, off_t move)
       }
       if (pager->linked_pager->offset >= pager->linked_pager->file->size)
       {
-        /* Make it -bytes_per_row so it shows the entire last line */
-        pager->linked_pager->offset = pager->linked_pager->file->size-pager->linked_pager->bytes_per_row;
+        pager->linked_pager->offset = pager->linked_pager->file->size;
       } 
     }
+    
+  }  
+}
 
-  }
+static relative_move_pager(hi_ncurses_fpager *pager, off_t move)
+{
+  set_offset(pager, pager->offset + move);
 }
 
 static void move_to_next_diff(hi_ncurses_fpager *pager, gboolean forwards)
 {
+  hi_diff_hunk *hunk;
   
+  hunk = hi_diff_get_hunk(pager->diff, pager->file, pager->offset);
+  if (NULL != hunk)
+  {
+    if (forwards)
+    {
+      if (pager->file == pager->diff->src)
+      {
+        set_offset(pager, hunk->src_end);        
+      }
+      if (pager->file == pager->diff->dst)
+      {
+        set_offset(pager, hunk->dst_end);        
+      }
+    }
+    else
+    {
+      if (pager->file == pager->diff->src)
+      {
+        set_offset(pager, hunk->src_start-1);        
+      }
+      if (pager->file == pager->diff->dst)
+      {
+        set_offset(pager, hunk->dst_start-1);        
+      }      
+    }
+  }
 }
 
 /** Act on a key, returns TRUE if key was claimed */

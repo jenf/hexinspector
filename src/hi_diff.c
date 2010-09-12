@@ -494,6 +494,7 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
   }
   
   /* Add the last working hunk */
+  DPRINTF("Final mode %i\n", mode);
   if (mode == DIFF_MODE_SYNC)
   {
     working_hunk.src_end = srcptr;
@@ -502,7 +503,16 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
     if (dstptr != dst->size)
     {
       working_hunk.src_start = srcptr;
-      working_hunk.src_end = srcptr;
+      working_hunk.src_end = src->size;
+      working_hunk.dst_start = dstptr;
+      working_hunk.dst_end = dst->size;
+      working_hunk.type = HI_DIFF_TYPE_DIFF;
+      insert_hunk(diff, &working_hunk);
+    }
+    else if (srcptr != src->size)
+    {
+      working_hunk.src_start = srcptr;
+      working_hunk.src_end = src->size;
       working_hunk.dst_start = dstptr;
       working_hunk.dst_end = dst->size;
       working_hunk.type = HI_DIFF_TYPE_DIFF;
