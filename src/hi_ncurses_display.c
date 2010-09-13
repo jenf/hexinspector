@@ -36,17 +36,39 @@
 
 static GList *display_list;
 
-/* Hex mode */
-static int hexmode_bytes_per_line(unused(hi_ncurses_fpager *pager), int remaining_width)
+/* Hex8 mode */
+static int hex8mode_bytes_per_line(unused(hi_ncurses_fpager *pager), int remaining_width)
 {
   return remaining_width/3;
 }
 
-static void hexmode_display_byte(hi_ncurses_fpager *pager, int y, int start_x, int rowbyte, off_t offset, unsigned char value)
+static void hex8mode_display_byte(hi_ncurses_fpager *pager, int y, int start_x, int rowbyte, off_t offset, unsigned char value)
 {
   mvwprintw(pager->window,y,start_x+(rowbyte*3),"%02x",value);  
 }
 
+/* Int8 mode */
+static int int8mode_bytes_per_line(unused(hi_ncurses_fpager *pager), int remaining_width)
+{
+  return remaining_width/4;
+}
+
+static void int8mode_display_byte(hi_ncurses_fpager *pager, int y, int start_x, int rowbyte, off_t offset, unsigned char value)
+{
+  mvwprintw(pager->window,y,start_x+(rowbyte*4),"% 3i",value);  
+}
+
+/* Oct8 mode */
+static int oct8mode_bytes_per_line(unused(hi_ncurses_fpager *pager), int remaining_width)
+{
+  return remaining_width/4;
+}
+
+static void oct8mode_display_byte(hi_ncurses_fpager *pager, int y, int start_x, int rowbyte, off_t offset, unsigned char value)
+{
+  mvwprintw(pager->window,y,start_x+(rowbyte*4),"%03o",value);  
+}
+/* Utility functions */
 static void hi_ncurses_display_define(const char *name,
                                       hi_display_bytes_per_line    bytes_per_line_func,
                                       hi_display_display_byte      display_byte_func)
@@ -62,8 +84,9 @@ static void hi_ncurses_display_define(const char *name,
 }
 void hi_ncurses_display_init(void)
 {
-  
-  hi_ncurses_display_define("hex1", hexmode_bytes_per_line, hexmode_display_byte);
+  hi_ncurses_display_define("hex8", hex8mode_bytes_per_line, hex8mode_display_byte);
+  hi_ncurses_display_define("oct8", oct8mode_bytes_per_line, oct8mode_display_byte);  
+  hi_ncurses_display_define("int8", int8mode_bytes_per_line, int8mode_display_byte);  
 }
 
 hi_display_mode *hi_ncurses_display_get(hi_display_mode *display,
