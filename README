@@ -24,12 +24,12 @@ Todo
 
 Dependancies
 
-glib - 2.20.0 or later (For hash and balanced binary tree support)
+glib - 2.0.0 or later (For list, hash and balanced binary tree support)
 ncurses - Tested with version 5
 
 Platform
 
-Tested on Ubuntu Linux and MacOS X
+Tested on Ubuntu Linux and MacOS X and RHEL4
 
 Future enhancements
 
