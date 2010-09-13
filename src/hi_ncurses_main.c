@@ -45,7 +45,7 @@
 #define PAGER_HEIGHT (LINES-RULER_LINES)
 
 
-static void convert_to_bitstring(int value, char *str)
+void convert_to_bitstring(int value, char *str)
 {
   int i;
   str[8]=0;

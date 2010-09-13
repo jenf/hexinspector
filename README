@@ -1,17 +1,19 @@
-A better hex inspection tool
+HexIinspector - A better hex inspection tool
 
-* Easily compare binary files
+Examine binary files, diff two binary files
+
+To invoke
+hi <file1> [<file2>]
 
 Todo
 * Floating point representation on ruler
 * Display modes
-  * Decimal mode
-  * Character mode
-  * Bitmode (from xxd)
+  * Decimal mode (Int16 LE/BE, Int32 LE/BE)
 * Highlight modes
   * MPEG-TS packet detection
 * Fix issue where previous diff gets stuck on the last byte of the file
 * Fix issue where diff's of zero bytes are erronously shown as 1 byte.
+* Add { command (Goto next big area)
 * Add selection mode
   * CRC32/MD5/SHA1 of selection
   * File format detection (gzip, jffs2 etc)
@@ -20,21 +22,21 @@ Todo
 * Restore find duplicates in binary files
 * Add other command line arguments, --help support
 
-Dependancies
+* Dependancies *
 
 glib - 2.0.0 or later (For list, hash and balanced binary tree support)
 ncurses - Tested with version 5
 
-Platform
+* Platform *
 
 Tested on Ubuntu Linux and MacOS X and RHEL4
 
-Future enhancements
+* Future enhancements *
 
 * Allow it to work with files that are bigger than off_t or the maximum mmap size
 * Allow the document to be opened before the hashing and diffing is completed, by moving the diff and hash into the background
 
-Ncurses README
+* Ncurses README *
 
 Commands with [buffer] prepended can be multiplied by typing in a number.
 
@@ -43,7 +45,7 @@ All modes
  [buffer] Page Up/Page Down/Arrow keys pager around the file
  [buffer] g/G = Goto
  h/H = Next/Previous Highlight mode
- v/V = Next/Previous visual display mode (note it is linked to pager, this may change to display)
+ v/V = Next/Previous visual display mode (note it is linked to pager, this may change to entire display in future)
 
 Diff mode
  p/P = Switch focus between the two pagers

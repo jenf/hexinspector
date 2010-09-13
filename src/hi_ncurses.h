@@ -92,6 +92,6 @@ void hi_ncurses_fpager_resize(hi_ncurses_fpager *pager,
 gboolean hi_ncurses_fpager_key_event(hi_ncurses_fpager *pager,
                                      int key,
                                      long long buffer_val);
-
+void convert_to_bitstring(int value, char *str);
 
 #endif

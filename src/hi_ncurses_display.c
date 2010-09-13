@@ -33,6 +33,7 @@
 #include <hi_ncurses_display.h>
 #include <glib.h>
 #include <string.h>
+#include <ctype.h>
 
 static GList *display_list;
 
@@ -47,7 +48,7 @@ static void canmode_display_byte(hi_ncurses_fpager *pager, int y, int start_x, i
   mvwprintw(pager->window,y,start_x+(rowbyte*3),"%02x",value);  
   if (isprint(value))
   {
-    mvwprintw(pager->window,y,start_x+((pager->remaining_bytes_per_row-1)/4*3)+1+rowbyte,"%c", value);
+    mvwprintw(pager->window,y,start_x+((pager->remaining_bytes_per_row-1)/4*3)+rowbyte,"%c", value);
   }
 }
 
@@ -84,6 +85,33 @@ static void oct8mode_display_byte(hi_ncurses_fpager *pager, int y, int start_x, 
   mvwprintw(pager->window,y,start_x+(rowbyte*4),"%03o",value);  
 }
 
+/* ASCII mode */
+static int asciimode_bytes_per_line(unused(hi_ncurses_fpager *pager), int remaining_width)
+{
+  return (remaining_width);
+}
+
+static void asciimode_display_byte(hi_ncurses_fpager *pager, int y, int start_x, int rowbyte, off_t offset, unsigned char value)
+{
+  if (isprint(value))
+  {
+    mvwprintw(pager->window,y,start_x+rowbyte,"%c",value); 
+  }
+}
+
+/* Bit mode */
+static int bitmode_bytes_per_line(unused(hi_ncurses_fpager *pager), int remaining_width)
+{
+  return remaining_width/9;
+}
+
+static void bitmode_display_byte(hi_ncurses_fpager *pager, int y, int start_x, int rowbyte, off_t offset, unsigned char value)
+{
+  char str[9];
+  convert_to_bitstring(value,str);
+  mvwprintw(pager->window,y,start_x+(rowbyte*9),"%8s",str);  
+}
+
 
 /* Utility functions */
 static void hi_ncurses_display_define(const char *name,
@@ -105,6 +133,8 @@ void hi_ncurses_display_init(void)
   hi_ncurses_display_define("Hex8", hex8mode_bytes_per_line, hex8mode_display_byte);
   hi_ncurses_display_define("Oct8", oct8mode_bytes_per_line, oct8mode_display_byte);  
   hi_ncurses_display_define("Int8", int8mode_bytes_per_line, int8mode_display_byte);  
+  hi_ncurses_display_define("ASCII", asciimode_bytes_per_line, asciimode_display_byte);  
+  hi_ncurses_display_define("Bit",   bitmode_bytes_per_line, bitmode_display_byte);  
 }
 
 hi_display_mode *hi_ncurses_display_get(hi_display_mode *display,
