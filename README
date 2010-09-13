@@ -3,7 +3,6 @@ A better hex inspection tool
 * Easily compare binary files
 
 Todo
-* Bit representation on ruler
 * Floating point representation on ruler
 * Display modes
   * Canonical hex+ASCII display
@@ -21,7 +20,7 @@ Todo
   * ANSI/Unicode string
 * Search mode, improvements to regular expressions suitable for binary files
 * Restore find duplicates in binary files
-* Add proper command line arguments, --help support
+* Add other command line arguments, --help support
 
 Dependancies
 

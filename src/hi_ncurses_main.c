@@ -42,12 +42,23 @@
 #define PAGER_HEIGHT (LINES-RULER_LINES)
 
 
+static void convert_to_bitstring(int value, char *str)
+{
+  int i;
+  str[8]=0;
+  for (i=0; i < 8; i++)
+  {
+    str[7-i] = 0x30 + ((value >> i) & 1);
+  }
+}
+
 static void hi_ncurses_redraw_ruler(hi_ncurses *ncurses)
 {
   unsigned char value8;
   uint16_t value16_be,value16_le;
   uint32_t value32_be,value32_le;
   unsigned int value;
+  char bitstring[9];
   hi_file *file;
   off_t offset;
   
@@ -55,17 +66,18 @@ static void hi_ncurses_redraw_ruler(hi_ncurses *ncurses)
   file = ncurses->focused_pager->file;
   
   value8 = file->memory[offset];
+  convert_to_bitstring(value8, bitstring);
   
   werase(ncurses->ruler);
-  mvwprintw(ncurses->ruler,0,0,"1b: %03u/%+03i/%#03o/0x%02x/'%c'",
-            value8, (signed char) value8, value8, value8,
+  mvwprintw(ncurses->ruler,0,0,"1b: %s/% 3u/%+ 4i/%#03o/0x%02x/'%c'",
+            bitstring, value8, (signed char) value8, value8, value8,
             isprint(file->memory[offset]) ? file->memory[offset] : ' ');
   if (offset+1 < file->size)
   {
     value16_be = file->memory[offset] | (file->memory[offset+1] << 8);
     value16_le = file->memory[offset+1] | (file->memory[offset] << 8);
-    mvwprintw(ncurses->ruler,1,0,"2b: BE: %05u/%+06i/%#07o/0x%04x"
-              " LE: %05u/%+06i/%#07o/0x%04x",
+    mvwprintw(ncurses->ruler,1,0,"2b: BE: % 5u/%+ 6i/%#07o/0x%04x"
+              " LE: % 5u/%+ 6i/%#07o/0x%04x",
               value16_be, (int16_t)value16_be, value16_be, value16_be,
               value16_le, (int16_t)value16_le, value16_le, value16_le);
   }
@@ -75,10 +87,10 @@ static void hi_ncurses_redraw_ruler(hi_ncurses *ncurses)
                  (file->memory[offset+2] << 16) | (file->memory[offset+3] << 24);
     value32_le = file->memory[offset+3] | (file->memory[offset+2] << 8) |
                   (file->memory[offset+1] << 16) | (file->memory[offset] << 24);    
-    mvwprintw(ncurses->ruler,2,0,"4b: BE: %010u/%+011i/%#012o/0x%08x",
+    mvwprintw(ncurses->ruler,2,0,"4b: BE: % 10u/%+ 11i/%#012o/0x%08x",
               value32_be, (int32_t)value32_be, value32_be, value32_be);
     mvwprintw(ncurses->ruler,RULER_LINES-3,(COLS) > RULERCOLS_32BIT ? 55 : 0,
-              "4b: LE: %010u/%+011i/%#012o/0x%08x",
+              "4b: LE: % 10u/%+11i/%#012o/0x%08x",
               value32_le, (int32_t)value32_le, value32_le, value32_le);
   }
   
