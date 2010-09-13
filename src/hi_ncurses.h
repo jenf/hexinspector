@@ -45,6 +45,7 @@ enum hi_ncurses_colour
   hi_ncurses_colour_yellow =5
 };
 
+
 typedef struct hi_ncurses_fpager
 {
   hi_file *file;
@@ -71,6 +72,23 @@ typedef struct hi_ncurses
   WINDOW                *ruler;
 } hi_ncurses;
 
+typedef enum hi_ncurses_colour (*hi_ncurses_highlight_per_byte) (hi_file *file,
+                                                                 off_t offset,
+                                                                 unsigned char value,
+                                                                 void *dataptr);
+
+/** \brief Begin a redraw using a highlighter
+    \return Memory to be used (which will be freed using hi_ncurses_highlight_end) */
+typedef void *(*hi_ncurses_highlight_begin) (hi_file *file);
+typedef void (*hi_ncurses_highlight_end) (void *dataptr);
+
+typedef struct hi_ncurses_highlight
+{
+  hi_ncurses_highlight_per_byte *highlight_func;
+  hi_ncurses_highlight_begin    *begin_func;
+  hi_ncurses_highlight_end      *end_func;
+} hi_ncurses_highlight;
+
 void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff);
 hi_ncurses_fpager *hi_ncurses_fpager_new(hi_ncurses *curses,
                                          hi_file *file,
@@ -84,4 +102,7 @@ void hi_ncurses_fpager_resize(hi_ncurses_fpager *pager,
 gboolean hi_ncurses_fpager_key_event(hi_ncurses_fpager *pager,
                                      int key,
                                      long long buffer_val);
+
+
+
 #endif
