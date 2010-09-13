@@ -169,7 +169,7 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
   keypad(stdscr, TRUE);
   nonl();
   cbreak();
-  echo();
+  noecho();
 
   
   refresh();
