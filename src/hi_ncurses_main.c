@@ -233,8 +233,8 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
           ncurses->highlighter = hi_ncurses_highlight_get(ncurses->highlighter,1);
           break;
           
-        case 'F':
-        case 'f':
+        case 'P':
+        case 'p':
           if (ncurses->dst)
             ncurses->focused_pager = (ncurses->src==ncurses->focused_pager ? ncurses->dst : ncurses->src);
           break;

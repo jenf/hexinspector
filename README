@@ -47,6 +47,6 @@ All modes
  h/H = Next/Previous Highlight mode
 
 Diff mode
- f/F = Switch focus between the two pagers
+ p/P = Switch focus between the two pagers
  [   = Previous diff
  ]   = Next diff
