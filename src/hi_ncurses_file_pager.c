@@ -32,12 +32,11 @@
 #include <hi_ncurses_display.h>
 
 #define BYTES_FOR_BORDER (3)
-#define WIDTH_PER_BYTE (3)
 #define OFFSET_SIZE (9)
 static void update_bytes_per_line(hi_ncurses_fpager *pager)
 {
-  /* TODO: add other output format mechanisms */
-  pager->bytes_per_row = pager->display_mode->bytes_per_line_func(pager, pager->width-(OFFSET_SIZE+BYTES_FOR_BORDER));
+  pager->remaining_bytes_per_row = pager->width-(OFFSET_SIZE+BYTES_FOR_BORDER);
+  pager->bytes_per_row = pager->display_mode->bytes_per_line_func(pager, pager->remaining_bytes_per_row);
   
 }
 

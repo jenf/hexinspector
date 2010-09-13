@@ -55,6 +55,7 @@ typedef struct hi_ncurses_fpager
   WINDOW  *window;
   int      width;
   int      bytes_per_row;
+  int      remaining_bytes_per_row;
   int      height;
   int      x;
   int      y;

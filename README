@@ -5,7 +5,6 @@ A better hex inspection tool
 Todo
 * Floating point representation on ruler
 * Display modes
-  * Canonical hex+ASCII display
   * Decimal mode
   * Character mode
   * Bitmode (from xxd)

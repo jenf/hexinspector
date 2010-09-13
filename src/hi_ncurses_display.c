@@ -36,6 +36,21 @@
 
 static GList *display_list;
 
+/* Canonical mode */
+static int canmode_bytes_per_line(unused(hi_ncurses_fpager *pager), int remaining_width)
+{
+  return (remaining_width-1)/4;
+}
+
+static void canmode_display_byte(hi_ncurses_fpager *pager, int y, int start_x, int rowbyte, off_t offset, unsigned char value)
+{
+  mvwprintw(pager->window,y,start_x+(rowbyte*3),"%02x",value);  
+  if (isprint(value))
+  {
+    mvwprintw(pager->window,y,start_x+((pager->remaining_bytes_per_row-1)/4*3)+1+rowbyte,"%c", value);
+  }
+}
+
 /* Hex8 mode */
 static int hex8mode_bytes_per_line(unused(hi_ncurses_fpager *pager), int remaining_width)
 {
@@ -68,6 +83,8 @@ static void oct8mode_display_byte(hi_ncurses_fpager *pager, int y, int start_x, 
 {
   mvwprintw(pager->window,y,start_x+(rowbyte*4),"%03o",value);  
 }
+
+
 /* Utility functions */
 static void hi_ncurses_display_define(const char *name,
                                       hi_display_bytes_per_line    bytes_per_line_func,
@@ -84,6 +101,7 @@ static void hi_ncurses_display_define(const char *name,
 }
 void hi_ncurses_display_init(void)
 {
+  hi_ncurses_display_define("Hex8+ASCII", canmode_bytes_per_line, canmode_display_byte); 
   hi_ncurses_display_define("Hex8", hex8mode_bytes_per_line, hex8mode_display_byte);
   hi_ncurses_display_define("Oct8", oct8mode_bytes_per_line, oct8mode_display_byte);  
   hi_ncurses_display_define("Int8", int8mode_bytes_per_line, int8mode_display_byte);  
