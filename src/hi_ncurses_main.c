@@ -32,6 +32,9 @@
 #include <macros.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <ctype.h>
+#include <hi_ncurses_display.h>
+#include <string.h>
 
 /* 4 byte ruler currently needs 105 characters */
 #define RULERCOLS_32BIT (106)
@@ -57,7 +60,6 @@ static void hi_ncurses_redraw_ruler(hi_ncurses *ncurses)
   unsigned char value8;
   uint16_t value16_be,value16_le;
   uint32_t value32_be,value32_le;
-  unsigned int value;
   char bitstring[9];
   hi_file *file;
   off_t offset;
@@ -142,8 +144,6 @@ static void finish(int sig)
 
 void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
 {
-  WINDOW *window;
-  WINDOW *mainwin;
   hi_ncurses *ncurses;
   int newch;
   gboolean quit = FALSE;
@@ -165,6 +165,7 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
   init_pair(hi_ncurses_colour_green,COLOR_GREEN,COLOR_BLACK);
   init_pair(hi_ncurses_colour_yellow,COLOR_YELLOW,COLOR_BLACK);
   hi_ncurses_highlight_init();
+  hi_ncurses_display_init();
   
   keypad(stdscr, TRUE);
   nonl();

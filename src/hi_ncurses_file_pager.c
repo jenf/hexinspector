@@ -237,7 +237,7 @@ static void set_offset(hi_ncurses_fpager *pager, off_t offset)
   }  
 }
 
-static relative_move_pager(hi_ncurses_fpager *pager, off_t move)
+static void relative_move_pager(hi_ncurses_fpager *pager, off_t move)
 {
   set_offset(pager, pager->offset + move);
 }

@@ -35,9 +35,13 @@ typedef void (*hi_display_display_byte)(hi_ncurses_fpager *pager, off_t offset, 
 
 typedef struct hi_display_mode
 {
-  hi_display_bytes_per_line bytes_per_line;
-  hi_display_display_byte   display_byte;
+  hi_display_bytes_per_line bytes_per_line_func;
+  hi_display_display_byte   display_byte_func;
+  char                     *name;
 } hi_display_mode;
 
+hi_display_mode *hi_ncurses_display_get(hi_display_mode *display,
+                                        int relative);
+void hi_ncurses_display_init(void);
 
 #endif

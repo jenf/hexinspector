@@ -1,4 +1,4 @@
-/* <filename>: Hexinspector
+/* hi_ncurses_display.c: Hexinspector
    Copyright (c) 2010 Jen Freeman
 
    $Id$
@@ -24,9 +24,85 @@
 */
 
 /**
- * Structure overview
+ * Display mode subroutines
  */
 
-#ifndef HI_FILE_H
-#define HI_FILE_H
-#endif
+#include <hi_ncurses.h>
+#include <stdlib.h>
+#include <macros.h>
+#include <hi_ncurses_display.h>
+#include <glib.h>
+#include <string.h>
+
+static GList *display_list;
+
+/* Hex mode */
+static int hexmode_bytes_per_line(hi_ncurses_fpager *pager)
+{
+  return 0;
+}
+
+static void hexmode_display_byte(hi_ncurses_fpager *pager, off_t offset, unsigned char value)
+{
+}
+
+static void hi_ncurses_display_define(const char *name,
+                                      hi_display_bytes_per_line    bytes_per_line_func,
+                                      hi_display_display_byte      display_byte_func)
+{
+  hi_display_mode *new;
+  new = malloc(sizeof(hi_display_mode));
+
+  new->name           = strdup(name);
+  new->bytes_per_line_func = bytes_per_line_func;
+  new->display_byte_func   = display_byte_func;
+  
+  display_list = g_list_append(display_list, new);
+}
+void hi_ncurses_display_init(void)
+{
+  
+  hi_ncurses_display_define("hex1", hexmode_bytes_per_line, hexmode_display_byte);
+}
+
+hi_display_mode *hi_ncurses_display_get(hi_display_mode *display,
+                                        int relative)
+{
+  GList *item = NULL;
+  if (display == NULL)
+  {
+    item = g_list_first(display_list);
+  }
+  else
+  {
+    item = g_list_find(display_list, display);
+    if (relative >= 1)
+    {
+      item = g_list_next(item);
+    }
+    else
+    {
+      item = g_list_previous(item);
+    }
+    if (item == NULL)
+    {
+      if (relative >= 1)
+      {
+        item = g_list_first(display_list);
+      }
+      else
+      {
+        item = g_list_last(display_list);
+      }
+    }
+  }
+  
+  if (item == NULL)
+  {
+    return NULL;    
+  }
+  else
+  {
+    return item->data;    
+  }
+}
