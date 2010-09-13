@@ -42,8 +42,8 @@ static void update_bytes_per_line(hi_ncurses_fpager *pager)
 }
 
 static enum hi_ncurses_colour colorize_ctype(hi_ncurses_fpager *pager,
-                                             off_t offset,
-                                             char val)
+                                      off_t offset,
+                                      char val)
 {
   if (isalpha(val))
     return hi_ncurses_colour_blue;
