@@ -38,7 +38,7 @@
 #define RULER_LINES ((COLS) > RULERCOLS_32BIT ? 5: 6)
 
 #define PAGER_WIDTH_SOLO (COLS)
-#define PAGER_WIDTH_PAIR ((COLS/2)-2)
+#define PAGER_WIDTH_PAIR ((COLS/2))
 #define PAGER_HEIGHT (LINES-RULER_LINES)
 
 
@@ -94,11 +94,12 @@ static void hi_ncurses_redraw_ruler(hi_ncurses *ncurses)
               value32_le, (int32_t)value32_le, value32_le, value32_le);
   }
   
-  mvwprintw(ncurses->ruler,RULER_LINES-1,0,"0x%08x/0x%08x %i/%i (%.2f%%) \"%s\"",
+  mvwprintw(ncurses->ruler,RULER_LINES-1,0,"0x%08x/0x%08x %i/%i (%.2f%%) \"%s\" %s",
             (unsigned int) offset, (unsigned int) file->size,
             (unsigned int) offset, (unsigned int) file->size,
             (((double) offset)/file->size)*100,
-            ncurses->buffer);
+            ncurses->buffer,
+            ((ncurses->highlighter != NULL) && (ncurses->highlighter->name != NULL)) ? ncurses->highlighter->name : "");
   wrefresh(ncurses->ruler);
 }
 
