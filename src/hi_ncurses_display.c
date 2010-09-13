@@ -134,7 +134,7 @@ void hi_ncurses_display_init(void)
   hi_ncurses_display_define("Oct8", oct8mode_bytes_per_line, oct8mode_display_byte);  
   hi_ncurses_display_define("Int8", int8mode_bytes_per_line, int8mode_display_byte);  
   hi_ncurses_display_define("ASCII", asciimode_bytes_per_line, asciimode_display_byte);  
-  hi_ncurses_display_define("Bit",   bitmode_bytes_per_line, bitmode_display_byte);  
+  hi_ncurses_display_define("Binary",bitmode_bytes_per_line, bitmode_display_byte);  
 }
 
 hi_display_mode *hi_ncurses_display_get(hi_display_mode *display,
