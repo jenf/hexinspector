@@ -84,9 +84,9 @@ static void hi_ncurses_display_define(const char *name,
 }
 void hi_ncurses_display_init(void)
 {
-  hi_ncurses_display_define("hex8", hex8mode_bytes_per_line, hex8mode_display_byte);
-  hi_ncurses_display_define("oct8", oct8mode_bytes_per_line, oct8mode_display_byte);  
-  hi_ncurses_display_define("int8", int8mode_bytes_per_line, int8mode_display_byte);  
+  hi_ncurses_display_define("Hex8", hex8mode_bytes_per_line, hex8mode_display_byte);
+  hi_ncurses_display_define("Oct8", oct8mode_bytes_per_line, oct8mode_display_byte);  
+  hi_ncurses_display_define("Int8", int8mode_bytes_per_line, int8mode_display_byte);  
 }
 
 hi_display_mode *hi_ncurses_display_get(hi_display_mode *display,

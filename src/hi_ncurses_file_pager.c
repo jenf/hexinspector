@@ -321,6 +321,14 @@ gboolean hi_ncurses_fpager_key_event(hi_ncurses_fpager *pager,
       pager->curses->buffer[0]=0;
       claimed = TRUE;
       break;   
+    case 'V':
+      pager->display_mode = hi_ncurses_display_get(pager->display_mode,-1);
+      update_bytes_per_line(pager);
+      break;          
+    case 'v':
+      pager->display_mode = hi_ncurses_display_get(pager->display_mode,1);
+      update_bytes_per_line(pager);
+      break;      
       
     case '[':
       move_to_next_diff(pager, FALSE);

@@ -6,7 +6,6 @@ Todo
 * Floating point representation on ruler
 * Display modes
   * Canonical hex+ASCII display
-  * Octal display
   * Decimal mode
   * Character mode
   * Bitmode (from xxd)
@@ -45,6 +44,7 @@ All modes
  [buffer] Page Up/Page Down/Arrow keys pager around the file
  [buffer] g/G = Goto
  h/H = Next/Previous Highlight mode
+ v/V = Next/Previous visual display mode (note it is linked to pager, this may change to display)
 
 Diff mode
  p/P = Switch focus between the two pagers
