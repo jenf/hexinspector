@@ -63,9 +63,9 @@ enum hi_ncurses_colour highlight_ctype(unused(hi_file *file),
 /* MPEG-TS style, this isn't perfect */
 void *mpegts_highlight_begin(hi_file *file)
 {
-  int *pos;
-  pos = malloc(sizeof(int));
-  *pos=188;
+  enum hi_ncurses_colour *pos;
+  pos = malloc(sizeof(enum hi_ncurses_colour));
+  *pos=hi_ncurses_colour_normal;
   return pos;
 }
 
@@ -77,33 +77,34 @@ void mpegts_highlight_end(void *mem)
 enum hi_ncurses_colour mpeg_highlight(unused(hi_file *file),
                                       unused(off_t offset),
                                       unsigned char val,
-                                      int *dataptr)
+                                      void *dataptr)
 {
   int pid;
+  enum hi_ncurses_colour *col = dataptr;
   
   if (0x47==val)
   {
     if (offset+2 < file->size)
     {
-      pid = (file->memory[offset+1] << 16 + file->memory[offset+2]) & 0x1fff;
+      pid = ((file->memory[offset+1] << 16) | (file->memory[offset+2])) & 0x1fff;
       if (pid <0x1F)
       {
-        *dataptr = hi_ncurses_colour_green;
+        *col = hi_ncurses_colour_green;
       }
       else if (pid < 0x1fff)
       {
-        *dataptr = hi_ncurses_colour_yellow;
+        *col = hi_ncurses_colour_yellow;
       }
       else
       {
-        *dataptr = hi_ncurses_colour_red;
+        *col = hi_ncurses_colour_red;
       }
     }
     return hi_ncurses_colour_blue;
   }
   else
   {
-    return *dataptr;
+    return *col;
   }
   return hi_ncurses_colour_normal;
 }
