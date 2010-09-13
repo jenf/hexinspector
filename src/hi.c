@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
 {
 
   int c;
-  hi_file *file, *file2;
+  hi_file *file = NULL, *file2 = NULL;
   hi_diff *diff = NULL;
   
   static struct option long_options[] =
