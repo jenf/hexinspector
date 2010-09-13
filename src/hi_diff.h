@@ -30,6 +30,8 @@
 #ifndef HI_DIFF_H
 #define HI_DIFF_H
 
+#include <sys/types.h>
+#include <unistd.h>
 /** Structure representing the differences between two files */
 typedef struct hi_diff
 {

@@ -24,6 +24,7 @@
 */
 
 //#define VERBOSE_DEBUG
+#include <sys/types.h>
 #include <hi_file.h>
 #include <hi_priv.h>
 #include <unistd.h>
