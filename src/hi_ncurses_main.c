@@ -147,7 +147,6 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
   (void) signal(SIGINT, finish);
   ncurses->window = initscr();
   start_color();
-  init_pair(hi_ncurses_colour_diff,COLOR_BLACK,COLOR_RED);
   init_pair(hi_ncurses_colour_red ,COLOR_RED  ,COLOR_BLACK);
   init_pair(hi_ncurses_colour_blue,COLOR_CYAN ,COLOR_BLACK);
   init_pair(hi_ncurses_colour_green,COLOR_GREEN,COLOR_BLACK);
@@ -162,7 +161,8 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
   
   refresh();
   
-
+  ncurses->highlighter = hi_ncurses_highlight_get(NULL,0);
+  
   ncurses->ruler = newwin(RULER_LINES, 0, PAGER_HEIGHT, 0);
   
   if (file2 != NULL)

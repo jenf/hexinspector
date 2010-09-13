@@ -41,21 +41,6 @@ static void update_bytes_per_line(hi_ncurses_fpager *pager)
   
 }
 
-static enum hi_ncurses_colour colorize_ctype(hi_ncurses_fpager *pager,
-                                      off_t offset,
-                                      char val)
-{
-  if (isalpha(val))
-    return hi_ncurses_colour_blue;
-  if (!isprint(val))
-    return hi_ncurses_colour_red;
-  if (isdigit(val))
-    return hi_ncurses_colour_green;
-  if (isspace(val))
-    return hi_ncurses_colour_yellow;
-  return hi_ncurses_colour_normal;
-}
-
 hi_ncurses_fpager *hi_ncurses_fpager_new(hi_ncurses *curses,
                                          hi_file *file,
                                          hi_diff *diff,
@@ -109,7 +94,17 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
   hi_diff_hunk *hunk;
   werase(pager->window);
   gboolean diff;
-
+  void *highlighter_data = NULL;
+  hi_ncurses_highlight *highlighter;
+  enum hi_ncurses_colour colour;
+  
+  highlighter = pager->curses->highlighter;
+  
+  if ((highlighter != NULL) && (highlighter->begin_func != NULL))
+  {
+    highlighter_data = highlighter->begin_func(pager->file);
+  }
+  
   /* Make the pager we're selected highlighted */
   if (pager == pager->curses->focused_pager)
     wattron(pager->window, A_REVERSE);
@@ -157,7 +152,14 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
         
           if (TRUE == diff)
             wattron(pager->window, A_REVERSE);
-          wcolor_set(pager->window, colorize_ctype(pager, offset, val), NULL);
+          
+          colour = hi_ncurses_colour_normal;
+          if ((highlighter != NULL) && (highlighter->highlight_func != NULL))
+          {
+            colour = highlighter->highlight_func(pager->file, offset, val, highlighter_data);
+            
+          }
+          wcolor_set(pager->window, colour, NULL);
         
           mvwprintw(pager->window,y+1,2+OFFSET_SIZE+(x*3),"%02x",val);  
           wcolor_set(pager->window, hi_ncurses_colour_normal,NULL);
@@ -168,7 +170,11 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
     }
   
   }
-
+  if ((highlighter != NULL) && (highlighter->end_func != NULL))
+  {
+       highlighter->end_func(highlighter_data);
+  }
+      
   wrefresh(pager->window);
 }
 

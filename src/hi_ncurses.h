@@ -38,12 +38,11 @@
 #define KEYBUFFER_LEN (256)
 enum hi_ncurses_colour
 {
-  hi_ncurses_colour_normal =0,
-  hi_ncurses_colour_diff   =1,
-  hi_ncurses_colour_red    =2,
-  hi_ncurses_colour_blue   =3,
-  hi_ncurses_colour_green  =4,
-  hi_ncurses_colour_yellow =5
+  hi_ncurses_colour_normal,
+  hi_ncurses_colour_red,
+  hi_ncurses_colour_blue,
+  hi_ncurses_colour_green,
+  hi_ncurses_colour_yellow
 };
 
 
@@ -71,7 +70,7 @@ typedef struct hi_ncurses
   hi_diff               *diff;
   WINDOW                *window;
   WINDOW                *ruler;
-  hi_ncurses_highlight *highlighter;
+  hi_ncurses_highlight  *highlighter;
 } hi_ncurses;
 
 

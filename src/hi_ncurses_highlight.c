@@ -37,7 +37,8 @@ static GList *highlight_list;
 /* C Type style */
 enum hi_ncurses_colour highlight_ctype(hi_file *file,
                                        off_t offset,
-                                       char val)
+                                       char val,
+                                       void *dataptr)
 {
   if (isalpha(val))
     return hi_ncurses_colour_blue;
@@ -50,10 +51,10 @@ enum hi_ncurses_colour highlight_ctype(hi_file *file,
   return hi_ncurses_colour_normal;
 }
 
-void hi_ncurses_highlight_define(hi_ncurses_highlight_per_byte *highlighter,
+void hi_ncurses_highlight_define(hi_ncurses_highlight_per_byte highlighter,
                                  char *name,
-                                 hi_ncurses_highlight_begin    *begin_func,
-                                 hi_ncurses_highlight_end      *end_func)
+                                 hi_ncurses_highlight_begin    begin_func,
+                                 hi_ncurses_highlight_end      end_func)
 {
   hi_ncurses_highlight *new;
   new = malloc(sizeof(hi_ncurses_highlight));
@@ -62,7 +63,7 @@ void hi_ncurses_highlight_define(hi_ncurses_highlight_per_byte *highlighter,
   new->begin_func     = begin_func;
   new->end_func       = end_func;
   
-  g_list_append(highlight_list, new);
+  highlight_list = g_list_append(highlight_list, new);
 }
 
 void hi_ncurses_highlight_init()
@@ -75,7 +76,7 @@ void hi_ncurses_highlight_init()
 hi_ncurses_highlight *hi_ncurses_highlight_get(hi_ncurses_highlight *highlight,
                                               int relative)
 {
-  GList *item;
+  GList *item = NULL;
   if (highlight == NULL)
   {
     item = g_list_first(highlight_list);
