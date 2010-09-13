@@ -31,9 +31,9 @@
 #include <macros.h>
 #include <ctype.h>
 
-#define BYTES_FOR_BORDER (4)
+#define BYTES_FOR_BORDER (3)
 #define WIDTH_PER_BYTE (3)
-#define OFFSET_SIZE (8)
+#define OFFSET_SIZE (9)
 static void update_bytes_per_line(hi_ncurses_fpager *pager)
 {
   /* TODO: add other output format mechanisms */
@@ -127,7 +127,7 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
 
             
             snprintf(buffer, 256, "%08x", (unsigned int) offset);
-            wmove(pager->window, y+1,1);
+            wmove(pager->window, y+1,2);
             waddstr(pager->window, buffer);
             
 
