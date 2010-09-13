@@ -45,6 +45,7 @@ All modes
  q/Q = Quit
  [buffer] Page Up/Page Down/Arrow keys pager around the file
  [buffer] g/G = Goto
+ h/H = Next/Previous Highlight mode
 
 Diff mode
  f/F = Switch focus between the two pagers

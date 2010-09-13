@@ -212,6 +212,13 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
         case 'Q':
           quit = TRUE;
           break;
+        
+        case 'H':
+          ncurses->highlighter = hi_ncurses_highlight_get(ncurses->highlighter,-1);
+          break;          
+        case 'h':
+          ncurses->highlighter = hi_ncurses_highlight_get(ncurses->highlighter,1);
+          break;
           
         case 'F':
         case 'f':
