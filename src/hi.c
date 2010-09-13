@@ -31,22 +31,78 @@
 #include <hi_diff.h>
 #include <stdint.h>
 #include <macros.h>
+#include <getopt.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <hi_ncurses.h>
+
+void help(char *program_name)
+{
+  printf("Usage: %s [OPTION] <file1> [<file2>]\n", program_name);
+  exit(0);
+}
 
 int main(int argc, char *argv[])
 {
 
+  int c;
   hi_file *file, *file2;
   hi_diff *diff = NULL;
   
-  file = hi_open_file(argv[1], NULL);
-  file2 = hi_open_file(argv[2], NULL);
+  static struct option long_options[] =
+  {
+    {"help", no_argument, 0, 'h'},
+    {0,0,0,0}
+  };
+  
+  while (1)
+  {
+    int option_index = 0;
+    c = getopt_long(argc, argv, "h",
+                    long_options, &option_index);
+    
+    if (c == -1)
+      break;
+    
+    switch (c)
+    {
+      case 'h':
+        help(argv[0]);
+        break;
+        
+      default:
+        help(argv[0]);
+    }
+  }
+  
+  if ((argc - optind) < 1)
+  {
+    help(argv[0]);
+  }
+  
+  file = hi_open_file(argv[optind], NULL);
+  
+  if (NULL == file)
+  {
+    fprintf(stderr,"Could not open %s\n", argv[optind]);
+    exit(0);
+  }
+  
+  if ((argc - optind) >=2)
+  {
+    file2 = hi_open_file(argv[optind+1], NULL);
+    if (NULL == file2)
+    {
+      fprintf(stderr,"Could not open %s\n", argv[optind+1]);
+      exit(0);
+    }
+  }
 
   if (file2 != NULL)
   {
     diff = hi_diff_calculate(file, file2);    
     
   }
-
   
 #if 1
   hi_ncurses_main(file, file2, diff);
