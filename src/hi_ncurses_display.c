@@ -37,13 +37,14 @@
 static GList *display_list;
 
 /* Hex mode */
-static int hexmode_bytes_per_line(hi_ncurses_fpager *pager)
+static int hexmode_bytes_per_line(unused(hi_ncurses_fpager *pager), int remaining_width)
 {
-  return 0;
+  return remaining_width/3;
 }
 
-static void hexmode_display_byte(hi_ncurses_fpager *pager, off_t offset, unsigned char value)
+static void hexmode_display_byte(hi_ncurses_fpager *pager, int y, int start_x, int rowbyte, off_t offset, unsigned char value)
 {
+  mvwprintw(pager->window,y,start_x+(rowbyte*3),"%02x",value);  
 }
 
 static void hi_ncurses_display_define(const char *name,

@@ -96,12 +96,13 @@ static void hi_ncurses_redraw_ruler(hi_ncurses *ncurses)
               value32_le, (int32_t)value32_le, value32_le, value32_le);
   }
   
-  mvwprintw(ncurses->ruler,RULER_LINES-1,0,"0x%08x/0x%08x %i/%i (%.2f%%) \"%s\" %s",
+  mvwprintw(ncurses->ruler,RULER_LINES-1,0,"0x%08x/0x%08x %i/%i (%.2f%%) \"%s\" %s %s",
             (unsigned int) offset, (unsigned int) file->size,
             (unsigned int) offset, (unsigned int) file->size,
             (((double) offset)/file->size)*100,
             ncurses->buffer,
-            ((ncurses->highlighter != NULL) && (ncurses->highlighter->name != NULL)) ? ncurses->highlighter->name : "");
+            ((ncurses->highlighter != NULL) && (ncurses->highlighter->name != NULL)) ? ncurses->highlighter->name : "",
+            ((ncurses->focused_pager->display_mode != NULL) && (ncurses->focused_pager->display_mode->name != NULL)) ? ncurses->focused_pager->display_mode->name : "");
   wrefresh(ncurses->ruler);
 }
 

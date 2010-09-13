@@ -37,7 +37,7 @@
 static void update_bytes_per_line(hi_ncurses_fpager *pager)
 {
   /* TODO: add other output format mechanisms */
-  pager->bytes_per_row = (pager->width-(OFFSET_SIZE+BYTES_FOR_BORDER))/WIDTH_PER_BYTE;
+  pager->bytes_per_row = pager->display_mode->bytes_per_line_func(pager, pager->width-(OFFSET_SIZE+BYTES_FOR_BORDER));
   
 }
 
@@ -65,6 +65,7 @@ hi_ncurses_fpager *hi_ncurses_fpager_new(hi_ncurses *curses,
   pager->offset = 0;
   pager->window = newwin(height , width,y, x);
   pager->linked_pager = NULL;
+  pager->display_mode = hi_ncurses_display_get(NULL, 0);
   update_bytes_per_line(pager);
   
   return pager;
@@ -161,7 +162,9 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
           }
           wcolor_set(pager->window, colour, NULL);
         
-          mvwprintw(pager->window,y+1,2+OFFSET_SIZE+(x*3),"%02x",val);  
+          /* Display byte */
+          pager->display_mode->display_byte_func(pager, y+1, 2+OFFSET_SIZE, x, offset, val);
+ 
           wcolor_set(pager->window, hi_ncurses_colour_normal,NULL);
           if (TRUE == diff)
             wattroff(pager->window, A_REVERSE);

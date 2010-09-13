@@ -30,8 +30,8 @@
 #ifndef HI_NCURSES_DISPLAY_H
 #define HI_NCURSES_DISPLAY_H
 
-typedef int (*hi_display_bytes_per_line)(hi_ncurses_fpager *pager);
-typedef void (*hi_display_display_byte)(hi_ncurses_fpager *pager, off_t offset, unsigned char value);
+typedef int (*hi_display_bytes_per_line)(hi_ncurses_fpager *pager, int remaining_width);
+typedef void (*hi_display_display_byte)(hi_ncurses_fpager *pager, int y, int start_x, int rowbyte, off_t offset, unsigned char value);
 
 typedef struct hi_display_mode
 {
