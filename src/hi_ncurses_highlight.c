@@ -31,14 +31,23 @@
 #include <hi_ncurses.h>
 #include <hi_ncurses_highlight.h>
 #include <glib.h>
+#include <ctype.h>
+#include <string.h>
+#include <stdlib.h>
+#include <macros.h>
 
 static GList *highlight_list;
 
+static void hi_ncurses_highlight_define(hi_ncurses_highlight_per_byte highlighter,
+                                        const char *name,
+                                        hi_ncurses_highlight_begin    begin_func,
+                                        hi_ncurses_highlight_end      end_func);
+
 /* C Type style */
-enum hi_ncurses_colour highlight_ctype(hi_file *file,
-                                       off_t offset,
-                                       char val,
-                                       void *dataptr)
+enum hi_ncurses_colour highlight_ctype(unused(hi_file *file),
+                                       unused(off_t offset),
+                                       unsigned char val,
+                                       unused(void *dataptr))
 {
   if (isalpha(val))
     return hi_ncurses_colour_blue;
@@ -51,10 +60,10 @@ enum hi_ncurses_colour highlight_ctype(hi_file *file,
   return hi_ncurses_colour_normal;
 }
 
-void hi_ncurses_highlight_define(hi_ncurses_highlight_per_byte highlighter,
-                                 char *name,
-                                 hi_ncurses_highlight_begin    begin_func,
-                                 hi_ncurses_highlight_end      end_func)
+static void hi_ncurses_highlight_define(hi_ncurses_highlight_per_byte highlighter,
+                                        const char *name,
+                                        hi_ncurses_highlight_begin    begin_func,
+                                        hi_ncurses_highlight_end      end_func)
 {
   hi_ncurses_highlight *new;
   new = malloc(sizeof(hi_ncurses_highlight));
@@ -66,7 +75,7 @@ void hi_ncurses_highlight_define(hi_ncurses_highlight_per_byte highlighter,
   highlight_list = g_list_append(highlight_list, new);
 }
 
-void hi_ncurses_highlight_init()
+void hi_ncurses_highlight_init(void)
 {
 
   hi_ncurses_highlight_define(highlight_ctype,"ctype",NULL,NULL);

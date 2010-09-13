@@ -59,6 +59,8 @@ typedef struct hi_ncurses_fpager
   int      x;
   int      y;
   struct hi_ncurses_fpager *linked_pager;
+  /* Declared later */
+  struct hi_display_mode *display_mode;
 } hi_ncurses_fpager;
 
 typedef struct hi_ncurses
@@ -71,6 +73,7 @@ typedef struct hi_ncurses
   WINDOW                *window;
   WINDOW                *ruler;
   hi_ncurses_highlight  *highlighter;
+
 } hi_ncurses;
 
 

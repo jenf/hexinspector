@@ -29,7 +29,7 @@
 #include <hi_ncurses.h>
 #include <stdlib.h>
 #include <macros.h>
-#include <ctype.h>
+#include <hi_ncurses_display.h>
 
 #define BYTES_FOR_BORDER (3)
 #define WIDTH_PER_BYTE (3)

@@ -1,4 +1,4 @@
-/* <filename>: Hexinspector
+/* hi_ncurses_display: Hexinspector
    Copyright (c) 2010 Jen Freeman
 
    $Id$
@@ -27,38 +27,17 @@
  * Structure overview
  */
 
-#ifndef HI_MACRO_H
-#define HI_MACRO_H
+#ifndef HI_NCURSES_DISPLAY_H
+#define HI_NCURSES_DISPLAY_H
 
+typedef int (*hi_display_bytes_per_line)(hi_ncurses_fpager *pager);
+typedef void (*hi_display_display_byte)(hi_ncurses_fpager *pager, off_t offset, unsigned char value);
 
-#ifdef HAVE_DEBUG
-#include <errno.h>
-#include <string.h>
-#include <stdio.h>
-#define DPRINTF(...) fprintf(stderr,__VA_ARGS__)
-#define DERRNO(fmt) fprintf(stderr,"%s:%s\n", fmt, strerror(errno));
-#else
-#define DPRINTF(...)
-#define DERRNO(...)
-#endif
+typedef struct hi_display_mode
+{
+  hi_display_bytes_per_line bytes_per_line;
+  hi_display_display_byte   display_byte;
+} hi_display_mode;
 
-#ifdef VERBOSE_DEBUG
-#define VDPRINTF(...) DPRINTF(__VA_ARGS__)
-#else
-#define VDPRINTF(...)
-#endif
-
-/* Branch predicition markers */
-#if __GNUC__ < 3
-#define __builtin_expect(x, n) (x)
-#else
-#define likely(x)   __builtin_expect(!!(x), 1)
-#define unlikely(x)   __builtin_expect(!!(x), 0)
-#endif
-#if __GNUC__ < 3
-#define unused(x) x
-#else
-#define unused(x) x __attribute__ ((unused))
-#endif
 
 #endif
