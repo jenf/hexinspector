@@ -10,7 +10,7 @@ Todo
 * Display modes
   * Decimal mode (Int16 LE/BE, Int32 LE/BE)
 * Highlight modes
-  * MPEG-TS packet detection
+  * MPEG-TS packet mode needs improvement
 * Fix issue where previous diff gets stuck on the last byte of the file
 * Fix issue where diff's of zero bytes are erronously shown as 1 byte.
 * Add { command (Goto next big area)
