@@ -46,7 +46,7 @@ static int canmode_bytes_per_line(unused(hi_ncurses_fpager *pager), int remainin
 static void canmode_display_byte(hi_ncurses_fpager *pager, int y, int start_x, int rowbyte, off_t offset, unsigned char value)
 {
   mvwprintw(pager->window,y,start_x+(rowbyte*3),"%02x",value);  
-  mvwprintw(pager->window,y,start_x+((pager->remaining_bytes_per_row-1)/4*3)+rowbyte,"%c",isprint(value) ? value : ' ');
+  mvwprintw(pager->window,y,start_x+((pager->remaining_bytes_per_row-1)/4*3)+rowbyte,"%c",isprint(value) ? value : '.');
 }
 
 /* Hex8 mode */
@@ -90,10 +90,7 @@ static int asciimode_bytes_per_line(unused(hi_ncurses_fpager *pager), int remain
 
 static void asciimode_display_byte(hi_ncurses_fpager *pager, int y, int start_x, int rowbyte, off_t offset, unsigned char value)
 {
-  if (isprint(value))
-  {
-    mvwprintw(pager->window,y,start_x+rowbyte,"%c",value); 
-  }
+  mvwprintw(pager->window,y,start_x+rowbyte,"%c",isprint(value) ? value : '.'); 
 }
 
 /* Bit mode */

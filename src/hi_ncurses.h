@@ -38,6 +38,7 @@
 #define KEYBUFFER_LEN (256)
 enum hi_ncurses_colour
 {
+  hi_ncurses_colour_dummy,
   hi_ncurses_colour_normal,
   hi_ncurses_colour_red,
   hi_ncurses_colour_blue,

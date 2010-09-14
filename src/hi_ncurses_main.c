@@ -164,6 +164,7 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
   (void) signal(SIGINT, finish);
   ncurses->window = initscr();
   start_color();
+  init_pair(hi_ncurses_colour_normal,COLOR_WHITE  ,COLOR_BLACK);
   init_pair(hi_ncurses_colour_red ,COLOR_RED  ,COLOR_BLACK);
   init_pair(hi_ncurses_colour_blue,COLOR_CYAN ,COLOR_BLACK);
   init_pair(hi_ncurses_colour_green,COLOR_GREEN,COLOR_BLACK);
