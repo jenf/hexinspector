@@ -33,7 +33,7 @@
 #include <stdint.h>
 #include <buzhash.h>
 #include <stdlib.h>
-
+#include <string.h>
 enum diff_mode
 {
   DIFF_MODE_SYNC,
@@ -290,6 +290,7 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
   off_t *value;  
   int idx;
   gboolean moved_since_hash_match = TRUE;
+  gboolean diffed = FALSE;
   int bytes_jump;
   hi_diff *diff;
   
@@ -388,22 +389,36 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
           for (srcptr_search = 0; srcptr_search < search_size; srcptr_search++)
           {
             dstptr_search = search_size - (srcptr_search);
-            if (srcptr+srcptr_search > src->size) {continue;}
-            if (dstptr+dstptr_search > dst->size) {continue;}      
+            if ((srcptr+srcptr_search+dst->file_options.minimum_same-1) > src->size) {continue;}
+            if ((dstptr+dstptr_search+dst->file_options.minimum_same-1) > dst->size) {continue;}      
             
             VDPRINTF("Search %lu %lu %lu\n", (unsigned long) search_size, (unsigned long)srcptr_search, (unsigned long)dstptr_search);
             if (src->memory[srcptr+srcptr_search] == dst->memory[dstptr+dstptr_search])
             {
-              srcptr_new = srcptr+srcptr_search;
-              dstptr_new = dstptr+dstptr_search;
-              mode = DIFF_MODE_SYNC;
+              diffed = FALSE;
+              for (idx = 1; idx < dst->file_options.minimum_same; idx++)
+              {
+                if ((src->memory[srcptr+srcptr_search+idx]) != (dst->memory[dstptr+dstptr_search+idx]))
+                {
+                  diffed = TRUE;
+                  break;
+                }
+                                                                         
+              }
               
-              working_hunk.src_start = srcptr_new;
-              working_hunk.dst_start = dstptr_new;
-              working_hunk.type = HI_DIFF_TYPE_SAME;
-              
-              DPRINTF("Near Sync at %lu %lu\n", (unsigned long) srcptr_new, (unsigned long) dstptr_new);
-              break;
+              if (diffed == FALSE)
+              {
+                srcptr_new = srcptr+srcptr_search;
+                dstptr_new = dstptr+dstptr_search;
+                mode = DIFF_MODE_SYNC;
+                
+                working_hunk.src_start = srcptr_new;
+                working_hunk.dst_start = dstptr_new;
+                working_hunk.type = HI_DIFF_TYPE_SAME;
+                
+                DPRINTF("Near Sync at %lu %lu\n", (unsigned long) srcptr_new, (unsigned long) dstptr_new);
+                break;
+              }
 
             }
           }

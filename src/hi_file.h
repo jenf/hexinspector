@@ -37,8 +37,9 @@
 
 typedef struct hi_file_options
 {
-  int hashbytes;       /**< Number of bytes to hash */
-  int diff_jump_percent; /**< Maximum percentage of file to jump on a far diff */
+  int hashbytes;          /**< Number of bytes to hash */
+  float diff_jump_percent;  /**< Maximum percentage of file to jump on a far diff */
+  int minimum_same;       /**< Minimum number of same bytes to be considered the same */
   gboolean generate_hash; /**< Should a buzhash be calculcated for this file? */
 } hi_file_options;
   

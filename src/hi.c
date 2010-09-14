@@ -40,12 +40,13 @@ void help(char *program_name)
 {
   hi_file_options options;
   hi_file_get_default_options(&options);
-  printf("Usage: %s [OPTION] <file1> [<file2>]\n", program_name);
-  printf("Hex file viewer/comparer.\n\n"
+  fprintf(stderr, "Usage: %s [OPTION] <file1> [<file2>]\n", program_name);
+  fprintf(stderr, "Hex file viewer/comparer.\n\n"
          " -h/--help          This help text\n"
          " -b/--hashbytes=num Number of bytes that are used in each hash, lower=more memory, default %i\n"
-         " -d/--diff_jump_limit=num Percentage of the file that a diff is allowed to jump, default %i\n",
-         options.hashbytes, options.diff_jump_percent);
+         " -d/--diff_jump_limit=num Percentage of the file that a diff is allowed to jump, default %f\n"
+         " -m/--minimum_same=num Minimum number of bytes that must be the same in order to be considered back in sync, default %i\n",
+         options.hashbytes, options.diff_jump_percent, options.minimum_same);
   exit(0);
 }
 
@@ -62,6 +63,7 @@ int main(int argc, char *argv[])
     {"help", no_argument, 0, 'h'},
     {"hashbytes", required_argument, 0, 'b'},
     {"diff_jump_limit", required_argument, 0, 'd'},
+    {"minimum_same", required_argument, 0, 'm'},
     {0,0,0,0}
   };
   
@@ -69,8 +71,9 @@ int main(int argc, char *argv[])
   
   while (1)
   {
+    int value;
     int option_index = 0;
-    c = getopt_long(argc, argv, "hb:d:",
+    c = getopt_long(argc, argv, "hb:d:m:",
                     long_options, &option_index);
     
     if (c == -1)
@@ -84,10 +87,35 @@ int main(int argc, char *argv[])
         
       case 'b':
         options.hashbytes = atoi(optarg);
+        if (options.hashbytes < 16)
+        {
+          fprintf(stderr,"Hash size less than 16 is not recommended\n");
+          help(argv[0]);
+        }
         break;
         
       case 'd':
         options.diff_jump_percent = atof(optarg);
+        if (options.diff_jump_percent > 0.0)
+        {
+          fprintf(stderr,"Maximum diff jump percentage must be greater than 0%\n");
+          help(argv[0]);
+        }
+        else if (options.diff_jump_percent < 100.0)
+        {
+          fprintf(stderr,"Maximum diff jump percentage must be less than 100%\n");
+          help(argv[0]);
+        }
+        break;
+        
+      case 'm':
+        options.minimum_same = atoi(optarg);
+        if (value < 1)
+        {
+          fprintf(stderr,"Minimum same must be greater than 1\n");
+          help(argv[0]);
+        }
+        break;
       default:
         help(argv[0]);
     }
