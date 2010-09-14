@@ -44,7 +44,6 @@
 hi_file *hi_open_file(char *filename,hi_file_options *options)
 {
   int fd, ret;
-  struct stat buf;
   hi_file *file;
   
   struct hi_file_options default_options = {
@@ -71,21 +70,23 @@ hi_file *hi_open_file(char *filename,hi_file_options *options)
     DERRNO("Couldn't open file");
     return NULL;
   }
-  
-  ret = fstat(fd, &buf);
-  
-  if (ret == -1)
-  {
-    DERRNO("Couldn't fstat file");
-    goto close_fd;
-  }
+
+
+
   file = malloc(sizeof(hi_file));
   if (file == NULL)
   {
     DPRINTF("Couldn't malloc memory\n");
     goto close_fd;
   }
+  file->size = lseek(fd, 0, SEEK_END);
   
+  if (file->size == -1)
+  {
+    DERRNO("Couldn't get file size\n");
+    goto free_structure;
+  }
+
   file->filename=strdup(filename);
   if (file->filename == NULL)
   {
@@ -93,15 +94,14 @@ hi_file *hi_open_file(char *filename,hi_file_options *options)
     goto free_structure;
   }
   
-  file->size = buf.st_size;
   file->file_options = *options;
+  DPRINTF("About to map %i\n", file->size);
   file->memory = mmap(NULL, file->size, PROT_READ, MAP_PRIVATE, fd, 0);
-  if (NULL == file->memory)
+  if (-1 == file->memory)
   {
     DPRINTF("Couldn't mmap file\n");
     goto free_filename;
   }
-  
   /* Generate utils */
   if (FALSE == hi_buzhash_generate(file))
   {

@@ -44,7 +44,7 @@
 #define PAGER_WIDTH_PAIR ((COLS/2))
 #define PAGER_HEIGHT (LINES-RULER_LINES)
 
-
+char foo[256];
 void convert_to_bitstring(int value, char *str)
 {
   int i;
@@ -71,6 +71,7 @@ static void hi_ncurses_redraw_ruler(hi_ncurses *ncurses)
   convert_to_bitstring(value8, bitstring);
   
   werase(ncurses->ruler);
+
   mvwprintw(ncurses->ruler,0,0,"1b: %s/% 3u/%+ 4i/%#03o/0x%02x/'%c'",
             bitstring, value8, (signed char) value8, value8, value8,
             isprint(file->memory[offset]) ? file->memory[offset] : ' ');
@@ -95,7 +96,7 @@ static void hi_ncurses_redraw_ruler(hi_ncurses *ncurses)
               "4b: LE: % 10u/%+11i/%#012o/0x%08x",
               value32_le, (int32_t)value32_le, value32_le, value32_le);
   }
-  
+
   mvwprintw(ncurses->ruler,RULER_LINES-1,0,"0x%08x/0x%08x %i/%i (%.2f%%) \"%s\" %s %s",
             (unsigned int) offset, (unsigned int) file->size,
             (unsigned int) offset, (unsigned int) file->size,
@@ -103,6 +104,7 @@ static void hi_ncurses_redraw_ruler(hi_ncurses *ncurses)
             ncurses->buffer,
             ((ncurses->highlighter != NULL) && (ncurses->highlighter->name != NULL)) ? ncurses->highlighter->name : "",
             ((ncurses->focused_pager->display_mode != NULL) && (ncurses->focused_pager->display_mode->name != NULL)) ? ncurses->focused_pager->display_mode->name : "");
+
   wrefresh(ncurses->ruler);
 }
 
@@ -120,8 +122,9 @@ static void redraw(hi_ncurses *ncurses, gboolean need_resize)
       hi_ncurses_fpager_resize(ncurses->src, PAGER_HEIGHT, PAGER_WIDTH_SOLO, 0, 0);           
     }
     
-    mvwin(ncurses->ruler, PAGER_HEIGHT, 0);
+
     wresize(ncurses->ruler, RULER_LINES, COLS);
+    mvwin(ncurses->ruler, PAGER_HEIGHT, 0);
     erase();
     refresh();
   }
