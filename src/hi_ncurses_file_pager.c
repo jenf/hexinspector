@@ -140,11 +140,6 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
             hunk = hi_diff_get_hunk(pager->diff, pager->file, offset);
             if (hunk != NULL && hunk->type == HI_DIFF_TYPE_DIFF)
             {
-              /* TODO: Fix this */
-              if ((pager->diff->dst==pager->file) && (hunk->dst_start==hunk->dst_end))
-              {
-                diff = FALSE;
-              }
               diff = TRUE;
             }
             
@@ -184,6 +179,7 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
 static void set_offset(hi_ncurses_fpager *pager, off_t offset)
 {
   hi_diff_hunk *hunk;
+  double ratio;
   
   pager->offset = offset;
   if (pager->offset < 0)
@@ -203,10 +199,18 @@ static void set_offset(hi_ncurses_fpager *pager, off_t offset)
     {
       if (pager->diff->src == pager->file)
       {
-        
+
         if (hunk->type == HI_DIFF_TYPE_DIFF)
         {
-          pager->linked_pager->offset = hunk->dst_start;
+          if (hunk->src_end - hunk->src_start == 0)
+          {
+            ratio = 0.0;
+          }
+          else
+          {
+            ratio = (pager->offset - hunk->src_start) / ((double)(hunk->src_end - hunk->src_start));
+          }
+          pager->linked_pager->offset = hunk->dst_start + (ratio * (hunk->dst_end - hunk->dst_start));
         }
         else
         {
@@ -217,7 +221,15 @@ static void set_offset(hi_ncurses_fpager *pager, off_t offset)
       {
         if (hunk->type == HI_DIFF_TYPE_DIFF)
         {
-          pager->linked_pager->offset = hunk->src_start;
+          if (hunk->dst_end - hunk->dst_start == 0)
+          {
+            ratio = 0.0;
+          }
+          else
+          {
+            ratio = (pager->offset - hunk->dst_start) / ((double)(hunk->dst_end - hunk->dst_start));
+          }
+          pager->linked_pager->offset = hunk->src_start + (ratio * (hunk->src_end - hunk->src_start));
         }
         else
         {
@@ -255,11 +267,11 @@ static void move_to_next_diff(hi_ncurses_fpager *pager, gboolean forwards)
     {
       if (pager->file == pager->diff->src)
       {
-        set_offset(pager, hunk->src_end);        
+        set_offset(pager, hunk->src_end+1);        
       }
       if (pager->file == pager->diff->dst)
       {
-        set_offset(pager, hunk->dst_end);        
+        set_offset(pager, hunk->dst_end+1);        
       }
     }
     else

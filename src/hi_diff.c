@@ -26,7 +26,7 @@
 /**
  * Calculate diff on two files
  */
-
+//#define VERBOSE_DEBUG
 #include <hi_file.h>
 #include <hi_diff.h>
 #include "hi_priv.h"
@@ -34,7 +34,7 @@
 #include <buzhash.h>
 #include <stdlib.h>
 #include <string.h>
-#define VERBOSE_DEBUG
+
 enum diff_mode
 {
   DIFF_MODE_SYNC,
@@ -56,7 +56,7 @@ static void dump_hunk(hi_diff_hunk *hunk)
     case HI_DIFF_TYPE_SAME_INDEXED:
       DPRINTF("SAME_IDX");break;
   }     
-  DPRINTF(" %lu %lu %lu %lu\n",
+  DPRINTF(" %lx %lx %lx %lx\n",
           (unsigned long) hunk->src_start,
           (unsigned long) hunk->dst_start,
           (unsigned long) hunk->src_end,
@@ -80,7 +80,7 @@ static gint compare_diff_hunks(hi_diff_hunk *hunk1, hi_diff_hunk *hunk2)
   if (hunk1->type == HI_DIFF_FIND_SRC)
   {
     if ((hunk1->src_start >= hunk2->src_start) &&
-        (hunk1->src_start < hunk2->src_end))
+        (hunk1->src_start <= hunk2->src_end))
     {
       return 0;
     }
@@ -88,7 +88,7 @@ static gint compare_diff_hunks(hi_diff_hunk *hunk1, hi_diff_hunk *hunk2)
   if (hunk1->type == HI_DIFF_FIND_DST)
   {
     if ((hunk1->dst_start >= hunk2->dst_start) &&
-        (hunk1->dst_start < hunk2->dst_end))
+        (hunk1->dst_start <= hunk2->dst_end))
     {
       return 0;
     }
@@ -144,7 +144,7 @@ gboolean backtrack_hunks(hi_diff_hunk *hunk,void *value, struct diff_userdata *u
     srcptr+=1;
     dstptr+=1;
     
-    DPRINTF("Original %lu %lu New %lu %lu\n",
+    DPRINTF("Original %lx %lx New %lx %lx\n",
             (unsigned long) hunk->src_start, (unsigned long) hunk->dst_start, (unsigned long) srcptr, (unsigned long) dstptr);
     hunk->src_start = srcptr;
     hunk->dst_start = dstptr;
@@ -161,6 +161,14 @@ hi_diff_hunk *insert_hunk(hi_diff *diff, hi_diff_hunk *hunk)
   hi_diff_hunk *new;
   DPRINTF("Add hunk ");
 
+  if (hunk->dst_end < hunk->dst_start)
+  {
+    hunk->dst_end = hunk->dst_start;
+  }
+  if (hunk->src_end < hunk->src_start)
+  {
+    hunk->src_end = hunk->src_start;
+  }
   
   new = malloc(sizeof(hi_diff_hunk));
   memcpy(new, hunk, sizeof(hi_diff_hunk));
@@ -293,8 +301,8 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
           if ((srcptr != working_hunk.src_start) &&
              (dstptr != working_hunk.dst_start))
           {
-              working_hunk.src_end = srcptr;
-              working_hunk.dst_end = dstptr;
+              working_hunk.src_end = srcptr-1;
+              working_hunk.dst_end = dstptr-1;
 
               insert_hunk(diff, &working_hunk);  
             
@@ -314,19 +322,23 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
         /* Try all combinations of bytes up to the dst hash size
            I'm not convinced that you have to do it all */
         
+        DPRINTF("Search start at %lu %lu\n", (unsigned long) srcptr, (unsigned long) dstptr);
+        
         /* Currently make it 16 */
         for (search_size=0;search_size<dst->file_options.hashbytes;search_size++)
         {
           if (DIFF_MODE_UNSYNCED_NEAR != mode) {break;}
-          
+#if 0          
           VDPRINTF("Search %lu\n", search_size);
-          for (srcptr_search = 0; srcptr_search < search_size; srcptr_search++)
+#endif
+          for (srcptr_search = 0; srcptr_search <= search_size; srcptr_search++)
           {
             dstptr_search = search_size - (srcptr_search);
             if ((srcptr+srcptr_search+dst->file_options.minimum_same-1) > src->size) {continue;}
             if ((dstptr+dstptr_search+dst->file_options.minimum_same-1) > dst->size) {continue;}      
-            
+#if 0            
             VDPRINTF("Search %lu %lu %lu\n", (unsigned long) search_size, (unsigned long)srcptr_search, (unsigned long)dstptr_search);
+#endif
             if (src->memory[srcptr+srcptr_search] == dst->memory[dstptr+dstptr_search])
             {
               diffed = FALSE;
@@ -346,8 +358,8 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
                 dstptr_new = dstptr+dstptr_search;
                 mode = DIFF_MODE_SYNC;
                 
-                working_hunk.src_end = srcptr_new;
-                working_hunk.dst_end = dstptr_new;
+                working_hunk.src_end = srcptr_new-1;
+                working_hunk.dst_end = dstptr_new-1;
                 working_hunk.type = HI_DIFF_TYPE_DIFF;
                 insert_hunk(diff, &working_hunk); 
                 
@@ -355,7 +367,7 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
                 working_hunk.dst_start = dstptr_new;
                 working_hunk.type = HI_DIFF_TYPE_SAME;
                 
-                DPRINTF("Near Sync at %lu %lu\n", (unsigned long) srcptr_new, (unsigned long) dstptr_new);
+                DPRINTF("Near Sync at %lx %lx\n", (unsigned long) srcptr_new, (unsigned long) dstptr_new);
                 break;
               }
 
@@ -391,39 +403,53 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
           value = g_hash_table_lookup(dst->buzhashes, (gpointer) hash);
           if (NULL != value)
           {
+#if 0
             VDPRINTF("Found hash %lu %u\n", (unsigned long)srcptr, hash);
-            
+#endif
             /* Check for one after the current dstptr */
             for (idx = 0; idx < value[0]; idx++)
             {
+#if 0
               VDPRINTF("Value at %lu %lu %lu %i\n",(unsigned long)srcptr, (unsigned long)dstptr, (unsigned long)value[idx+1], idx);
+#endif
               if (value[idx+1] >= dstptr)
               {
                 if (value[idx+1] < dstptr+bytes_jump)
                 {
+
                   dstptr_new = value[idx+1];
-                  DPRINTF("Far Sync at %lu %lu %i\n",(unsigned long)srcptr, (unsigned long)dstptr_new, idx);
-                  mode = DIFF_MODE_SYNC;
-                  if (last_hunk == NULL)
+                  
+                  /* This should memcmp the memory to ensure it is correct, however to many collisions will cause it to grind to a halt. */
+                  if (TRUE)
                   {
-                    working_hunk.src_end = srcptr;
-                    working_hunk.dst_end = dstptr_new;
-                    working_hunk.type = HI_DIFF_TYPE_DIFF;
-                    last_hunk = insert_hunk(diff, &working_hunk); 
+                    DPRINTF("Far Sync at %lx %lx %i %x %x\n",(unsigned long)srcptr, (unsigned long)dstptr_new, idx, src->memory[srcptr],dst->memory[dstptr_new]);
+                    mode = DIFF_MODE_SYNC;
+                    if (last_hunk == NULL)
+                    {
+                      working_hunk.src_end = srcptr-1;
+                      working_hunk.dst_end = dstptr_new-1;
+
+                      working_hunk.type = HI_DIFF_TYPE_DIFF;
+                      last_hunk = insert_hunk(diff, &working_hunk); 
+                    }
+                    else
+                    {
+                      /* This relies on the basis that it will not move position in the balanced binary tree */
+                      last_hunk->src_end = srcptr_new-1;
+                      last_hunk->dst_end = dstptr_new-1;
+                      DPRINTF("Edit last hunk to %lx %lx\n", (unsigned long)last_hunk->src_end, (unsigned long)last_hunk->dst_end);
+                    }
+                    working_hunk.src_start = srcptr;
+                    working_hunk.dst_start = dstptr_new;
+                    working_hunk.type = HI_DIFF_TYPE_SAME_INDEXED;
+                    
+                    moved_since_hash_match = FALSE;
+                    break;
                   }
                   else
                   {
-                    /* This relies on the basis that it will not move position in the balanced binary tree */
-                    last_hunk->src_end = srcptr;
-                    last_hunk->dst_end = dstptr_new;
-                    DPRINTF("Edit last hunk to %i %i\n", last_hunk->src_end, last_hunk->dst_end);
+                    VDPRINTF("Hash collision at %lx %lx\n", (unsigned long)srcptr, (unsigned long)dstptr_new);
                   }
-                  working_hunk.src_start = srcptr;
-                  working_hunk.dst_start = dstptr_new;
-                  working_hunk.type = HI_DIFF_TYPE_SAME_INDEXED;
-                  
-                  moved_since_hash_match = FALSE;
-                  break;
                 }
                 else
                 {
@@ -456,7 +482,9 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
       if (srcptr+dst->file_options.hashbytes < src->size)
       {
         hash = buzhash_roll(hash, src->memory[srcptr+dst->file_options.hashbytes], src->memory[srcptr ==0 ? 0 : srcptr], srcptr+dst->file_options.hashbytes, dst->file_options.hashbytes);
+#if 0
         VDPRINTF("%lu %lu %lu\n", (unsigned long) srcptr, (unsigned long) srcptr_new, hash);
+#endif
       }
     }
     dstptr = dstptr_new;
@@ -490,10 +518,19 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
   }
   else
   {
-    working_hunk.src_end = src->size;
-    working_hunk.dst_end = dst->size;
-    working_hunk.type = HI_DIFF_TYPE_DIFF;
-    insert_hunk(diff, &working_hunk);
+    if (last_hunk == NULL)
+    {
+      working_hunk.src_end = src->size;
+      working_hunk.dst_end = dst->size;
+      working_hunk.type = HI_DIFF_TYPE_DIFF;
+      insert_hunk(diff, &working_hunk);
+    }
+    else
+    {
+      last_hunk->src_end = src->size;
+      last_hunk->dst_end = dst->size;
+    }
+    
   }
   
   struct diff_userdata userdata={

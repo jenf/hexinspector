@@ -96,12 +96,12 @@ int main(int argc, char *argv[])
         
       case 'd':
         options.diff_jump_percent = atof(optarg);
-        if (options.diff_jump_percent > 0.0)
+        if (options.diff_jump_percent < 0.0)
         {
           fprintf(stderr,"Maximum diff jump percentage must be greater than 0%\n");
           help(argv[0]);
         }
-        else if (options.diff_jump_percent < 100.0)
+        else if (options.diff_jump_percent > 100.0)
         {
           fprintf(stderr,"Maximum diff jump percentage must be less than 100%\n");
           help(argv[0]);
