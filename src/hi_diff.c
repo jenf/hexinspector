@@ -34,6 +34,7 @@
 #include <buzhash.h>
 #include <stdlib.h>
 #include <string.h>
+#define VERBOSE_DEBUG
 enum diff_mode
 {
   DIFF_MODE_SYNC,
@@ -154,82 +155,8 @@ gboolean backtrack_hunks(hi_diff_hunk *hunk,void *value, struct diff_userdata *u
   return FALSE;
 }
 
-
-
-                               
-/* For each item add the diffs */
-gboolean insert_missing_diffs_each(hi_diff_hunk *hunk, void *value, struct diff_userdata *userdata)
-{
-  hi_diff_hunk *new_hunk;
-
-  if ((userdata->last != NULL) && (hunk->type != HI_DIFF_TYPE_DIFF))
-  {
-    new_hunk=malloc(sizeof(hi_diff_hunk));
-    new_hunk->type      = HI_DIFF_TYPE_DIFF;
-    new_hunk->src_start = userdata->last->src_end;
-    new_hunk->src_end   = hunk->src_start;
-    new_hunk->dst_start = userdata->last->dst_end;
-    new_hunk->dst_end   = hunk->dst_start;
-    DPRINTF("New Diff ");
-    dump_hunk(new_hunk);
-    userdata->list = g_slist_prepend(userdata->list, new_hunk);
-  }
-  
-  /* Cases where the first byte is not the same. */
-  if ((userdata->last == NULL) && (hunk->type != HI_DIFF_TYPE_DIFF))
-  {
-    if ((hunk->src_start != 0) || (hunk->dst_start !=0))
-    {
-      new_hunk=malloc(sizeof(hi_diff_hunk));
-      new_hunk->type = HI_DIFF_TYPE_DIFF;
-      new_hunk->src_start = 0;
-      new_hunk->dst_start = 0;
-      new_hunk->src_end   = hunk->src_start;
-      new_hunk->dst_end   = hunk->dst_start;
-      DPRINTF("New Diff ");
-      dump_hunk(new_hunk);
-      userdata->list = g_slist_prepend(userdata->list, new_hunk);
-    }
-  }
-  userdata->last = hunk;
-  return FALSE;
-}
-
-void insert_missing_diffs_to_tree(hi_diff_hunk *hunk, hi_diff *diff)
-{
-
-  DPRINTF("Insert ");
-  dump_hunk(hunk);
-  g_tree_insert(diff->hunks, hunk, hunk);
-}
-
-/** Add the missing diffs */
-void insert_missing_diffs(hi_diff *diff)
-{
-  GSList *list;
-  struct diff_userdata userdata={
-    .diff = diff,
-    .last = NULL,
-    .list = NULL
-  };
-  
-  g_tree_foreach(diff->hunks, (GTraverseFunc) insert_missing_diffs_each, &userdata);
-  
-  list = userdata.list;
-  
-  if (list != NULL)
-  {
-     /* Add the added items */
-    g_slist_foreach(userdata.list,(GFunc) insert_missing_diffs_to_tree, diff);
-    g_slist_free(userdata.list);   
-  }
-
-}
-
-
-
 /* insert a hunk into the tree */
-void insert_hunk(hi_diff *diff, hi_diff_hunk *hunk)
+hi_diff_hunk *insert_hunk(hi_diff *diff, hi_diff_hunk *hunk)
 {
   hi_diff_hunk *new;
   DPRINTF("Add hunk ");
@@ -243,7 +170,7 @@ void insert_hunk(hi_diff *diff, hi_diff_hunk *hunk)
   }
   dump_hunk(hunk);
 
-  
+  return new;
 }
 
 /** Retrieve a hunk by position */
@@ -301,6 +228,7 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
     .src_end = 0,
     .dst_end = 0
   };
+  hi_diff_hunk *last_hunk = NULL;
   
 
   
@@ -357,6 +285,7 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
         {
           srcptr_new ++;
           dstptr_new ++;
+          last_hunk = NULL;
           moved_since_hash_match = TRUE;
         }
         else
@@ -366,7 +295,12 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
           {
               working_hunk.src_end = srcptr;
               working_hunk.dst_end = dstptr;
-              insert_hunk(diff, &working_hunk);            
+
+              insert_hunk(diff, &working_hunk);  
+            
+              working_hunk.src_start = srcptr;
+              working_hunk.dst_start = dstptr;
+            
           }
 
 
@@ -411,6 +345,11 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
                 srcptr_new = srcptr+srcptr_search;
                 dstptr_new = dstptr+dstptr_search;
                 mode = DIFF_MODE_SYNC;
+                
+                working_hunk.src_end = srcptr_new;
+                working_hunk.dst_end = dstptr_new;
+                working_hunk.type = HI_DIFF_TYPE_DIFF;
+                insert_hunk(diff, &working_hunk); 
                 
                 working_hunk.src_start = srcptr_new;
                 working_hunk.dst_start = dstptr_new;
@@ -465,6 +404,20 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
                   dstptr_new = value[idx+1];
                   DPRINTF("Far Sync at %lu %lu %i\n",(unsigned long)srcptr, (unsigned long)dstptr_new, idx);
                   mode = DIFF_MODE_SYNC;
+                  if (last_hunk == NULL)
+                  {
+                    working_hunk.src_end = srcptr;
+                    working_hunk.dst_end = dstptr_new;
+                    working_hunk.type = HI_DIFF_TYPE_DIFF;
+                    last_hunk = insert_hunk(diff, &working_hunk); 
+                  }
+                  else
+                  {
+                    /* This relies on the basis that it will not move position in the balanced binary tree */
+                    last_hunk->src_end = srcptr;
+                    last_hunk->dst_end = dstptr_new;
+                    DPRINTF("Edit last hunk to %i %i\n", last_hunk->src_end, last_hunk->dst_end);
+                  }
                   working_hunk.src_start = srcptr;
                   working_hunk.dst_start = dstptr_new;
                   working_hunk.type = HI_DIFF_TYPE_SAME_INDEXED;
@@ -549,10 +502,12 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
     .list = NULL
   }; 
   /* Backtrack the indexed ones */
+  
   g_tree_foreach(diff->hunks, (GTraverseFunc) backtrack_hunks, &userdata);
   
+#if 0
   /* Insert the missing diff hunks */
   insert_missing_diffs(diff);
-  
+#endif
   return diff;
 }

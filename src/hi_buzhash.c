@@ -108,7 +108,10 @@ static gboolean destroy_hash_value(gpointer key, gpointer value, gpointer data)
  */
 void hi_buzhash_destroy(hi_file *file)
 {
-  g_hash_table_foreach_remove(file->buzhashes,destroy_hash_value,NULL);
-  g_hash_table_destroy(file->buzhashes);
-  file->buzhashes = NULL;
+  if (file->buzhashes != NULL)
+  {
+    g_hash_table_foreach_remove(file->buzhashes,destroy_hash_value,NULL);
+    g_hash_table_destroy(file->buzhashes);
+    file->buzhashes = NULL;
+  }
 }

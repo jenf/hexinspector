@@ -68,7 +68,7 @@ static int int8mode_bytes_per_line(unused(hi_ncurses_fpager *pager), int remaini
 
 static void int8mode_display_byte(hi_ncurses_fpager *pager, int y, int start_x, int rowbyte, off_t offset, unsigned char value)
 {
-  mvwprintw(pager->window,y,start_x+(rowbyte*4),"% 3i",value);  
+  mvwprintw(pager->window,y,start_x+(rowbyte*4),"%3i",value);  
 }
 
 /* Oct8 mode */
