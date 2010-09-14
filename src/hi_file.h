@@ -39,6 +39,7 @@ typedef struct hi_file_options
 {
   int hashbytes;       /**< Number of bytes to hash */
   int diff_jump_percent; /**< Maximum percentage of file to jump on a far diff */
+  gboolean generate_hash; /**< Should a buzhash be calculcated for this file? */
 } hi_file_options;
   
 /** Structure representing the file */
@@ -52,7 +53,8 @@ typedef struct hi_file
 } hi_file;
 
 /* Functions */
-hi_file *hi_open_file(char *filename,hi_file_options *options);
-void hi_close_file(hi_file *file);
+hi_file *hi_file_open(char *filename,hi_file_options *options);
+void hi_file_close(hi_file *file);
+void hi_file_get_default_options(hi_file_options *options);
 
 #endif

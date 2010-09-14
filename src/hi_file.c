@@ -36,20 +36,25 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <hi_priv.h>
+#include <string.h>
+
+void hi_file_get_default_options(hi_file_options *options)
+{
+  options->hashbytes = 128;
+  options->diff_jump_percent = 5;
+  options->generate_hash = TRUE;
+}
 
 /**
  * \brief Open a hexinspector file instance
  * If options is NULL, default ones will be used
  */
-hi_file *hi_open_file(char *filename,hi_file_options *options)
+hi_file *hi_file_open(char *filename,hi_file_options *options)
 {
-  int fd, ret;
+  int fd;
   hi_file *file;
   
-  struct hi_file_options default_options = {
-    .hashbytes = 128,
-    .diff_jump_percent = 5,
-  };
+  struct hi_file_options default_options;
   
   if (NULL == filename)
   {
@@ -60,6 +65,7 @@ hi_file *hi_open_file(char *filename,hi_file_options *options)
   if (NULL == options)
   {
     options = &default_options;
+    hi_file_get_default_options(options);
   }
 
   DPRINTF("Opening file %s\n", filename);
@@ -97,15 +103,18 @@ hi_file *hi_open_file(char *filename,hi_file_options *options)
   file->file_options = *options;
   DPRINTF("About to map %i\n", file->size);
   file->memory = mmap(NULL, file->size, PROT_READ, MAP_PRIVATE, fd, 0);
-  if (-1 == file->memory)
+  if ((void *)-1 == file->memory)
   {
     DPRINTF("Couldn't mmap file\n");
     goto free_filename;
   }
   /* Generate utils */
-  if (FALSE == hi_buzhash_generate(file))
+  if (TRUE == options->generate_hash)
   {
-    goto free_mmap;
+    if (FALSE == hi_buzhash_generate(file))
+    {
+      goto free_mmap;
+    }
   }
   close(fd);
   return file;
@@ -124,7 +133,7 @@ close_fd:
 /**
  * \brief Close and release all memory associated with a hexinspector file instance
  */
-void hi_close_file(hi_file *file)
+void hi_file_close(hi_file *file)
 {
   if (file == NULL)
   {

@@ -38,7 +38,14 @@
 
 void help(char *program_name)
 {
+  hi_file_options options;
+  hi_file_get_default_options(&options);
   printf("Usage: %s [OPTION] <file1> [<file2>]\n", program_name);
+  printf("Hex file viewer/comparer.\n\n"
+         " -h/--help          This help text\n"
+         " -b/--hashbytes=num Number of bytes that are used in each hash, lower=more memory, default %i\n"
+         " -d/--diff_jump_limit=num Percentage of the file that a diff is allowed to jump, default %i\n",
+         options.hashbytes, options.diff_jump_percent);
   exit(0);
 }
 
@@ -48,17 +55,22 @@ int main(int argc, char *argv[])
   int c;
   hi_file *file = NULL, *file2 = NULL;
   hi_diff *diff = NULL;
+  hi_file_options options;
   
   static struct option long_options[] =
   {
     {"help", no_argument, 0, 'h'},
+    {"hashbytes", required_argument, 0, 'b'},
+    {"diff_jump_limit", required_argument, 0, 'd'},
     {0,0,0,0}
   };
+  
+  hi_file_get_default_options(&options);
   
   while (1)
   {
     int option_index = 0;
-    c = getopt_long(argc, argv, "h",
+    c = getopt_long(argc, argv, "hb:d:",
                     long_options, &option_index);
     
     if (c == -1)
@@ -70,6 +82,12 @@ int main(int argc, char *argv[])
         help(argv[0]);
         break;
         
+      case 'b':
+        options.hashbytes = atoi(optarg);
+        break;
+        
+      case 'd':
+        options.diff_jump_percent = atof(optarg);
       default:
         help(argv[0]);
     }
@@ -80,7 +98,8 @@ int main(int argc, char *argv[])
     help(argv[0]);
   }
   
-  file = hi_open_file(argv[optind], NULL);
+  options.generate_hash = FALSE;
+  file = hi_file_open(argv[optind], &options);
   
   if (NULL == file)
   {
@@ -90,7 +109,8 @@ int main(int argc, char *argv[])
   
   if ((argc - optind) >=2)
   {
-    file2 = hi_open_file(argv[optind+1], NULL);
+    options.generate_hash = TRUE;
+    file2 = hi_file_open(argv[optind+1], &options);
     if (NULL == file2)
     {
       fprintf(stderr,"Could not open %s\n", argv[optind+1]);
@@ -107,7 +127,7 @@ int main(int argc, char *argv[])
 #if 1
   hi_ncurses_main(file, file2, diff);
 #endif
-  hi_close_file(file2);
-  hi_close_file(file);
-  
+  hi_file_close(file2);
+  hi_file_close(file);
+  return 0;
 }
