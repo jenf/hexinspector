@@ -34,6 +34,12 @@
 #include <buzhash.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef USE_RABINKARP
+#include <rabinkarp.h>
+
+#endif
+/* Useful for development */
+//#define DISABLE_NEAR_MATCH
 
 enum diff_mode
 {
@@ -269,7 +275,11 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
   {
     if (srcptr_new < src->size)
     {
+#ifdef USE_RABINKARP
+      hash = rabinkarp_add(hash, src->memory[srcptr_new], PRIME, BASE);
+#else
       hash = buzhash_roll(hash, src->memory[srcptr_new], 0, srcptr_new, dst->file_options.hashbytes);
+#endif
       VDPRINTF("Rolling %lu %u\n", (unsigned long) srcptr_new, hash);
     }
     else
@@ -321,7 +331,7 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
 
         /* Try all combinations of bytes up to the dst hash size
            I'm not convinced that you have to do it all */
-        
+#ifndef DISABLE_NEAR_MATCH        
         DPRINTF("Search start at %lu %lu\n", (unsigned long) srcptr, (unsigned long) dstptr);
         
         /* Currently make it 16 */
@@ -374,7 +384,7 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
             }
           }
         }
-        
+#endif        
         /* Couldn't find a match */
         if (DIFF_MODE_UNSYNCED_NEAR == mode)
         {
@@ -481,8 +491,14 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
     {
       if (srcptr+dst->file_options.hashbytes < src->size)
       {
+#ifdef USE_RABINKARP
+        hash = rabinkarp_roll(hash, src->memory[srcptr+dst->file_options.hashbytes], src->memory[srcptr ==0 ? 0 : srcptr],
+                              srcptr+dst->file_options.hashbytes, dst->file_options.hashbytes,
+                              PRIME, BASE, dst->file_options.popvalue);
+#else
         hash = buzhash_roll(hash, src->memory[srcptr+dst->file_options.hashbytes], src->memory[srcptr ==0 ? 0 : srcptr], srcptr+dst->file_options.hashbytes, dst->file_options.hashbytes);
-#if 0
+#endif
+#if 1
         VDPRINTF("%lu %lu %lu\n", (unsigned long) srcptr, (unsigned long) srcptr_new, hash);
 #endif
       }

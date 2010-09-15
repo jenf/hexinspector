@@ -30,14 +30,18 @@
 
 #ifndef HI_FILE_H
 #define HI_FILE_H
+#include <stdint.h>
 #include <unistd.h>
 #include <glib.h>
 
 /* Structures, Enums etc */
-
+//#define USE_RABINKARP
+#define PRIME GOOD_PRIME
+#define BASE  GOOD_BASE
 typedef struct hi_file_options
 {
   int hashbytes;          /**< Number of bytes to hash */
+  uint32_t popvalue;      /**< Value for the hash algorithm */
   float diff_jump_percent;  /**< Maximum percentage of file to jump on a far diff */
   int minimum_same;       /**< Minimum number of same bytes to be considered the same */
   gboolean generate_hash; /**< Should a buzhash be calculcated for this file? */

@@ -24,6 +24,7 @@
 */
 
 //#define VERBOSE_DEBUG
+#define STATS
 #include <sys/types.h>
 #include <hi_file.h>
 #include <hi_priv.h>
@@ -31,9 +32,12 @@
 #include <stdint.h>
 #include <buzhash.h>
 #include <stdlib.h>
+
+#ifdef USE_RABINKARP
 #include <rabinkarp.h>
-
-
+#define PRIME GOOD_PRIME
+#define BASE  GOOD_BASE
+#endif
 
 /**
  * \brief Buzhash generation
@@ -44,6 +48,13 @@ gboolean hi_buzhash_generate(hi_file *file)
   uint32_t hash=0;
   uint32_t table[256]=BUZHASH_TABLE;
   off_t *value,*original_value;
+#ifdef STATS
+  int max_len = 0;
+#endif
+  
+#ifdef USE_RABINKARP  
+  file->file_options.popvalue = rabinkarp_calculate_popvalue(file->file_options.hashbytes, PRIME, BASE);
+#endif
   
   file->buzhashes = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, NULL);
   if (NULL == file->buzhashes)
@@ -57,7 +68,11 @@ gboolean hi_buzhash_generate(hi_file *file)
     hash=0;
     for (i2=hash_start_offset;(i2<file->size && i2<hash_start_offset+file->file_options.hashbytes);i2++)
     {
+#ifdef USE_RABINKARP
+      hash = rabinkarp_add(hash, (unsigned char)file->memory[i2], PRIME, BASE);
+#else
       hash = combine(hash, table[(unsigned char)file->memory[i2]], 1);
+#endif
       VDPRINTF("hash1 %lu %lu\n", (unsigned long) i2, hash);
     }
     VDPRINTF("hash %lu %lu\n", (unsigned long) hash_start_offset, hash);
@@ -77,8 +92,10 @@ gboolean hi_buzhash_generate(hi_file *file)
       value[0]+=1;
     }
     
-    VDPRINTF("Adding byte %i hash %x len %x\n", hash_start_offset, hash, value[0]);
-    
+   VDPRINTF("Adding byte %i hash %x len %i\n", hash_start_offset, hash, value[0]);
+#ifdef STATS
+    max_len = MAX(max_len, value[0]);
+#endif
     value[value[0]]=hash_start_offset;
     
     if (value != original_value)
@@ -91,9 +108,9 @@ gboolean hi_buzhash_generate(hi_file *file)
 
   }
   
-#if 1
+#ifdef STATS
   guint size = g_hash_table_size(file->buzhashes);
-  DPRINTF("Hash items %lu size %u\n", file->size/file->file_options.hashbytes, size);
+  DPRINTF("Hash items %lu size %u, biggest hash %i\n", file->size/file->file_options.hashbytes, size, max_len);
 #endif
   return TRUE;
 }

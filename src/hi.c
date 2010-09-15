@@ -98,12 +98,12 @@ int main(int argc, char *argv[])
         options.diff_jump_percent = atof(optarg);
         if (options.diff_jump_percent < 0.0)
         {
-          fprintf(stderr,"Maximum diff jump percentage must be greater than 0%\n");
+          fprintf(stderr,"Maximum diff jump percentage must be greater than 0%%\n");
           help(argv[0]);
         }
         else if (options.diff_jump_percent > 100.0)
         {
-          fprintf(stderr,"Maximum diff jump percentage must be less than 100%\n");
+          fprintf(stderr,"Maximum diff jump percentage must be less than 100%%\n");
           help(argv[0]);
         }
         break;
@@ -134,7 +134,6 @@ int main(int argc, char *argv[])
     fprintf(stderr,"Could not open %s\n", argv[optind]);
     exit(0);
   }
-  
   if ((argc - optind) >=2)
   {
     options.generate_hash = TRUE;
@@ -145,6 +144,7 @@ int main(int argc, char *argv[])
       exit(0);
     }
   }
+
 
   if (file2 != NULL)
   {
