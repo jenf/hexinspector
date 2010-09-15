@@ -35,8 +35,7 @@
 
 #ifdef USE_RABINKARP
 #include <rabinkarp.h>
-#define PRIME GOOD_PRIME
-#define BASE  GOOD_BASE
+
 #endif
 
 /**
