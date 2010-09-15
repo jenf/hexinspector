@@ -31,7 +31,7 @@
 #include <stdint.h>
 #include <buzhash.h>
 #include <stdlib.h>
-
+#include <rabinkarp.h>
 
 
 
@@ -91,6 +91,10 @@ gboolean hi_buzhash_generate(hi_file *file)
 
   }
   
+#if 1
+  guint size = g_hash_table_size(file->buzhashes);
+  DPRINTF("Hash items %lu size %u\n", file->size/file->file_options.hashbytes, size);
+#endif
   return TRUE;
 }
 
