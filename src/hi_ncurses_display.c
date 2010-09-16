@@ -60,6 +60,11 @@ static void gen8mode_display_byte(hi_ncurses_fpager *pager, int y, int start_x, 
   mvwprintw(pager->window,y,start_x+(rowbyte*pager->display_mode->width_option),pager->display_mode->format_option,value);  
 }
 
+static void gen8mode_display_signedbyte(hi_ncurses_fpager *pager, int y, int start_x, int rowbyte, off_t offset, unsigned char value)
+{
+  mvwprintw(pager->window,y,start_x+(rowbyte*pager->display_mode->width_option),pager->display_mode->format_option,(signed char) value);  
+}
+
 /* ASCII mode */
 static void asciimode_display_byte(hi_ncurses_fpager *pager, int y, int start_x, int rowbyte, off_t offset, unsigned char value)
 {
@@ -89,7 +94,7 @@ static void hi_ncurses_display_define(const char *name,
   new->bytes_per_line_func = bytes_per_line_func;
   new->display_byte_func   = display_byte_func;
   new->width_option        = width_option;
-  new->format_option       = format_option != NULL ? strdup(format_option) : format_option;
+  new->format_option       = format_option != NULL ? strdup(format_option) : NULL;
   
   display_list = g_list_append(display_list, new);
 }
@@ -97,8 +102,9 @@ void hi_ncurses_display_init(void)
 {
   hi_ncurses_display_define("Hex8+ASCII", canmode_bytes_per_line, canmode_display_byte,0,NULL); 
   hi_ncurses_display_define("Hex8", gen8mode_bytes_per_line, gen8mode_display_byte,3, "%02x");
-  hi_ncurses_display_define("Oct8", gen8mode_bytes_per_line, gen8mode_display_byte,4, "%03o");  
-  hi_ncurses_display_define("Int8", gen8mode_bytes_per_line, gen8mode_display_byte,4, "%3i");  
+  hi_ncurses_display_define("Oct8", gen8mode_bytes_per_line, gen8mode_display_byte,4, "%03o");   
+  hi_ncurses_display_define("UInt8", gen8mode_bytes_per_line, gen8mode_display_byte,4, "%3u");  
+  hi_ncurses_display_define("SInt8", gen8mode_bytes_per_line, gen8mode_display_signedbyte,5, "%3hi");  
   hi_ncurses_display_define("ASCII", gen8mode_bytes_per_line, asciimode_display_byte,1, NULL);  
   hi_ncurses_display_define("Binary",gen8mode_bytes_per_line, bitmode_display_byte, 9, NULL);  
 }
