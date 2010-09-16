@@ -11,7 +11,6 @@ Todo
   * Decimal mode (Int16 LE/BE, Int32 LE/BE)
 * Highlight modes
   * MPEG-TS packet mode needs improvement
-* Add { command (Goto next big area)
 * Add selection mode
   * CRC32/MD5/SHA1 of selection
   * File format detection (gzip, jffs2 etc)
