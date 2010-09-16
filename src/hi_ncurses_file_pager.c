@@ -276,34 +276,43 @@ static void relative_move_pager(hi_ncurses_fpager *pager, off_t move)
   set_offset(pager, pager->offset + move);
 }
 
-static void move_to_next_diff(hi_ncurses_fpager *pager, gboolean forwards)
+static void move_to_next_diff(hi_ncurses_fpager *pager, int times)
 {
   hi_diff_hunk *hunk;
+  int i;
+  int times_abs = abs(times);
+  gboolean forwards= FALSE;
   
-  hunk = hi_diff_get_hunk(pager->diff, pager->file, pager->offset);
-  if (NULL != hunk)
+  if (times_abs == times)
+    forwards = TRUE;
+  
+  for (i=0; i < times_abs; i++)
   {
-    if (forwards)
+    hunk = hi_diff_get_hunk(pager->diff, pager->file, pager->offset);
+    if (NULL != hunk)
     {
-      if (pager->file == pager->diff->src)
+      if (forwards)
       {
-        set_offset(pager, hunk->src_end+1);        
+        if (pager->file == pager->diff->src)
+        {
+          set_offset(pager, hunk->src_end+1);        
+        }
+        if (pager->file == pager->diff->dst)
+        {
+          set_offset(pager, hunk->dst_end+1);        
+        }
       }
-      if (pager->file == pager->diff->dst)
+      else
       {
-        set_offset(pager, hunk->dst_end+1);        
+        if (pager->file == pager->diff->src)
+        {
+          set_offset(pager, hunk->src_start-1);        
+        }
+        if (pager->file == pager->diff->dst)
+        {
+          set_offset(pager, hunk->dst_start-1);        
+        }      
       }
-    }
-    else
-    {
-      if (pager->file == pager->diff->src)
-      {
-        set_offset(pager, hunk->src_start-1);        
-      }
-      if (pager->file == pager->diff->dst)
-      {
-        set_offset(pager, hunk->dst_start-1);        
-      }      
     }
   }
 }
@@ -402,12 +411,14 @@ gboolean hi_ncurses_fpager_key_event(hi_ncurses_fpager *pager,
       break;
       
     case '[':
-      move_to_next_diff(pager, FALSE);
+      move_to_next_diff(pager,-buffer_val);
       claimed = TRUE;
+      pager->curses->buffer[0]=0; 
       break;
     case ']':
-      move_to_next_diff(pager, TRUE);
+      move_to_next_diff(pager, buffer_val);
       claimed = TRUE;
+      pager->curses->buffer[0]=0; 
       break;
     case 'G':
     case 'g':
