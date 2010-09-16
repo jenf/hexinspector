@@ -35,7 +35,7 @@
 #include <glib.h>
 
 /* Structures, Enums etc */
-//#define USE_RABINKARP
+#define USE_RABINKARP
 #define PRIME GOOD_PRIME
 #define BASE  GOOD_BASE
 typedef struct hi_file_options
