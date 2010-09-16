@@ -38,6 +38,8 @@ typedef struct hi_display_mode
   hi_display_bytes_per_line bytes_per_line_func;
   hi_display_display_byte   display_byte_func;
   char                     *name;
+  int                       width_option;
+  char                     *format_option;
 } hi_display_mode;
 
 hi_display_mode *hi_ncurses_display_get(hi_display_mode *display,

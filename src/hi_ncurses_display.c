@@ -49,56 +49,24 @@ static void canmode_display_byte(hi_ncurses_fpager *pager, int y, int start_x, i
   mvwprintw(pager->window,y,start_x+((pager->remaining_bytes_per_row-1)/4*3)+rowbyte,"%c",isprint(value) ? value : '.');
 }
 
-/* Hex8 mode */
-static int hex8mode_bytes_per_line(unused(hi_ncurses_fpager *pager), int remaining_width)
+/* General 8bit mode */
+static int gen8mode_bytes_per_line(hi_ncurses_fpager *pager, int remaining_width)
 {
-  return remaining_width/3;
+  return remaining_width/pager->display_mode->width_option;
 }
 
-static void hex8mode_display_byte(hi_ncurses_fpager *pager, int y, int start_x, int rowbyte, off_t offset, unsigned char value)
+static void gen8mode_display_byte(hi_ncurses_fpager *pager, int y, int start_x, int rowbyte, off_t offset, unsigned char value)
 {
-  mvwprintw(pager->window,y,start_x+(rowbyte*3),"%02x",value);  
-}
-
-/* Int8 mode */
-static int int8mode_bytes_per_line(unused(hi_ncurses_fpager *pager), int remaining_width)
-{
-  return remaining_width/4;
-}
-
-static void int8mode_display_byte(hi_ncurses_fpager *pager, int y, int start_x, int rowbyte, off_t offset, unsigned char value)
-{
-  mvwprintw(pager->window,y,start_x+(rowbyte*4),"%3i",value);  
-}
-
-/* Oct8 mode */
-static int oct8mode_bytes_per_line(unused(hi_ncurses_fpager *pager), int remaining_width)
-{
-  return remaining_width/4;
-}
-
-static void oct8mode_display_byte(hi_ncurses_fpager *pager, int y, int start_x, int rowbyte, off_t offset, unsigned char value)
-{
-  mvwprintw(pager->window,y,start_x+(rowbyte*4),"%03o",value);  
+  mvwprintw(pager->window,y,start_x+(rowbyte*pager->display_mode->width_option),pager->display_mode->format_option,value);  
 }
 
 /* ASCII mode */
-static int asciimode_bytes_per_line(unused(hi_ncurses_fpager *pager), int remaining_width)
-{
-  return (remaining_width);
-}
-
 static void asciimode_display_byte(hi_ncurses_fpager *pager, int y, int start_x, int rowbyte, off_t offset, unsigned char value)
 {
   mvwprintw(pager->window,y,start_x+rowbyte,"%c",isprint(value) ? value : '.'); 
 }
 
 /* Bit mode */
-static int bitmode_bytes_per_line(unused(hi_ncurses_fpager *pager), int remaining_width)
-{
-  return remaining_width/9;
-}
-
 static void bitmode_display_byte(hi_ncurses_fpager *pager, int y, int start_x, int rowbyte, off_t offset, unsigned char value)
 {
   char str[9];
@@ -110,7 +78,9 @@ static void bitmode_display_byte(hi_ncurses_fpager *pager, int y, int start_x, i
 /* Utility functions */
 static void hi_ncurses_display_define(const char *name,
                                       hi_display_bytes_per_line    bytes_per_line_func,
-                                      hi_display_display_byte      display_byte_func)
+                                      hi_display_display_byte      display_byte_func,
+                                      int width_option,
+                                      const char *format_option)
 {
   hi_display_mode *new;
   new = malloc(sizeof(hi_display_mode));
@@ -118,17 +88,19 @@ static void hi_ncurses_display_define(const char *name,
   new->name           = strdup(name);
   new->bytes_per_line_func = bytes_per_line_func;
   new->display_byte_func   = display_byte_func;
+  new->width_option        = width_option;
+  new->format_option       = format_option != NULL ? strdup(format_option) : format_option;
   
   display_list = g_list_append(display_list, new);
 }
 void hi_ncurses_display_init(void)
 {
-  hi_ncurses_display_define("Hex8+ASCII", canmode_bytes_per_line, canmode_display_byte); 
-  hi_ncurses_display_define("Hex8", hex8mode_bytes_per_line, hex8mode_display_byte);
-  hi_ncurses_display_define("Oct8", oct8mode_bytes_per_line, oct8mode_display_byte);  
-  hi_ncurses_display_define("Int8", int8mode_bytes_per_line, int8mode_display_byte);  
-  hi_ncurses_display_define("ASCII", asciimode_bytes_per_line, asciimode_display_byte);  
-  hi_ncurses_display_define("Binary",bitmode_bytes_per_line, bitmode_display_byte);  
+  hi_ncurses_display_define("Hex8+ASCII", canmode_bytes_per_line, canmode_display_byte,0,NULL); 
+  hi_ncurses_display_define("Hex8", gen8mode_bytes_per_line, gen8mode_display_byte,3, "%02x");
+  hi_ncurses_display_define("Oct8", gen8mode_bytes_per_line, gen8mode_display_byte,4, "%03o");  
+  hi_ncurses_display_define("Int8", gen8mode_bytes_per_line, gen8mode_display_byte,4, "%3i");  
+  hi_ncurses_display_define("ASCII", gen8mode_bytes_per_line, asciimode_display_byte,1, NULL);  
+  hi_ncurses_display_define("Binary",gen8mode_bytes_per_line, bitmode_display_byte, 9, NULL);  
 }
 
 hi_display_mode *hi_ncurses_display_get(hi_display_mode *display,
