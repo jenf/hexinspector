@@ -46,6 +46,12 @@ enum hi_ncurses_colour
   hi_ncurses_colour_yellow
 };
 
+typedef struct hi_location_mode
+  {
+    char *constructor_string;
+    char *name;
+    int base;
+  } hi_location_mode;
 
 typedef struct hi_ncurses_fpager
 {
@@ -63,7 +69,8 @@ typedef struct hi_ncurses_fpager
   struct hi_ncurses_fpager *linked_pager;
   /* Declared later */
   struct hi_display_mode   *display_mode;
-  struct hi_location_mode  *location_mode;
+  hi_location_mode         *location_mode;
+  hi_ncurses_highlight     *highlighter;
   int      bytes_in_location;
 } hi_ncurses_fpager;
 
@@ -76,16 +83,10 @@ typedef struct hi_ncurses
   hi_diff               *diff;
   WINDOW                *window;
   WINDOW                *ruler;
-  hi_ncurses_highlight  *highlighter;
 } hi_ncurses;
 
 
-typedef struct hi_location_mode
-{
-  char *constructor_string;
-  char *name;
-  int base;
-} hi_location_mode;
+
 
 void *hi_ncurses_common_get(GList *list,
                             void *to_find,

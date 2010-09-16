@@ -73,6 +73,7 @@ hi_ncurses_fpager *hi_ncurses_fpager_new(hi_ncurses *curses,
   pager->linked_pager = NULL;
   pager->display_mode = hi_ncurses_display_get(NULL, 0);
   pager->location_mode = hi_ncurses_location_get(NULL, 0);
+  pager->highlighter   = hi_ncurses_highlight_get(NULL,0);
   update_bytes_per_line(pager);
   
   return pager;
@@ -107,7 +108,7 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
   enum hi_ncurses_colour colour;
   char format_str[256];
   
-  highlighter = pager->curses->highlighter;
+  highlighter = pager->highlighter;
   
   if ((highlighter != NULL) && (highlighter->begin_func != NULL))
   {
@@ -317,6 +318,7 @@ gboolean hi_ncurses_fpager_slave_key_event(hi_ncurses_fpager *pager,
     case '=':
       pager->location_mode = pager->linked_pager->location_mode;
       pager->display_mode  = pager->linked_pager->display_mode;
+      pager->highlighter   = pager->linked_pager->highlighter;
       update_bytes_per_line(pager);
       claimed = TRUE;
       break;
@@ -368,6 +370,8 @@ gboolean hi_ncurses_fpager_key_event(hi_ncurses_fpager *pager,
       pager->curses->buffer[0]=0;
       claimed = TRUE;
       break;   
+      
+    /* Display modes */
     case 'V':
       pager->display_mode = hi_ncurses_display_get(pager->display_mode,-1);
       update_bytes_per_line(pager);
@@ -386,6 +390,14 @@ gboolean hi_ncurses_fpager_key_event(hi_ncurses_fpager *pager,
     case 'l':
       pager->location_mode = hi_ncurses_location_get(pager->location_mode,1); 
       update_bytes_per_line(pager);
+      claimed = TRUE;
+      break;
+    case 'H':
+      pager->highlighter = hi_ncurses_highlight_get(pager->highlighter,-1);
+      claimed = TRUE;
+      break;          
+    case 'h':
+      pager->highlighter = hi_ncurses_highlight_get(pager->highlighter,1);
       claimed = TRUE;
       break;
       

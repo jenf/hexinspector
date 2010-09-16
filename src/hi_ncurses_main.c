@@ -101,7 +101,7 @@ static void hi_ncurses_redraw_ruler(hi_ncurses *ncurses)
             (unsigned int) offset, (unsigned int) file->size,
             (((double) offset)/file->size)*100,
             ncurses->buffer,
-            ((ncurses->highlighter != NULL) && (ncurses->highlighter->name != NULL)) ? ncurses->highlighter->name : "",
+            ((ncurses->focused_pager->highlighter != NULL) && (ncurses->focused_pager->highlighter->name != NULL)) ? ncurses->focused_pager->highlighter->name : "",
             ((ncurses->focused_pager->display_mode != NULL) && (ncurses->focused_pager->display_mode->name != NULL)) ? ncurses->focused_pager->display_mode->name : "",
             ((ncurses->focused_pager->location_mode != NULL) && (ncurses->focused_pager->location_mode->name != NULL)) ? ncurses->focused_pager->location_mode->name : "");
 
@@ -180,7 +180,7 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
 
   refresh();
   
-  ncurses->highlighter = hi_ncurses_highlight_get(NULL,0);
+
   
   ncurses->ruler = newwin(RULER_LINES, 0, PAGER_HEIGHT, 0);
   
@@ -238,12 +238,7 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
           quit = TRUE;
           break;
         
-        case 'H':
-          ncurses->highlighter = hi_ncurses_highlight_get(ncurses->highlighter,-1);
-          break;          
-        case 'h':
-          ncurses->highlighter = hi_ncurses_highlight_get(ncurses->highlighter,1);
-          break;
+
           
         case 'P':
         case 'p':
@@ -251,7 +246,6 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
             ncurses->focused_pager = (ncurses->src==ncurses->focused_pager ? ncurses->dst : ncurses->src);
           break;
           
-          /* Just temporary */
 
         case KEY_RESIZE:
           /* Need to resize the pagers */

@@ -41,11 +41,17 @@ All modes
  q/Q = Quit
  [buffer] Page Up/Page Down/Arrow keys pager around the file
  [buffer] g/G = Goto
- h/H = Next/Previous Highlight mode
- v/V = Next/Previous visual display mode (note it is linked to pager, this may change to entire display in future)
- l/L = Change address location mode (Hex, Octal, Decimal)
- =   = Sync both pagers settings
+
 Diff mode
  p/P = Switch focus between the two pagers
  [   = Previous diff
  ]   = Next diff
+
+Display modes
+
+Note display modes are not syncronised between pagers, if you wish to do so, press =
+ h/H = Next/Previous Highlight mode
+ v/V = Next/Previous visual display mode
+ l/L = Change address location mode (Hex, Octal, Decimal)
+ =   = Sync both pagers settings
+
