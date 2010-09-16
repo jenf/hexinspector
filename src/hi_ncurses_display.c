@@ -134,41 +134,5 @@ void hi_ncurses_display_init(void)
 hi_display_mode *hi_ncurses_display_get(hi_display_mode *display,
                                         int relative)
 {
-  GList *item = NULL;
-  if (display == NULL)
-  {
-    item = g_list_first(display_list);
-  }
-  else
-  {
-    item = g_list_find(display_list, display);
-    if (relative >= 1)
-    {
-      item = g_list_next(item);
-    }
-    else
-    {
-      item = g_list_previous(item);
-    }
-    if (item == NULL)
-    {
-      if (relative >= 1)
-      {
-        item = g_list_first(display_list);
-      }
-      else
-      {
-        item = g_list_last(display_list);
-      }
-    }
-  }
-  
-  if (item == NULL)
-  {
-    return NULL;    
-  }
-  else
-  {
-    return item->data;    
-  }
+  return hi_ncurses_common_get(display_list, display, relative);
 }

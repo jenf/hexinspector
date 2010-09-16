@@ -75,11 +75,19 @@ typedef struct hi_ncurses
   WINDOW                *window;
   WINDOW                *ruler;
   hi_ncurses_highlight  *highlighter;
-
+  int                    location_base;
 } hi_ncurses;
 
 
+typedef struct hi_ncurses_location
+{
+  char *constructor_string;
+  char *name;
+} hi_ncurses_location;
 
+void *hi_ncurses_common_get(GList *list,
+                            void *to_find,
+                            int relative);
 void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff);
 hi_ncurses_fpager *hi_ncurses_fpager_new(hi_ncurses *curses,
                                          hi_file *file,

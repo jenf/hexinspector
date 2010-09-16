@@ -135,41 +135,5 @@ void hi_ncurses_highlight_init(void)
 hi_ncurses_highlight *hi_ncurses_highlight_get(hi_ncurses_highlight *highlight,
                                               int relative)
 {
-  GList *item = NULL;
-  if (highlight == NULL)
-  {
-    item = g_list_first(highlight_list);
-  }
-  else
-  {
-    item = g_list_find(highlight_list, highlight);
-    if (relative >= 1)
-    {
-      item = g_list_next(item);
-    }
-    else
-    {
-      item = g_list_previous(item);
-    }
-    if (item == NULL)
-    {
-      if (relative >= 1)
-      {
-        item = g_list_first(highlight_list);
-      }
-      else
-      {
-        item = g_list_last(highlight_list);
-      }
-    }
-  }
-  
-  if (item == NULL)
-  {
-    return NULL;    
-  }
-  else
-  {
-    return item->data;    
-  }
+  return hi_ncurses_common_get(highlight_list, highlight, relative);
 }

@@ -44,7 +44,6 @@
 #define PAGER_WIDTH_PAIR ((COLS/2))
 #define PAGER_HEIGHT (LINES-RULER_LINES)
 
-char foo[256];
 void convert_to_bitstring(int value, char *str)
 {
   int i;
@@ -177,7 +176,7 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
   cbreak();
   noecho();
 
-  
+  ncurses->location_base = 0;
   refresh();
   
   ncurses->highlighter = hi_ncurses_highlight_get(NULL,0);
@@ -237,6 +236,14 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
           break;          
         case 'h':
           ncurses->highlighter = hi_ncurses_highlight_get(ncurses->highlighter,1);
+          break;
+          
+        case 'l':
+          ncurses->location_base +=1;
+          break;
+          
+        case 'L':
+          ncurses->location_base -=1;
           break;
           
         case 'P':

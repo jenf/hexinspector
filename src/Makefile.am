@@ -27,7 +27,8 @@ bin_PROGRAMS = hi
 
 hi_SOURCES = hi.c hi_file.c hi_buzhash.c hi_diff.c
 
-hi_SOURCES += hi_ncurses_main.c hi_ncurses_file_pager.c hi_ncurses_highlight.c hi_ncurses_display.c
+hi_SOURCES += hi_ncurses_main.c hi_ncurses_file_pager.c hi_ncurses_highlight.c hi_ncurses_display.c \
+	      hi_ncurses_location.c hi_ncurses_common.c
 
 hi_CFLAGS = $(GLIB_CFLAGS)
 hi_LDADD = $(GLIB_LIBS) $(NCURSES_LIBS)
