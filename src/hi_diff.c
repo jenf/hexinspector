@@ -437,12 +437,11 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
               {
                 if (value[idx+1] < dstptr+bytes_jump)
                 {
-
-                  dstptr_new = value[idx+1];
                   
                   /* This should memcmp the memory to ensure it is correct, however to many collisions will cause it to grind to a halt. */
                   if (TRUE)
                   {
+                    dstptr_new = value[idx+1];
                     DPRINTF("Far Sync at %lx %lx %i %x %x\n",(unsigned long)srcptr, (unsigned long)dstptr_new, idx, src->memory[srcptr],dst->memory[dstptr_new]);
                     mode = DIFF_MODE_SYNC;
                     if (last_hunk == NULL)
