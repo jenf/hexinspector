@@ -137,8 +137,11 @@ gboolean backtrack_hunks(hi_diff_hunk *hunk,void *value, struct diff_userdata *u
       /* Ensure we don't go back into the last diff hunk */
       if (userdata->last != NULL)
       {
-        if (srcptr < userdata->last->src_end) break;
-        if (dstptr < userdata->last->dst_end) break;
+        if (userdata->last->type != HI_DIFF_TYPE_DIFF)
+        {
+          if (srcptr < userdata->last->src_end) break;
+          if (dstptr < userdata->last->dst_end) break;
+        }
       }
       if (diff->src->memory[srcptr]!=diff->dst->memory[dstptr])
       {
@@ -155,6 +158,11 @@ gboolean backtrack_hunks(hi_diff_hunk *hunk,void *value, struct diff_userdata *u
             (unsigned long) hunk->src_start, (unsigned long) hunk->dst_start, (unsigned long) srcptr, (unsigned long) dstptr);
     hunk->src_start = srcptr;
     hunk->dst_start = dstptr;
+    if (userdata->last != NULL && userdata->last->type == HI_DIFF_TYPE_DIFF)
+    {
+      userdata->last->src_end = srcptr-1;
+      userdata->last->dst_end = dstptr-1;
+    }
   }
   
   userdata->last = hunk;
