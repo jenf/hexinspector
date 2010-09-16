@@ -72,9 +72,9 @@ gboolean hi_buzhash_generate(hi_file *file)
 #else
       hash = combine(hash, table[(unsigned char)file->memory[i2]], 1);
 #endif
-      VDPRINTF("hash1 %lu %lu\n", (unsigned long) i2, hash);
+//      VDPRINTF("hash1 %lu %lu\n", (unsigned long) i2, hash);
     }
-    VDPRINTF("hash %lu %lu\n", (unsigned long) hash_start_offset, hash);
+    VDPRINTF("hash %lu %x\n", (unsigned long) hash_start_offset, hash);
     
     original_value = value = g_hash_table_lookup(file->buzhashes, hash);
     

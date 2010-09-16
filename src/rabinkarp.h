@@ -39,7 +39,7 @@ static inline uint32_t rabinkarp_calculate_popvalue(int bytes, uint32_t prime, u
 {
   uint32_t popvalue = 1;
   int i;
-  for (i = 0; i < bytes; i++)
+  for (i = 0; i < bytes-1; i++)
   {
     popvalue = (popvalue * base) % prime;
   }

@@ -39,6 +39,7 @@
 
 #endif
 /* Useful for development */
+//#define START_WRONG
 //#define DISABLE_NEAR_MATCH
 
 enum diff_mode
@@ -244,7 +245,9 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
   };
   hi_diff_hunk *last_hunk = NULL;
   
-
+#ifdef START_WRONG
+  mode = DIFF_MODE_UNSYNCED_NEAR;
+#endif
   
   bytes_jump = (dst->file_options.diff_jump_percent*dst->size)/100;
   if (bytes_jump < dst->file_options.hashbytes)
@@ -280,7 +283,7 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
 #else
       hash = buzhash_roll(hash, src->memory[srcptr_new], 0, srcptr_new, dst->file_options.hashbytes);
 #endif
-      VDPRINTF("Rolling %lu %u\n", (unsigned long) srcptr_new, hash);
+      VDPRINTF("Rolling %lu 0x%x\n", (unsigned long) srcptr_new, hash);
     }
     else
     {
@@ -408,13 +411,13 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
         }
         else
         {
-          VDPRINTF("Unsynced far mode %lu %lu\n",(unsigned long) srcptr_new, hash);
+          VDPRINTF("Unsynced far mode %lu %x\n",(unsigned long) srcptr_new, hash);
           /* Lookup the current hash value in the list */
           value = g_hash_table_lookup(dst->buzhashes, (gpointer) hash);
           if (NULL != value)
           {
-#if 0
-            VDPRINTF("Found hash %lu %u\n", (unsigned long)srcptr, hash);
+#if 1
+            VDPRINTF("Found hash %lu %x\n", (unsigned long)srcptr, hash);
 #endif
             /* Check for one after the current dstptr */
             for (idx = 0; idx < value[0]; idx++)
@@ -499,7 +502,7 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
         hash = buzhash_roll(hash, src->memory[srcptr+dst->file_options.hashbytes], src->memory[srcptr ==0 ? 0 : srcptr], srcptr+dst->file_options.hashbytes, dst->file_options.hashbytes);
 #endif
 #if 1
-        VDPRINTF("%lu %lu %lu\n", (unsigned long) srcptr, (unsigned long) srcptr_new, hash);
+        VDPRINTF("%lu %lu %lx\n", (unsigned long) srcptr, (unsigned long) srcptr_new, hash);
 #endif
       }
     }
