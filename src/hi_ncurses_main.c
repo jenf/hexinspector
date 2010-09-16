@@ -144,8 +144,6 @@ static void finish(int sig)
   exit(0);
 }
 
-
-
 void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
 {
   hi_ncurses *ncurses;
@@ -179,7 +177,7 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
   noecho();
 
   refresh();
-  
+  ncurses->big_hunk_size=64;
 
   
   ncurses->ruler = newwin(RULER_LINES, 0, PAGER_HEIGHT, 0);

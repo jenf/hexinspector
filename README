@@ -44,7 +44,8 @@ All modes
 
 Diff mode
  p/P = Switch focus between the two pagers
- [buffer] "["/"]"   = Previous or next diff
+ [buffer] "["/"]"   = Previous or next hunk
+ [buffer] "{"/"}"   = Previous or next big diff hunk
 
 Display modes
 

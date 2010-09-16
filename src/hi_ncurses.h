@@ -46,12 +46,13 @@ enum hi_ncurses_colour
   hi_ncurses_colour_yellow
 };
 
+
 typedef struct hi_location_mode
-  {
-    char *constructor_string;
-    char *name;
-    int base;
-  } hi_location_mode;
+{
+  char *constructor_string;
+  char *name;
+  int base;
+} hi_location_mode;
 
 typedef struct hi_ncurses_fpager
 {
@@ -83,14 +84,13 @@ typedef struct hi_ncurses
   hi_diff               *diff;
   WINDOW                *window;
   WINDOW                *ruler;
+  int      big_hunk_size;
 } hi_ncurses;
 
 
 
 
-void *hi_ncurses_common_get(GList *list,
-                            void *to_find,
-                            int relative);
+
 void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff);
 hi_ncurses_fpager *hi_ncurses_fpager_new(hi_ncurses *curses,
                                          hi_file *file,
@@ -108,6 +108,10 @@ gboolean hi_ncurses_fpager_slave_key_event(hi_ncurses_fpager *pager,
                                            int key);
 void convert_to_bitstring(int value, char *str);
 void hi_ncurses_location_init(void);
+
+void *hi_ncurses_common_get(GList *list,
+                            void *to_find,
+                            int relative);
 hi_location_mode *hi_ncurses_location_get(hi_location_mode *location,
                                           int relative);
 

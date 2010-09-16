@@ -276,17 +276,17 @@ static void relative_move_pager(hi_ncurses_fpager *pager, off_t move)
   set_offset(pager, pager->offset + move);
 }
 
-static void move_to_next_diff(hi_ncurses_fpager *pager, int times)
+static void move_to_next_diff(hi_ncurses_fpager *pager, int times, gboolean bigdiff)
 {
-  hi_diff_hunk *hunk;
-  int i;
+  hi_diff_hunk *hunk, *hunk2 = NULL;
+  int i=0;
   int times_abs = abs(times);
   gboolean forwards= FALSE;
   
   if (times_abs == times)
     forwards = TRUE;
   
-  for (i=0; i < times_abs; i++)
+  while (i < times_abs)
   {
     hunk = hi_diff_get_hunk(pager->diff, pager->file, pager->offset);
     if (NULL != hunk)
@@ -313,7 +313,47 @@ static void move_to_next_diff(hi_ncurses_fpager *pager, int times)
           set_offset(pager, hunk->dst_start-1);        
         }      
       }
+      if (bigdiff == TRUE)
+      {
+        hunk2 = hi_diff_get_hunk(pager->diff, pager->file, pager->offset);
+        if (NULL != hunk2)
+        {
+          if (hunk2 == hunk)
+          {
+            fprintf(stderr,"Same hunk\n");
+            break;
+          }
+          fprintf(stderr,"%lu %lu %lu %lu %lu\n",(unsigned int) pager->offset, (unsigned int)hunk->src_end, (unsigned int)hunk->src_start, (unsigned int)hunk->dst_end, (unsigned int)hunk->dst_start);
+          if ((hunk2->type != HI_DIFF_TYPE_DIFF) ||
+              ((hunk2->src_end - hunk2->src_start < pager->curses->big_hunk_size) ||
+              (hunk2->dst_end - hunk2->dst_start < pager->curses->big_hunk_size)))
+          {
+            fprintf(stderr,"Cont\n");
+            continue;
+          }
+        }
+
+      }
     }
+    else
+    {
+      break;
+    }
+    i++;
+  }
+  
+  /* move to the start of a bigdiff, as it's probably what the user wants */
+  if ((bigdiff == TRUE) && (hunk != hunk2))
+  {
+    hunk = hi_diff_get_hunk(pager->diff, pager->file, pager->offset);
+    if (pager->file == pager->diff->src)
+    {
+      set_offset(pager, hunk->src_start);        
+    }
+    if (pager->file == pager->diff->dst)
+    {
+      set_offset(pager, hunk->dst_start);        
+    }      
   }
 }
 
@@ -411,15 +451,26 @@ gboolean hi_ncurses_fpager_key_event(hi_ncurses_fpager *pager,
       break;
       
     case '[':
-      move_to_next_diff(pager,-buffer_val);
+      move_to_next_diff(pager,-buffer_val, FALSE);
       claimed = TRUE;
       pager->curses->buffer[0]=0; 
       break;
     case ']':
-      move_to_next_diff(pager, buffer_val);
+      move_to_next_diff(pager, buffer_val, FALSE);
       claimed = TRUE;
       pager->curses->buffer[0]=0; 
       break;
+    case '{':
+      move_to_next_diff(pager,-buffer_val, TRUE);
+      claimed = TRUE;
+      pager->curses->buffer[0]=0; 
+      break;
+    case '}':
+      move_to_next_diff(pager, buffer_val, TRUE);
+      claimed = TRUE;
+      pager->curses->buffer[0]=0; 
+      break;
+      
     case 'G':
     case 'g':
       requested_offset = strtoll(pager->curses->buffer, NULL, 0);
