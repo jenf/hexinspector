@@ -62,7 +62,9 @@ typedef struct hi_ncurses_fpager
   int      y;
   struct hi_ncurses_fpager *linked_pager;
   /* Declared later */
-  struct hi_display_mode *display_mode;
+  struct hi_display_mode   *display_mode;
+  struct hi_location_mode  *location_mode;
+  int      bytes_in_location;
 } hi_ncurses_fpager;
 
 typedef struct hi_ncurses
@@ -75,15 +77,15 @@ typedef struct hi_ncurses
   WINDOW                *window;
   WINDOW                *ruler;
   hi_ncurses_highlight  *highlighter;
-  int                    location_base;
 } hi_ncurses;
 
 
-typedef struct hi_ncurses_location
+typedef struct hi_location_mode
 {
   char *constructor_string;
   char *name;
-} hi_ncurses_location;
+  int base;
+} hi_location_mode;
 
 void *hi_ncurses_common_get(GList *list,
                             void *to_find,
@@ -101,6 +103,11 @@ void hi_ncurses_fpager_resize(hi_ncurses_fpager *pager,
 gboolean hi_ncurses_fpager_key_event(hi_ncurses_fpager *pager,
                                      int key,
                                      long long buffer_val);
+gboolean hi_ncurses_fpager_slave_key_event(hi_ncurses_fpager *pager,
+                                           int key);
 void convert_to_bitstring(int value, char *str);
+void hi_ncurses_location_init(void);
+hi_location_mode *hi_ncurses_location_get(hi_location_mode *location,
+                                          int relative);
 
 #endif

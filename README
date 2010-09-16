@@ -18,7 +18,6 @@ Todo
   * ANSI/Unicode string
 * Search mode, improvements to regular expressions suitable for binary files
 * Restore find duplicates in binary files
-* Add other command line arguments, --help support
 
 * Dependancies *
 
@@ -44,7 +43,8 @@ All modes
  [buffer] g/G = Goto
  h/H = Next/Previous Highlight mode
  v/V = Next/Previous visual display mode (note it is linked to pager, this may change to entire display in future)
-
+ l/L = Change address location mode (Hex, Octal, Decimal)
+ =   = Sync both pagers settings
 Diff mode
  p/P = Switch focus between the two pagers
  [   = Previous diff

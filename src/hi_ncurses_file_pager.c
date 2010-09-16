@@ -31,11 +31,18 @@
 #include <macros.h>
 #include <hi_ncurses_display.h>
 
-#define BYTES_FOR_BORDER (3)
-#define OFFSET_SIZE (9)
+#define BYTES_FOR_BORDER (4)
 static void update_bytes_per_line(hi_ncurses_fpager *pager)
 {
-  pager->remaining_bytes_per_row = pager->width-(OFFSET_SIZE+BYTES_FOR_BORDER);
+  int x;
+  off_t offset;
+  
+  for (x=0, offset = pager->file->size; offset > 0; offset /=pager->location_mode->base)
+  {
+    x++;
+  }
+  pager->bytes_in_location = x;
+  pager->remaining_bytes_per_row = pager->width-(pager->bytes_in_location+BYTES_FOR_BORDER);
   pager->bytes_per_row = pager->display_mode->bytes_per_line_func(pager, pager->remaining_bytes_per_row);
   
 }
@@ -65,6 +72,7 @@ hi_ncurses_fpager *hi_ncurses_fpager_new(hi_ncurses *curses,
   pager->window = newwin(height , width,y, x);
   pager->linked_pager = NULL;
   pager->display_mode = hi_ncurses_display_get(NULL, 0);
+  pager->location_mode = hi_ncurses_location_get(NULL, 0);
   update_bytes_per_line(pager);
   
   return pager;
@@ -97,6 +105,7 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
   void *highlighter_data = NULL;
   hi_ncurses_highlight *highlighter;
   enum hi_ncurses_colour colour;
+  char format_str[256];
   
   highlighter = pager->curses->highlighter;
   
@@ -114,6 +123,9 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
   if (pager == pager->curses->focused_pager)
     wattroff(pager->window, A_REVERSE);
   
+
+  snprintf(format_str,256,pager->location_mode->constructor_string, pager->bytes_in_location);
+
   for (y=0; y< pager->height-2; y++)
   {
     for (x=0; x<pager->bytes_per_row; x++)
@@ -126,7 +138,7 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
           {
 
             
-            snprintf(buffer, 256, "%08x", (unsigned int) offset);
+            snprintf(buffer, 256, format_str, (unsigned int) offset);
             wmove(pager->window, y+1,2);
             waddstr(pager->window, buffer);
             
@@ -161,7 +173,7 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
           }
         
           /* Display byte */
-          pager->display_mode->display_byte_func(pager, y+1, 2+OFFSET_SIZE, x, offset, val);
+          pager->display_mode->display_byte_func(pager, y+1, 3+pager->bytes_in_location, x, offset, val);
  
           if (colour != hi_ncurses_colour_normal)
           {
@@ -295,6 +307,23 @@ static void move_to_next_diff(hi_ncurses_fpager *pager, gboolean forwards)
   }
 }
 
+/** Act on a key, but only if your the slave pager */
+gboolean hi_ncurses_fpager_slave_key_event(hi_ncurses_fpager *pager,
+                                           int key)
+{
+  gboolean claimed = FALSE;
+  switch (key)
+  {
+    case '=':
+      pager->location_mode = pager->linked_pager->location_mode;
+      pager->display_mode  = pager->linked_pager->display_mode;
+      update_bytes_per_line(pager);
+      claimed = TRUE;
+      break;
+  }
+  return claimed;
+}
+
 /** Act on a key, returns TRUE if key was claimed */
 gboolean hi_ncurses_fpager_key_event(hi_ncurses_fpager *pager,
                                      int key,
@@ -342,11 +371,23 @@ gboolean hi_ncurses_fpager_key_event(hi_ncurses_fpager *pager,
     case 'V':
       pager->display_mode = hi_ncurses_display_get(pager->display_mode,-1);
       update_bytes_per_line(pager);
+      claimed = TRUE;
       break;          
     case 'v':
       pager->display_mode = hi_ncurses_display_get(pager->display_mode,1);
       update_bytes_per_line(pager);
+      claimed = TRUE;
       break;      
+    case 'L':
+      pager->location_mode = hi_ncurses_location_get(pager->location_mode,-1); 
+      update_bytes_per_line(pager);
+      claimed = TRUE;
+      break;
+    case 'l':
+      pager->location_mode = hi_ncurses_location_get(pager->location_mode,1); 
+      update_bytes_per_line(pager);
+      claimed = TRUE;
+      break;
       
     case '[':
       move_to_next_diff(pager, FALSE);

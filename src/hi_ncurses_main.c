@@ -96,13 +96,14 @@ static void hi_ncurses_redraw_ruler(hi_ncurses *ncurses)
               value32_le, (int32_t)value32_le, value32_le, value32_le);
   }
 
-  mvwprintw(ncurses->ruler,RULER_LINES-1,0,"0x%08x/0x%08x %i/%i (%.2f%%) \"%s\" %s %s",
+  mvwprintw(ncurses->ruler,RULER_LINES-1,0,"0x%08x/0x%08x %i/%i (%.2f%%) \"%s\" %s %s %s",
             (unsigned int) offset, (unsigned int) file->size,
             (unsigned int) offset, (unsigned int) file->size,
             (((double) offset)/file->size)*100,
             ncurses->buffer,
             ((ncurses->highlighter != NULL) && (ncurses->highlighter->name != NULL)) ? ncurses->highlighter->name : "",
-            ((ncurses->focused_pager->display_mode != NULL) && (ncurses->focused_pager->display_mode->name != NULL)) ? ncurses->focused_pager->display_mode->name : "");
+            ((ncurses->focused_pager->display_mode != NULL) && (ncurses->focused_pager->display_mode->name != NULL)) ? ncurses->focused_pager->display_mode->name : "",
+            ((ncurses->focused_pager->location_mode != NULL) && (ncurses->focused_pager->location_mode->name != NULL)) ? ncurses->focused_pager->location_mode->name : "");
 
   wrefresh(ncurses->ruler);
 }
@@ -170,13 +171,13 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
   init_pair(hi_ncurses_colour_yellow,COLOR_YELLOW,COLOR_BLACK);
   hi_ncurses_highlight_init();
   hi_ncurses_display_init();
+  hi_ncurses_location_init();
   
   keypad(stdscr, TRUE);
   nonl();
   cbreak();
   noecho();
 
-  ncurses->location_base = 0;
   refresh();
   
   ncurses->highlighter = hi_ncurses_highlight_get(NULL,0);
@@ -210,8 +211,14 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
     }
     
     newch = getch();
-    key_claimed = hi_ncurses_fpager_key_event(ncurses->focused_pager, newch, buffer_val);
-    
+    if (ncurses->focused_pager->linked_pager != NULL)
+    {
+      key_claimed = hi_ncurses_fpager_slave_key_event(ncurses->focused_pager->linked_pager, newch);
+    }
+    if (key_claimed == FALSE)
+    {
+      key_claimed = hi_ncurses_fpager_key_event(ncurses->focused_pager, newch, buffer_val);
+    }
     if (FALSE == key_claimed)
     {
       if (isxdigit(newch) || newch=='x' || newch=='-')
@@ -236,14 +243,6 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
           break;          
         case 'h':
           ncurses->highlighter = hi_ncurses_highlight_get(ncurses->highlighter,1);
-          break;
-          
-        case 'l':
-          ncurses->location_base +=1;
-          break;
-          
-        case 'L':
-          ncurses->location_base -=1;
           break;
           
         case 'P':

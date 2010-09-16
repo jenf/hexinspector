@@ -23,6 +23,37 @@
 
 */
 
+#include <hi_ncurses.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 /**
  * Methods for showing the current location
  */
+static GList *location_list;
+
+static void hi_ncurses_location_define(const char *constructor_string,
+                                       const char *name,
+                                       int base)
+{
+  hi_location_mode *new;
+  new = malloc(sizeof(hi_location_mode));
+  new->constructor_string = strdup(constructor_string);
+  new->name           = strdup(name);
+  new->base           = base;
+  
+  location_list = g_list_append(location_list, new);
+}
+
+void hi_ncurses_location_init(void)
+{
+  hi_ncurses_location_define("%%0%ix", "Hex", 16);
+  hi_ncurses_location_define("%%0%ii", "Dec", 10);
+  hi_ncurses_location_define("%%0%io", "Oct", 8);
+}
+
+hi_location_mode *hi_ncurses_location_get(hi_location_mode *location,
+                                          int relative)
+{
+  return hi_ncurses_common_get(location_list, location, relative);
+}
