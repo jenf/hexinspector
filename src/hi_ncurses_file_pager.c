@@ -396,103 +396,85 @@ gboolean hi_ncurses_fpager_key_event(hi_ncurses_fpager *pager,
 {
   signed long long requested_offset;
   
-  gboolean claimed = FALSE;
+  gboolean claimed = TRUE;
   switch (key)
   {
     case KEY_NPAGE:
       /* Keep the last line on the screen */
       relative_move_pager(pager, (pager->bytes_per_row * pager->height-3) *  buffer_val);
       pager->curses->buffer[0]=0;
-      claimed = TRUE;
       break;
     case KEY_PPAGE:
       /* Keep the last line on the screen */
       relative_move_pager(pager, -(pager->bytes_per_row * pager->height-3) * buffer_val);
       pager->curses->buffer[0]=0;
-      claimed = TRUE;
       break;     
     case KEY_LEFT:
       relative_move_pager(pager, -1*buffer_val);
       pager->curses->buffer[0]=0;
-      claimed = TRUE;
       break;
     case KEY_RIGHT:
       relative_move_pager(pager, 1*buffer_val);
       pager->curses->buffer[0]=0;
-      claimed = TRUE;
       break;
     
 
     case KEY_UP:
       relative_move_pager(pager, -pager->bytes_per_row*buffer_val);
       pager->curses->buffer[0]=0;
-      claimed = TRUE;
       break;
     case KEY_DOWN:
       relative_move_pager(pager, pager->bytes_per_row*buffer_val);
       pager->curses->buffer[0]=0;
-      claimed = TRUE;
       break;   
       
     /* Display modes */
     case 'V':
       pager->display_mode = hi_ncurses_display_get(pager->display_mode,-1);
       update_bytes_per_line(pager);
-      claimed = TRUE;
       break;          
     case 'v':
       pager->display_mode = hi_ncurses_display_get(pager->display_mode,1);
       update_bytes_per_line(pager);
-      claimed = TRUE;
       break;      
     case 'L':
       pager->location_mode = hi_ncurses_location_get(pager->location_mode,-1); 
       update_bytes_per_line(pager);
-      claimed = TRUE;
       break;
     case 'l':
       pager->location_mode = hi_ncurses_location_get(pager->location_mode,1); 
       update_bytes_per_line(pager);
-      claimed = TRUE;
       break;
     case 'H':
       pager->highlighter = hi_ncurses_highlight_get(pager->highlighter,-1);
-      claimed = TRUE;
       break;          
     case 'h':
       pager->highlighter = hi_ncurses_highlight_get(pager->highlighter,1);
-      claimed = TRUE;
       break;
     case ',':
       pager->byte_grouping = buffer_val;
       pager->curses->buffer[0]=0; 
       update_bytes_per_line(pager);
-      claimed = TRUE;
       break;
     case '.':
       pager->set_bytes_per_row = buffer_val >= 0 ? buffer_val : 0;
       pager->curses->buffer[0]=0;
-      claimed = TRUE;
       break;
       
     case '[':
       move_to_next_diff(pager,-buffer_val, FALSE);
-      claimed = TRUE;
       pager->curses->buffer[0]=0; 
       break;
     case ']':
       move_to_next_diff(pager, buffer_val, FALSE);
-      claimed = TRUE;
       pager->curses->buffer[0]=0; 
       break;
     case '{':
       move_to_next_diff(pager,-buffer_val, TRUE);
-      claimed = TRUE;
       pager->curses->buffer[0]=0; 
       break;
     case '}':
       move_to_next_diff(pager, buffer_val, TRUE);
-      claimed = TRUE;
       pager->curses->buffer[0]=0; 
       break;
       
@@ -510,6 +492,8 @@ gboolean hi_ncurses_fpager_key_event(hi_ncurses_fpager *pager,
       pager->curses->buffer[0]=0; 
       break;
       
+    default:
+      claimed = FALSE;
   }
 
   return claimed;
