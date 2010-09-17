@@ -209,6 +209,7 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
     }
     
     newch = getch();
+    key_claimed = FALSE;
     if (ncurses->focused_pager->linked_pager != NULL)
     {
       key_claimed = hi_ncurses_fpager_slave_key_event(ncurses->focused_pager->linked_pager, newch);
@@ -248,6 +249,20 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
         case KEY_RESIZE:
           /* Need to resize the pagers */
           need_resize = TRUE;
+          break;
+
+        case 27: /* Escape key, clear the buffer */
+          ncurses->buffer[0] = 0;
+          break;
+
+        case 127:
+        case '\b':
+        case KEY_BACKSPACE:
+          len = strlen(ncurses->buffer);
+          if (len >= 1)
+          {
+            ncurses->buffer[len-1] = 0;
+          }
           break;
       }
     }

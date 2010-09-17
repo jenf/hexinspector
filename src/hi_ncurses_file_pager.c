@@ -282,7 +282,12 @@ static void move_to_next_diff(hi_ncurses_fpager *pager, int times, gboolean bigd
   int i=0;
   int times_abs = abs(times);
   gboolean forwards= FALSE;
-  
+ 
+  if (pager->diff == NULL)
+  {
+    return;
+  } 
+
   if (times_abs == times)
     forwards = TRUE;
   
@@ -320,15 +325,12 @@ static void move_to_next_diff(hi_ncurses_fpager *pager, int times, gboolean bigd
         {
           if (hunk2 == hunk)
           {
-            fprintf(stderr,"Same hunk\n");
             break;
           }
-          fprintf(stderr,"%lu %lu %lu %lu %lu\n",(unsigned int) pager->offset, (unsigned int)hunk->src_end, (unsigned int)hunk->src_start, (unsigned int)hunk->dst_end, (unsigned int)hunk->dst_start);
           if ((hunk2->type != HI_DIFF_TYPE_DIFF) ||
               ((hunk2->src_end - hunk2->src_start < pager->curses->big_hunk_size) ||
               (hunk2->dst_end - hunk2->dst_start < pager->curses->big_hunk_size)))
           {
-            fprintf(stderr,"Cont\n");
             continue;
           }
         }
