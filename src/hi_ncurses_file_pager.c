@@ -69,6 +69,7 @@ hi_ncurses_fpager *hi_ncurses_fpager_new(hi_ncurses *curses,
   pager->x = x;
   pager->y = y;
   pager->offset = 0;
+  pager->byte_grouping = 4;
   pager->window = newwin(height , width,y, x);
   pager->linked_pager = NULL;
   pager->display_mode = hi_ncurses_display_get(NULL, 0);
@@ -370,6 +371,7 @@ gboolean hi_ncurses_fpager_slave_key_event(hi_ncurses_fpager *pager,
       pager->location_mode = pager->linked_pager->location_mode;
       pager->display_mode  = pager->linked_pager->display_mode;
       pager->highlighter   = pager->linked_pager->highlighter;
+      pager->byte_grouping = pager->linked_pager->byte_grouping;
       update_bytes_per_line(pager);
       claimed = TRUE;
       break;
@@ -449,6 +451,12 @@ gboolean hi_ncurses_fpager_key_event(hi_ncurses_fpager *pager,
       break;          
     case 'h':
       pager->highlighter = hi_ncurses_highlight_get(pager->highlighter,1);
+      claimed = TRUE;
+      break;
+    case ',':
+      pager->byte_grouping = buffer_val;
+      pager->curses->buffer[0]=0; 
+      update_bytes_per_line(pager);
       claimed = TRUE;
       break;
       

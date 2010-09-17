@@ -73,6 +73,7 @@ typedef struct hi_ncurses_fpager
   hi_location_mode         *location_mode;
   hi_ncurses_highlight     *highlighter;
   int      bytes_in_location;
+  int      byte_grouping;
 } hi_ncurses_fpager;
 
 typedef struct hi_ncurses

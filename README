@@ -40,6 +40,8 @@ All modes
  q/Q = Quit
  [buffer] Page Up/Page Down/Arrow keys pager around the file
  [buffer] g/G = Goto
+ Escape = Clear buffer
+ Backspace = Remove last char from buffer
 
 Diff mode
  p/P = Switch focus between the two pagers
@@ -52,5 +54,6 @@ Note display modes are not syncronised between pagers, if you wish to do so, pre
  h/H = Next/Previous Highlight mode
  v/V = Next/Previous visual display mode
  l/L = Change address location mode (Hex, Octal, Decimal)
+ [buffer] ,   = Set byte grouping (defaults to 4)
  =   = Sync both pagers settings
 
