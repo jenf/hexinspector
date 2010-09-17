@@ -22,6 +22,7 @@ Todo
 
 glib - 2.0.0 or later (For list, hash and balanced binary tree support)
 ncurses - Tested with version 5
+pcre - Perl compatibile regular expresions
 
 * Platform *
 
