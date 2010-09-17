@@ -24,8 +24,12 @@
 */
 
 /**
- * Test app
+ * Hexinspector main app
  */
+
+#define VERSION "0.8.0"
+#define AUTHORS \
+  "Jennifer Freeman"
 
 #include <hi_file.h>
 #include <hi_diff.h>
@@ -35,6 +39,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <hi_ncurses.h>
+
+void version(char *program_name)
+{
+  fprintf(stderr, "%s version %s\n"
+          "This is free software; see the source for copying conditions.  There is NO\n"
+          "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"
+          "See: http://github.com/jenf/hexinspector\n"
+          "Authors: %s\n", program_name, VERSION, AUTHORS);
+  exit(0);
+}
 
 void help(char *program_name)
 {
@@ -64,6 +78,7 @@ int main(int argc, char *argv[])
     {"hashbytes", required_argument, 0, 'b'},
     {"diff_jump_limit", required_argument, 0, 'd'},
     {"minimum_same", required_argument, 0, 'm'},
+    {"version", no_argument, 0, 'v'},
     {0,0,0,0}
   };
   
@@ -73,7 +88,7 @@ int main(int argc, char *argv[])
   {
     int value;
     int option_index = 0;
-    c = getopt_long(argc, argv, "hb:d:m:",
+    c = getopt_long(argc, argv, "hvb:d:m:",
                     long_options, &option_index);
     
     if (c == -1)
@@ -83,6 +98,10 @@ int main(int argc, char *argv[])
     {
       case 'h':
         help(argv[0]);
+        break;
+        
+      case 'v':
+        version(argv[0]);
         break;
         
       case 'b':
