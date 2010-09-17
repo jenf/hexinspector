@@ -205,11 +205,13 @@ static void set_offset(hi_ncurses_fpager *pager, off_t offset)
   pager->offset = offset;
   if (pager->offset < 0)
   {
+    pager->curses->activate_bell = TRUE;
     pager->offset = 0;
   }
   if (pager->offset >= pager->file->size)
   {
     pager->offset = pager->file->size;
+    pager->curses->activate_bell = TRUE;
   }
   
   /* Make the other pager move to the right position */

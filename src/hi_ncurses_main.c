@@ -134,6 +134,11 @@ static void redraw(hi_ncurses *ncurses, gboolean need_resize)
     hi_ncurses_fpager_redraw(ncurses->dst);
   
   hi_ncurses_redraw_ruler(ncurses);
+  
+  if (ncurses->activate_bell == TRUE)
+  {
+    beep();
+  }
   refresh();
 }
 
@@ -200,6 +205,7 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
   {
     redraw(ncurses, need_resize);    
     need_resize = FALSE;
+    ncurses->activate_bell = FALSE;
     buffer_val = strtoll(ncurses->buffer, NULL, 0);  
     
     /* Special case imply 1 if there is no buffer */

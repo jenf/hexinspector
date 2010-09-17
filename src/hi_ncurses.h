@@ -86,6 +86,7 @@ typedef struct hi_ncurses
   WINDOW                *window;
   WINDOW                *ruler;
   int      big_hunk_size;
+  gboolean activate_bell;
 } hi_ncurses;
 
 
