@@ -55,5 +55,6 @@ Note display modes are not syncronised between pagers, if you wish to do so, pre
  v/V = Next/Previous visual display mode
  l/L = Change address location mode (Hex, Octal, Decimal)
  [buffer] ,   = Set byte grouping (defaults to 4)
+ [buffer] .   = Limit/Set number of bytes per line (0 = auto-adjust to terminal)
  =   = Sync both pagers settings
 

@@ -224,6 +224,7 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
     {
       key_claimed = hi_ncurses_fpager_key_event(ncurses->focused_pager, newch, buffer_val);
     }
+    
     if (FALSE == key_claimed)
     {
       if (isxdigit(newch) || newch=='x' || newch=='-')
@@ -234,8 +235,12 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
           ncurses->buffer[len]=newch;
           ncurses->buffer[len+1]=0;          
         }
+        key_claimed = TRUE;
       }
-   
+    }
+    
+    if (FALSE == key_claimed)
+    {
       switch (newch)
       {
         case 'q':
@@ -270,6 +275,14 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
             ncurses->buffer[len-1] = 0;
           }
           break;
+        case ERR:
+          break;
+        default:
+          /* Unknown key */
+#if 0
+          fprintf(stderr,"Unknown key %i\n",  newch);
+#endif
+          ncurses->activate_bell = TRUE;
       }
     }
   }

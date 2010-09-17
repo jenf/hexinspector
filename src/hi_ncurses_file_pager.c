@@ -70,6 +70,7 @@ hi_ncurses_fpager *hi_ncurses_fpager_new(hi_ncurses *curses,
   pager->y = y;
   pager->offset = 0;
   pager->byte_grouping = 4;
+  pager->set_bytes_per_row = 0;
   pager->window = newwin(height , width,y, x);
   pager->linked_pager = NULL;
   pager->display_mode = hi_ncurses_display_get(NULL, 0);
@@ -108,6 +109,7 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
   hi_ncurses_highlight *highlighter;
   enum hi_ncurses_colour colour;
   char format_str[256];
+  int bytes;
   
   highlighter = pager->highlighter;
   
@@ -128,11 +130,17 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
 
   snprintf(format_str,256,pager->location_mode->constructor_string, pager->bytes_in_location);
 
+  bytes = (pager->set_bytes_per_row == 0 ? pager->bytes_per_row : pager->set_bytes_per_row);
+  if (bytes > pager->bytes_per_row)
+  {
+    bytes = pager->bytes_per_row;
+  }
+  
   for (y=0; y< pager->height-2; y++)
   {
-    for (x=0; x<pager->bytes_per_row; x++)
+    for (x=0; x<bytes; x++)
     {
-      offset = pager->offset+x+(pager->bytes_per_row*y);
+      offset = pager->offset+x+(pager->set_bytes_per_row == 0 ? pager->bytes_per_row*y : pager->set_bytes_per_row*y);
 
       if (offset < pager->file->size)
       {
@@ -459,6 +467,11 @@ gboolean hi_ncurses_fpager_key_event(hi_ncurses_fpager *pager,
       pager->byte_grouping = buffer_val;
       pager->curses->buffer[0]=0; 
       update_bytes_per_line(pager);
+      claimed = TRUE;
+      break;
+    case '.':
+      pager->set_bytes_per_row = buffer_val >= 0 ? buffer_val : 0;
+      pager->curses->buffer[0]=0;
       claimed = TRUE;
       break;
       
