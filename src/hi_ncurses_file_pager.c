@@ -123,11 +123,12 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
     wattron(pager->window, A_REVERSE);
   
   box(pager->window, ACS_VLINE, ACS_HLINE);
-  
+
   if (pager == pager->curses->focused_pager)
     wattroff(pager->window, A_REVERSE);
   
-
+  mvwprintw(pager->window, pager->height-1, 2," %s ", pager->file->filename);  
+  
   snprintf(format_str,256,pager->location_mode->constructor_string, pager->bytes_in_location);
 
   bytes = (pager->set_bytes_per_row == 0 ? pager->bytes_per_row : pager->set_bytes_per_row);
@@ -200,6 +201,7 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
   {
        highlighter->end_func(highlighter_data);
   }
+
       
   wrefresh(pager->window);
 }
