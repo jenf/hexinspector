@@ -106,12 +106,12 @@ static void hi_ncurses_redraw_ruler(hi_ncurses *ncurses)
   }
   else
   {
-    mvwprintw(ncurses->ruler,RULER_LINES-1,0,"%s 0x%08x/0x%08x %i/%i (%.2f%%) \"%s\" %s %s %s",
-              ncurses->mode == MODE_NORMAL ? "NORMAL" : "REGEX",
+    mvwprintw(ncurses->ruler,RULER_LINES-1,0,"%s \"%s\" 0x%08x/0x%08x %i/%i (%.2f%%) %s %s %s",
+              ncurses->mode == MODE_NORMAL ? "Buffer:" : "RegEx:",
+              ncurses->buffer,
               (unsigned int) offset, (unsigned int) file->size,
               (unsigned int) offset, (unsigned int) file->size,
               (((double) offset)/file->size)*100,
-              ncurses->buffer,
               ((ncurses->focused_pager->highlighter != NULL) && (ncurses->focused_pager->highlighter->name != NULL)) ? ncurses->focused_pager->highlighter->name : "",
               ((ncurses->focused_pager->display_mode != NULL) && (ncurses->focused_pager->display_mode->name != NULL)) ? ncurses->focused_pager->display_mode->name : "",
               ((ncurses->focused_pager->location_mode != NULL) && (ncurses->focused_pager->location_mode->name != NULL)) ? ncurses->focused_pager->location_mode->name : "");
