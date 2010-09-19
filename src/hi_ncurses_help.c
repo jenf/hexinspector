@@ -28,7 +28,7 @@
  */
 #include <hi_ncurses.h>
 #include <string.h>
-char *help_data [] = {
+const char *help_data [] = {
 "*Buffer",
 "Certain commands can be prefixed with a 'buffer' argument, this takes an",
 "integer in decimal, octal (preceeded by 0), or hex (preceeded by 0x) formats",
@@ -42,6 +42,7 @@ char *help_data [] = {
 "[buffer] Page Up/Down/Arrows | Move around the file",
 "[buffer] g/G                 | Goto (Negative value in buffer)",
 "                               act as bytes from EOF",
+"/                            | Search using a regular expression",
 "*Display modes",
 "Note that display modes are not applied to both pagers",
 "=                            | Set the unfocused pager to the same settings",

@@ -115,7 +115,7 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager);
 void hi_ncurses_fpager_resize(hi_ncurses_fpager *pager,
                               int height, int width,
                               int y, int x);
-hi_ncurses_fpager_search(hi_ncurses_fpager *pager, char *search);
+void hi_ncurses_fpager_search(hi_ncurses_fpager *pager, char *search);
 gboolean hi_ncurses_fpager_key_event(hi_ncurses_fpager *pager,
                                      int key,
                                      long long buffer_val);

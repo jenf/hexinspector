@@ -499,7 +499,7 @@ gboolean hi_ncurses_fpager_key_event(hi_ncurses_fpager *pager,
   return claimed;
 }
 
-hi_ncurses_fpager_search(hi_ncurses_fpager *pager, char *search)
+void hi_ncurses_fpager_search(hi_ncurses_fpager *pager, char *search)
 {
   char *error;
   off_t offset;
