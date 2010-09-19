@@ -43,6 +43,7 @@ const char *help_data [] = {
 "[buffer] g/G                 | Goto (Negative value in buffer)",
 "                               act as bytes from EOF",
 "/                            | Search using a regular expression",
+"",
 "*Display modes",
 "Note that display modes are not applied to both pagers",
 "=                            | Set the unfocused pager to the same settings",

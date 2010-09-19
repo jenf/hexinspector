@@ -62,6 +62,8 @@ static void hi_ncurses_redraw_ruler(hi_ncurses *ncurses)
   char bitstring[9];
   hi_file *file;
   off_t offset;
+  char format_str[256];
+  char pos1[256],pos2[256];
   
   offset = ncurses->focused_pager->offset;
   file = ncurses->focused_pager->file;
@@ -95,12 +97,14 @@ static void hi_ncurses_redraw_ruler(hi_ncurses *ncurses)
               "4b: LE: % 10u/%+11i/%#012o/0x%08x",
               value32_le, (int32_t)value32_le, value32_le, value32_le);
   }
+  
+  snprintf(format_str,256,ncurses->focused_pager->location_mode->constructor_string, ncurses->focused_pager->bytes_in_location);
 
-  mvwprintw(ncurses->ruler,RULER_LINES-2,0,"Position: 0x%08x/0x%08x %i/%i (%.2f%%)",
-            ncurses->mode == MODE_NORMAL ? "Buffer:" : "RegEx:",
-            ncurses->buffer,
-            (unsigned int) offset, (unsigned int) file->size,
-            (unsigned int) offset, (unsigned int) file->size,
+  snprintf(pos1, 256, format_str, (unsigned int) offset);
+  snprintf(pos2, 256, format_str, (unsigned int) file->size);
+  mvwprintw(ncurses->ruler,RULER_LINES-2,0,"Position(%s): %s/%s (%.2f%%)",
+            ((ncurses->focused_pager->location_mode != NULL) && (ncurses->focused_pager->location_mode->name != NULL)) ? ncurses->focused_pager->location_mode->name : "",
+            pos1, pos2,
             (((double) offset)/file->size)*100);  
   if (ncurses->error != NULL)
   {
@@ -112,12 +116,11 @@ static void hi_ncurses_redraw_ruler(hi_ncurses *ncurses)
   }
   else
   {
-    mvwprintw(ncurses->ruler,RULER_LINES-1,0,"%s \"%s\" %s %s %s : Press ? for help",
+    mvwprintw(ncurses->ruler,RULER_LINES-1,0,"%s \"%s\" %s %s : Press ? for help",
               ncurses->mode == MODE_NORMAL ? "Buffer:" : "RegEx:",
               ncurses->buffer,
               ((ncurses->focused_pager->highlighter != NULL) && (ncurses->focused_pager->highlighter->name != NULL)) ? ncurses->focused_pager->highlighter->name : "",
-              ((ncurses->focused_pager->display_mode != NULL) && (ncurses->focused_pager->display_mode->name != NULL)) ? ncurses->focused_pager->display_mode->name : "",
-              ((ncurses->focused_pager->location_mode != NULL) && (ncurses->focused_pager->location_mode->name != NULL)) ? ncurses->focused_pager->location_mode->name : "");
+              ((ncurses->focused_pager->display_mode != NULL) && (ncurses->focused_pager->display_mode->name != NULL)) ? ncurses->focused_pager->display_mode->name : "");
   }
   wrefresh(ncurses->ruler);
 }
