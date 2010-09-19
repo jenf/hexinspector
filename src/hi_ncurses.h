@@ -88,6 +88,9 @@ typedef struct hi_ncurses
   WINDOW                *ruler;
   int      big_hunk_size;
   gboolean activate_bell;
+  int help_win_line;
+  gboolean show_help;
+  WINDOW                *help_win;
 } hi_ncurses;
 
 
@@ -117,5 +120,9 @@ void *hi_ncurses_common_get(GList *list,
                             int relative);
 hi_location_mode *hi_ncurses_location_get(hi_location_mode *location,
                                           int relative);
+
+void hi_ncurses_help_init(hi_ncurses *curses);
+void hi_ncurses_help_redraw(hi_ncurses *curses);
+gboolean hi_ncurses_help_key_event(hi_ncurses *ncurses, int newch);
 
 #endif

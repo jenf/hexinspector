@@ -27,7 +27,6 @@
  * Hexinspector main app
  */
 
-#define VERSION "0.8.0"
 #define AUTHORS \
   "Jennifer Freeman"
 
@@ -46,7 +45,7 @@ void version(char *program_name)
           "This is free software; see the source for copying conditions.  There is NO\n"
           "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"
           "See: http://github.com/jenf/hexinspector\n"
-          "Authors: %s\n", program_name, VERSION, AUTHORS);
+          "Authors: %s\n", program_name, PACKAGE_VERSION, AUTHORS);
   exit(0);
 }
 
@@ -129,7 +128,7 @@ int main(int argc, char *argv[])
         
       case 'm':
         options.minimum_same = atoi(optarg);
-        if (value < 1)
+        if (options.minimum_same < 1)
         {
           fprintf(stderr,"Minimum same must be greater than 1\n");
           help(argv[0]);

@@ -96,7 +96,7 @@ static void hi_ncurses_redraw_ruler(hi_ncurses *ncurses)
               value32_le, (int32_t)value32_le, value32_le, value32_le);
   }
 
-  mvwprintw(ncurses->ruler,RULER_LINES-1,0,"0x%08x/0x%08x %i/%i (%.2f%%) \"%s\" %s %s %s",
+  mvwprintw(ncurses->ruler,RULER_LINES-1,0,"0x%08x/0x%08x %i/%i (%.2f%%) \"%s\" %s %s %s : Press ? for help",
             (unsigned int) offset, (unsigned int) file->size,
             (unsigned int) offset, (unsigned int) file->size,
             (((double) offset)/file->size)*100,
@@ -128,13 +128,14 @@ static void redraw(hi_ncurses *ncurses, gboolean need_resize)
     erase();
     refresh();
   }
-  
+ 
   hi_ncurses_fpager_redraw(ncurses->src);
   if (ncurses->dst != NULL)
     hi_ncurses_fpager_redraw(ncurses->dst);
-  
+
   hi_ncurses_redraw_ruler(ncurses);
-  
+
+  hi_ncurses_help_redraw(ncurses);
   if (ncurses->activate_bell == TRUE)
   {
     beep();
@@ -175,6 +176,7 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
   hi_ncurses_highlight_init();
   hi_ncurses_display_init();
   hi_ncurses_location_init();
+  hi_ncurses_help_init(ncurses);
   
   keypad(stdscr, TRUE);
   nonl();
@@ -216,9 +218,17 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
     
     newch = getch();
     key_claimed = FALSE;
-    if (ncurses->focused_pager->linked_pager != NULL)
+    
+    if (ncurses->show_help)
     {
-      key_claimed = hi_ncurses_fpager_slave_key_event(ncurses->focused_pager->linked_pager, newch);
+      key_claimed = hi_ncurses_help_key_event(ncurses, newch);
+    }
+    if (key_claimed == FALSE)
+    { 
+      if (ncurses->focused_pager->linked_pager != NULL)
+      {
+        key_claimed = hi_ncurses_fpager_slave_key_event(ncurses->focused_pager->linked_pager, newch);
+      }
     }
     if (key_claimed == FALSE)
     {
@@ -266,6 +276,10 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
           ncurses->buffer[0] = 0;
           break;
 
+        case '?': /* Show help */
+          ncurses->show_help = !ncurses->show_help;
+          break;
+          
         case 127:
         case '\b':
         case KEY_BACKSPACE:
@@ -274,7 +288,7 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
           {
             ncurses->buffer[len-1] = 0;
           }
-          break;
+          break;          
         case ERR:
           break;
         default:

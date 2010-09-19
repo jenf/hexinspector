@@ -32,29 +32,34 @@ Tested on Ubuntu Linux and MacOS X and RHEL4
 * Allow it to work with files that are bigger than off_t or the maximum mmap size
 * Allow the document to be opened before the hashing and diffing is completed, by moving the diff and hash into the background
 
-* Ncurses README *
+* Keyboard help *
 
-Commands with [buffer] prepended can be multiplied by typing in a number.
+Buffer
 
-All modes
- q/Q = Quit
- [buffer] Page Up/Page Down/Arrow keys pager around the file
- [buffer] g/G = Goto
- Escape = Clear buffer
- Backspace = Remove last char from buffer
+Certain commands can be prefixed with a 'buffer' argument, this takes an int
+in either decimal, octal (preceeded by 0),or hex (preceeded by 0x) formats
+Escape                       | Clear the buffer
+Backspace                    | Remove the last character from buffer
 
-Diff mode
- p/P = Switch focus between the two pagers
- [buffer] "["/"]"   = Previous or next hunk
- [buffer] "{"/"}"   = Previous or next big diff hunk
-
+All mode keys
+q/Q                          | Quit
+?                            | This help (Press to remove)
+[buffer] Page Up/Down/Arrows | Move around the file
+[buffer] g/G                 | Goto (Negative value in buffer)
+                               act as bytes from EOF
+                               
 Display modes
+Note that display modes are not applied to both pagers
+=                            | Set the unfocused pager to the same settings
+h/H                          | Next/Prev Highlight mode
+v/V                          | Next/Prev Display mode (Dec, Hex, Oct etc)
+l/L                          | Next/Prev base for address location
+[buffer] ,                   | Set byte grouping (default of 4)
+[buffer] .                   | Limit/Set number of bytes per line
+                               (0 = auto-adjust to the terminal size)
 
-Note display modes are not syncronised between pagers, if you wish to do so, press =
- h/H = Next/Previous Highlight mode
- v/V = Next/Previous visual display mode
- l/L = Change address location mode (Hex, Octal, Decimal)
- [buffer] ,   = Set byte grouping (defaults to 4)
- [buffer] .   = Limit/Set number of bytes per line (0 = auto-adjust to terminal)
- =   = Sync both pagers settings
-
+Diff mode only
+The following only operate when two files are open
+p/P                          | Switch between pagers/files
+[buffer] [ or ]              | Previous or next hunk
+[buffer] { or }              | Previous or next big diff hunk
