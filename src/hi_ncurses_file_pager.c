@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include <macros.h>
 #include <hi_ncurses_display.h>
+#include <hi_search.h>
 
 #define BYTES_FOR_BORDER (4)
 static void update_bytes_per_line(hi_ncurses_fpager *pager)
@@ -503,7 +504,6 @@ gboolean hi_ncurses_fpager_key_event(hi_ncurses_fpager *pager,
 
 void hi_ncurses_fpager_search(hi_ncurses_fpager *pager, char *search)
 {
-  char *error;
   off_t offset;
   gboolean found;
   

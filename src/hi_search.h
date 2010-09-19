@@ -34,5 +34,5 @@ gboolean hi_search_compile_and_exec(hi_file *file,
                                     char *pattern,
                                     off_t begin_offset,
                                     off_t *found_offset,
-                                    char **error);
+                                    const char **error);
 #endif

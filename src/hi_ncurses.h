@@ -98,7 +98,7 @@ typedef struct hi_ncurses
   gboolean show_help;
   WINDOW                *help_win;
   enum command_mode mode;
-  char *error;
+  const char *error;
 } hi_ncurses;
 
 

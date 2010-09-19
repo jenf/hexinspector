@@ -42,13 +42,23 @@ static void hi_ncurses_highlight_define(hi_ncurses_highlight_per_byte highlighte
                                         const char *name,
                                         hi_ncurses_highlight_begin    begin_func,
                                         hi_ncurses_highlight_end      end_func,
-                                        char *help_string);
+                                        const char *help_string);
+static void *mpegts_highlight_begin(hi_file *file);
+static void mpegts_highlight_end(void *mem);
+static enum hi_ncurses_colour mpeg_highlight(unused(hi_file *file),
+                                             unused(off_t offset),
+                                             unsigned char val,
+                                             void *dataptr);
+static enum hi_ncurses_colour highlight_ctype(unused(hi_file *file),
+                                              unused(off_t offset),
+                                              unsigned char val,
+                                              unused(void *dataptr));
 
 /* C Type style */
-enum hi_ncurses_colour highlight_ctype(unused(hi_file *file),
-                                       unused(off_t offset),
-                                       unsigned char val,
-                                       unused(void *dataptr))
+static enum hi_ncurses_colour highlight_ctype(unused(hi_file *file),
+                                              unused(off_t offset),
+                                              unsigned char val,
+                                              unused(void *dataptr))
 {
   if (isalpha(val))
     return hi_ncurses_colour_blue;
@@ -62,7 +72,7 @@ enum hi_ncurses_colour highlight_ctype(unused(hi_file *file),
 }
 
 /* MPEG-TS style, this isn't perfect */
-void *mpegts_highlight_begin(hi_file *file)
+static void *mpegts_highlight_begin(unused(hi_file *file))
 {
   enum hi_ncurses_colour *pos;
   pos = malloc(sizeof(enum hi_ncurses_colour));
@@ -70,15 +80,15 @@ void *mpegts_highlight_begin(hi_file *file)
   return pos;
 }
 
-void mpegts_highlight_end(void *mem)
+static void mpegts_highlight_end(void *mem)
 {
   free(mem);
 }
 
-enum hi_ncurses_colour mpeg_highlight(unused(hi_file *file),
-                                      unused(off_t offset),
-                                      unsigned char val,
-                                      void *dataptr)
+static enum hi_ncurses_colour mpeg_highlight(unused(hi_file *file),
+                                             unused(off_t offset),
+                                             unsigned char val,
+                                             void *dataptr)
 {
   int pid;
   enum hi_ncurses_colour *col = dataptr;
@@ -114,7 +124,7 @@ static void hi_ncurses_highlight_define(hi_ncurses_highlight_per_byte highlighte
                                         const char *name,
                                         hi_ncurses_highlight_begin    begin_func,
                                         hi_ncurses_highlight_end      end_func,
-                                        char *help_string)
+                                        const char *help_string)
 {
   hi_ncurses_highlight *new;
   new = malloc(sizeof(hi_ncurses_highlight));
