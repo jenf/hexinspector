@@ -96,6 +96,12 @@ static void hi_ncurses_redraw_ruler(hi_ncurses *ncurses)
               value32_le, (int32_t)value32_le, value32_le, value32_le);
   }
 
+  mvwprintw(ncurses->ruler,RULER_LINES-2,0,"Position: 0x%08x/0x%08x %i/%i (%.2f%%)",
+            ncurses->mode == MODE_NORMAL ? "Buffer:" : "RegEx:",
+            ncurses->buffer,
+            (unsigned int) offset, (unsigned int) file->size,
+            (unsigned int) offset, (unsigned int) file->size,
+            (((double) offset)/file->size)*100);  
   if (ncurses->error != NULL)
   {
     ncurses->activate_bell = TRUE;
@@ -106,12 +112,9 @@ static void hi_ncurses_redraw_ruler(hi_ncurses *ncurses)
   }
   else
   {
-    mvwprintw(ncurses->ruler,RULER_LINES-1,0,"%s \"%s\" 0x%08x/0x%08x %i/%i (%.2f%%) %s %s %s : Press ? for help",
+    mvwprintw(ncurses->ruler,RULER_LINES-1,0,"%s \"%s\" %s %s %s : Press ? for help",
               ncurses->mode == MODE_NORMAL ? "Buffer:" : "RegEx:",
               ncurses->buffer,
-              (unsigned int) offset, (unsigned int) file->size,
-              (unsigned int) offset, (unsigned int) file->size,
-              (((double) offset)/file->size)*100,
               ((ncurses->focused_pager->highlighter != NULL) && (ncurses->focused_pager->highlighter->name != NULL)) ? ncurses->focused_pager->highlighter->name : "",
               ((ncurses->focused_pager->display_mode != NULL) && (ncurses->focused_pager->display_mode->name != NULL)) ? ncurses->focused_pager->display_mode->name : "",
               ((ncurses->focused_pager->location_mode != NULL) && (ncurses->focused_pager->location_mode->name != NULL)) ? ncurses->focused_pager->location_mode->name : "");
