@@ -162,7 +162,7 @@ static void redraw(hi_ncurses *ncurses, gboolean need_resize)
 }
 
 
-static void finish(int sig)
+static void finish(unused(int sig))
 {
   endwin();
   exit(0);
