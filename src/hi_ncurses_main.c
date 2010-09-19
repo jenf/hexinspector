@@ -122,7 +122,8 @@ static void redraw(hi_ncurses *ncurses, gboolean need_resize)
       hi_ncurses_fpager_resize(ncurses->src, PAGER_HEIGHT, PAGER_WIDTH_SOLO, 0, 0);           
     }
     
-
+    hi_ncurses_help_resize(ncurses);
+    
     wresize(ncurses->ruler, RULER_LINES, COLS);
     mvwin(ncurses->ruler, PAGER_HEIGHT, 0);
     erase();

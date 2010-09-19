@@ -30,8 +30,9 @@
 
 char *help_data [] = {
 "*Buffer",
-"Certain commands can be prefixed with a 'buffer' argument, this takes an int",
-"in either decimal, octal (preceeded by 0),or hex (preceeded by 0x) formats",
+"Certain commands can be prefixed with a 'buffer' argument, this takes an",
+"integer in decimal, octal (preceeded by 0), or hex (preceeded by 0x) formats",
+"",
 "Escape                       | Clear the buffer",
 "Backspace                    | Remove the last character from buffer",
 "",
@@ -77,6 +78,14 @@ void hi_ncurses_help_init(hi_ncurses *ncurses)
   }
 }
 
+void hi_ncurses_help_resize(hi_ncurses *ncurses)
+{
+  wresize(ncurses->help_win, LINES-10, COLS-2);
+  mvwin(ncurses->help_win, 5, 1);
+  box(ncurses->help_win, 0, 0);
+  werase(ncurses->help_win);
+}
+
 void hi_ncurses_help_redraw(hi_ncurses *ncurses)
 {
   int x;
@@ -85,34 +94,42 @@ void hi_ncurses_help_redraw(hi_ncurses *ncurses)
 
   if (ncurses->show_help)
   { 
-    box(ncurses->help_win, ACS_VLINE, ACS_HLINE);
-    for (x = ncurses->help_win_line; x< help_lines; x++)
+    if (COLS < 80)
     {
-      if (x-ncurses->help_win_line < LINES-12)
+      ncurses->activate_bell = TRUE;
+      mvwprintw(ncurses->help_win,0,0, "Please make the window bigger than 80 columns");
+    }
+    else
+    {
+      box(ncurses->help_win, ACS_VLINE, ACS_HLINE);
+      for (x = ncurses->help_win_line; x< help_lines; x++)
       {
-        if (help_data[x][0] == '&')
+        if (x-ncurses->help_win_line < LINES-12)
         {
-          if (strcmp(help_data[x],"&highlight1")==0)
+          if (help_data[x][0] == '&')
           {
-            wattron(ncurses->help_win, A_BOLD);
-            mvwprintw(ncurses->help_win,1+x-ncurses->help_win_line,1, "'%s' highlight mode", ncurses->focused_pager->highlighter->name);
-            wattroff(ncurses->help_win, A_BOLD);
+            if (strcmp(help_data[x],"&highlight1")==0)
+            {
+              wattron(ncurses->help_win, A_BOLD);
+              mvwprintw(ncurses->help_win,1+x-ncurses->help_win_line,1, "'%s' highlight mode", ncurses->focused_pager->highlighter->name);
+              wattroff(ncurses->help_win, A_BOLD);
+            }
+            if (strcmp(help_data[x],"&highlight2")==0)
+            {
+              mvwprintw(ncurses->help_win,1+x-ncurses->help_win_line,1, ncurses->focused_pager->highlighter->help_string);
+            }
           }
-          if (strcmp(help_data[x],"&highlight2")==0)
+          else
           {
-            mvwprintw(ncurses->help_win,1+x-ncurses->help_win_line,1, ncurses->focused_pager->highlighter->help_string);
-          }
-        }
-        else
-        {
-          if (help_data[x][0] == '*')
-          {
-            wattron(ncurses->help_win, A_BOLD);
-          }
-          mvwprintw(ncurses->help_win,1+x-ncurses->help_win_line,1, help_data[x][0]=='*' ? help_data[x]+1 : help_data[x]);
-          if (help_data[x][0] == '*')
-          {
-            wattroff(ncurses->help_win, A_BOLD);
+            if (help_data[x][0] == '*')
+            {
+              wattron(ncurses->help_win, A_BOLD);
+            }
+            mvwprintw(ncurses->help_win,1+x-ncurses->help_win_line,1, help_data[x][0]=='*' ? help_data[x]+1 : help_data[x]);
+            if (help_data[x][0] == '*')
+            {
+              wattroff(ncurses->help_win, A_BOLD);
+            }
           }
         }
       }
@@ -120,6 +137,8 @@ void hi_ncurses_help_redraw(hi_ncurses *ncurses)
     wrefresh(ncurses->help_win);
   }
 }
+
+
 
 gboolean hi_ncurses_help_key_event(hi_ncurses *ncurses, int newch)
 {
