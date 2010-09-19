@@ -46,6 +46,12 @@ enum hi_ncurses_colour
   hi_ncurses_colour_yellow
 };
 
+enum command_mode
+{
+  MODE_NORMAL,
+  MODE_REGEX
+};
+
 
 typedef struct hi_location_mode
 {
@@ -88,6 +94,8 @@ typedef struct hi_ncurses
   WINDOW                *ruler;
   int      big_hunk_size;
   gboolean activate_bell;
+  enum command_mode mode;
+  char *error;
 } hi_ncurses;
 
 

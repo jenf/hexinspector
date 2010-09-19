@@ -34,7 +34,7 @@
 
 #define OVECCOUNT 30
 
-static char no_match[] = "No match";
+static char *errors[] = {"No match","Empty pattern"};
 static gboolean hi_search_exec(hi_file *file,
                                off_t begin_offset,
                                off_t *found_offset,
@@ -49,6 +49,11 @@ gboolean hi_search_compile_and_exec(hi_file *file,
   pcre *re;
   *found_offset = 0;
   *error = NULL;
+  if (strcmp(pattern,"")==0)
+  {
+    *error = errors[1];
+    return FALSE;
+  } 
   re = pcre_compile(pattern, 0, error, found_offset, NULL);
   if (re == NULL)
   {
@@ -56,7 +61,11 @@ gboolean hi_search_compile_and_exec(hi_file *file,
     return FALSE;
   }
   ret = hi_search_exec(file, begin_offset, found_offset, re);
-  *error = no_match;
+  if (ret == FALSE)
+  {
+    *error = errors[0];
+  }
+  
   pcre_free(re);
   return ret;
 }

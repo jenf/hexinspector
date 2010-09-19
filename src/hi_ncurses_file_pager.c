@@ -505,7 +505,7 @@ hi_ncurses_fpager_search(hi_ncurses_fpager *pager, char *search)
   off_t offset;
   gboolean found;
   
-  found = hi_search_compile_and_exec(pager->file, search, pager->offset, &offset, &error);
+  found = hi_search_compile_and_exec(pager->file, search, pager->offset, &offset, &pager->curses->error);
   if (found == TRUE)
   {
     set_offset(pager, offset);

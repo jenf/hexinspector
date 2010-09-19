@@ -96,15 +96,26 @@ static void hi_ncurses_redraw_ruler(hi_ncurses *ncurses)
               value32_le, (int32_t)value32_le, value32_le, value32_le);
   }
 
-  mvwprintw(ncurses->ruler,RULER_LINES-1,0,"0x%08x/0x%08x %i/%i (%.2f%%) \"%s\" %s %s %s",
-            (unsigned int) offset, (unsigned int) file->size,
-            (unsigned int) offset, (unsigned int) file->size,
-            (((double) offset)/file->size)*100,
-            ncurses->buffer,
-            ((ncurses->focused_pager->highlighter != NULL) && (ncurses->focused_pager->highlighter->name != NULL)) ? ncurses->focused_pager->highlighter->name : "",
-            ((ncurses->focused_pager->display_mode != NULL) && (ncurses->focused_pager->display_mode->name != NULL)) ? ncurses->focused_pager->display_mode->name : "",
-            ((ncurses->focused_pager->location_mode != NULL) && (ncurses->focused_pager->location_mode->name != NULL)) ? ncurses->focused_pager->location_mode->name : "");
-
+  if (ncurses->error != NULL)
+  {
+    ncurses->activate_bell = TRUE;
+    wattron(ncurses->ruler, A_REVERSE);
+    mvwprintw(ncurses->ruler, RULER_LINES-1,0, "ERROR: %s", ncurses->error);
+    wattroff(ncurses->ruler, A_REVERSE);
+    ncurses->error = NULL;
+  }
+  else
+  {
+    mvwprintw(ncurses->ruler,RULER_LINES-1,0,"%s 0x%08x/0x%08x %i/%i (%.2f%%) \"%s\" %s %s %s",
+              ncurses->mode == MODE_NORMAL ? "NORMAL" : "REGEX",
+              (unsigned int) offset, (unsigned int) file->size,
+              (unsigned int) offset, (unsigned int) file->size,
+              (((double) offset)/file->size)*100,
+              ncurses->buffer,
+              ((ncurses->focused_pager->highlighter != NULL) && (ncurses->focused_pager->highlighter->name != NULL)) ? ncurses->focused_pager->highlighter->name : "",
+              ((ncurses->focused_pager->display_mode != NULL) && (ncurses->focused_pager->display_mode->name != NULL)) ? ncurses->focused_pager->display_mode->name : "",
+              ((ncurses->focused_pager->location_mode != NULL) && (ncurses->focused_pager->location_mode->name != NULL)) ? ncurses->focused_pager->location_mode->name : "");
+  }
   wrefresh(ncurses->ruler);
 }
 
@@ -149,11 +160,7 @@ static void finish(int sig)
   exit(0);
 }
 
-enum command_mode
-{
-  MODE_NORMAL,
-  MODE_REGEX
-};
+
 
 void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
 {
@@ -164,12 +171,13 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
   gboolean key_claimed;
   long long buffer_val = 0;
   int len;
-  enum command_mode mode = MODE_NORMAL;
   
   ncurses = malloc(sizeof(hi_ncurses));
   ncurses->dst = NULL;
   ncurses->diff = diff;
   ncurses->buffer[0]=0;
+  ncurses->mode = MODE_NORMAL;
+  ncurses->error = NULL;
   
   (void) signal(SIGINT, finish);
   ncurses->window = initscr();
@@ -229,7 +237,7 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
       case 27: /* Escape key, clear the buffer */
         ncurses->buffer[0] = 0;
         key_claimed = TRUE;
-        mode = MODE_NORMAL;
+        ncurses->mode = MODE_NORMAL;
         break;
         
       case 127:
@@ -247,13 +255,13 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
     /* Soak up all the key presses */
     if (key_claimed == FALSE)
     {
-      if (mode == MODE_REGEX)
+      if (ncurses->mode == MODE_REGEX)
       {
         if (newch == '\n' || newch == '\r')
         {
           hi_ncurses_fpager_search(ncurses->focused_pager, ncurses->buffer);
           ncurses->buffer[0]=0;
-          mode = MODE_NORMAL;
+          ncurses->mode = MODE_NORMAL;
         }
         else
         {
@@ -312,7 +320,7 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
           break;
           
         case 47 /* / */:
-          mode = MODE_REGEX;
+          ncurses->mode = MODE_REGEX;
           break;
 
         case KEY_RESIZE:
