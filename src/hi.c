@@ -172,14 +172,7 @@ int main(int argc, char *argv[])
     
   }
   
-  char *error;
-  int *erroffset;
-  off_t offset;
-  hi_search_compile_and_exec(file, "\\x5f\\x5f", 0, &offset, &error);
-  printf("%x\n", offset);
-  hi_search_compile_and_exec(file, "\\x5f\\x5f", offset+1, &offset, &error);
-  printf("%x\n", offset);
-#if 0
+#if 1
   hi_ncurses_main(file, file2, diff);
 #endif
   hi_file_close(file2);

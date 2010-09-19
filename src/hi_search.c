@@ -52,7 +52,7 @@ gboolean hi_search_compile_and_exec(hi_file *file,
   re = pcre_compile(pattern, 0, error, found_offset, NULL);
   if (re == NULL)
   {
-    DPRINTF("Failed pattern compile due to %s\n", *error);
+    VDPRINTF("Failed pattern compile due to %s\n", *error);
     return FALSE;
   }
   ret = hi_search_exec(file, begin_offset, found_offset, re);
@@ -72,11 +72,11 @@ static gboolean hi_search_exec(hi_file *file,
                  ovector, OVECCOUNT);
   if (rc < 0)
   {
-    DPRINTF("Could not find due to %i\n", rc);
+    VDPRINTF("Could not find due to %i\n", rc);
     return FALSE;
   }
   *found_offset = ovector[0];
-  DPRINTF("Found at %i\n", *found_offset);
+  VDPRINTF("Found at %i\n", *found_offset);
   return TRUE;
 }
 
