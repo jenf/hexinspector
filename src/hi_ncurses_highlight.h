@@ -47,6 +47,7 @@ typedef struct hi_ncurses_highlight
   hi_ncurses_highlight_begin    begin_func;
   hi_ncurses_highlight_end      end_func;
   char                          *name;
+  char                          *help_string;
 } hi_ncurses_highlight;
 
 void hi_ncurses_highlight_init(void);

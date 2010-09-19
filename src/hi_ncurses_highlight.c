@@ -41,7 +41,8 @@ static GList *highlight_list;
 static void hi_ncurses_highlight_define(hi_ncurses_highlight_per_byte highlighter,
                                         const char *name,
                                         hi_ncurses_highlight_begin    begin_func,
-                                        hi_ncurses_highlight_end      end_func);
+                                        hi_ncurses_highlight_end      end_func,
+                                        char *help_string);
 
 /* C Type style */
 enum hi_ncurses_colour highlight_ctype(unused(hi_file *file),
@@ -112,7 +113,8 @@ enum hi_ncurses_colour mpeg_highlight(unused(hi_file *file),
 static void hi_ncurses_highlight_define(hi_ncurses_highlight_per_byte highlighter,
                                         const char *name,
                                         hi_ncurses_highlight_begin    begin_func,
-                                        hi_ncurses_highlight_end      end_func)
+                                        hi_ncurses_highlight_end      end_func,
+                                        char *help_string)
 {
   hi_ncurses_highlight *new;
   new = malloc(sizeof(hi_ncurses_highlight));
@@ -120,6 +122,7 @@ static void hi_ncurses_highlight_define(hi_ncurses_highlight_per_byte highlighte
   new->name           = strdup(name);
   new->begin_func     = begin_func;
   new->end_func       = end_func;
+  new->help_string    = strdup(help_string);
   
   highlight_list = g_list_append(highlight_list, new);
 }
@@ -127,9 +130,9 @@ static void hi_ncurses_highlight_define(hi_ncurses_highlight_per_byte highlighte
 void hi_ncurses_highlight_init(void)
 {
 
-  hi_ncurses_highlight_define(highlight_ctype,"ctype",NULL,NULL);
-  hi_ncurses_highlight_define(NULL,           "none", NULL,NULL);
-  hi_ncurses_highlight_define(mpeg_highlight, "mpeg", mpegts_highlight_begin,mpegts_highlight_end);
+  hi_ncurses_highlight_define(highlight_ctype,"ctype",NULL,NULL,"Blue = Numbers, Red = Non-printable, Green = Decimal numbers, Yellow = Space");
+  hi_ncurses_highlight_define(NULL,           "none", NULL,NULL,"No highlighting");
+  hi_ncurses_highlight_define(mpeg_highlight, "mpeg", mpegts_highlight_begin,mpegts_highlight_end,"Green = Tables, Yellow = AV/Private, Red = NULL");
 }
 
 hi_ncurses_highlight *hi_ncurses_highlight_get(hi_ncurses_highlight *highlight,

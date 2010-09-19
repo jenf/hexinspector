@@ -56,6 +56,9 @@ char *help_data [] = {
 "p/P                          | Switch between pagers/files",
 "[buffer] [ or ]              | Previous or next hunk",
 "[buffer] { or }              | Previous or next big diff hunk",
+"",
+"&highlight1",
+"&highlight2",
 NULL,
 };
 
@@ -87,14 +90,30 @@ void hi_ncurses_help_redraw(hi_ncurses *ncurses)
     {
       if (x-ncurses->help_win_line < LINES-12)
       {
-        if (help_data[x][0] == '*')
+        if (help_data[x][0] == '&')
         {
-          wattron(ncurses->help_win, A_BOLD);
+          if (strcmp(help_data[x],"&highlight1")==0)
+          {
+            wattron(ncurses->help_win, A_BOLD);
+            mvwprintw(ncurses->help_win,1+x-ncurses->help_win_line,1, "'%s' highlight mode", ncurses->focused_pager->highlighter->name);
+            wattroff(ncurses->help_win, A_BOLD);
+          }
+          if (strcmp(help_data[x],"&highlight2")==0)
+          {
+            mvwprintw(ncurses->help_win,1+x-ncurses->help_win_line,1, ncurses->focused_pager->highlighter->help_string);
+          }
         }
-        mvwprintw(ncurses->help_win,1+x-ncurses->help_win_line,1, help_data[x][0]=='*' ? help_data[x]+1 : help_data[x]);
-        if (help_data[x][0] == '*')
+        else
         {
-          wattroff(ncurses->help_win, A_BOLD);
+          if (help_data[x][0] == '*')
+          {
+            wattron(ncurses->help_win, A_BOLD);
+          }
+          mvwprintw(ncurses->help_win,1+x-ncurses->help_win_line,1, help_data[x][0]=='*' ? help_data[x]+1 : help_data[x]);
+          if (help_data[x][0] == '*')
+          {
+            wattroff(ncurses->help_win, A_BOLD);
+          }
         }
       }
     }
