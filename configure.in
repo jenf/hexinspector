@@ -46,8 +46,7 @@ AM_PATH_GLIB_2_0(2.0.0)
 AC_CHECK_LIB(ncurses,initscr,[NCURSES_LIBS="-lncurses"])
 AC_SUBST([NCURSES_LIBS])
 
-PKG_CHECK_MODULES([PCRE], [libpcre >= 0.20], has_pcre=yes, has_prce=no)
-dnl PKG_CHECK_MODULES([PCRE], [libpcre = 0.20])
+PKG_CHECK_MODULES([PCRE], [libpcre >= 0.20], has_pcre=yes, has_pcre=no)
 AC_SUBST([PCRE_CFLAGS])
 AC_SUBST([PCRE_LIBS])
 

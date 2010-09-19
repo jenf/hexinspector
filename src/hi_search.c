@@ -26,10 +26,10 @@
 /**
  * Search a file for a regular expression
  */
-#ifndef NO_PCRE
 #include <hi_file.h>
 #include <hi_search.h>
 #include <macros.h>
+#ifndef NO_PCRE
 #include <pcre.h>
 
 #define OVECCOUNT 30
@@ -95,6 +95,7 @@ static gboolean hi_search_exec(hi_file *file,
 #else
 
 static char disabled[] = "Search support disabled";
+
 gboolean hi_search_compile_and_exec(hi_file *file,
                                     char *pattern,
                                     off_t begin_offset,
