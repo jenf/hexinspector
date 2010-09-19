@@ -27,7 +27,7 @@
  * NCurses help display
  */
 #include <hi_ncurses.h>
-
+#include <string.h>
 char *help_data [] = {
 "*Buffer",
 "Certain commands can be prefixed with a 'buffer' argument, this takes an",

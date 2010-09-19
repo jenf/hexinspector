@@ -123,6 +123,7 @@ hi_location_mode *hi_ncurses_location_get(hi_location_mode *location,
 
 void hi_ncurses_help_init(hi_ncurses *curses);
 void hi_ncurses_help_redraw(hi_ncurses *curses);
+void hi_ncurses_help_resize(hi_ncurses *ncurses);
 gboolean hi_ncurses_help_key_event(hi_ncurses *ncurses, int newch);
 
 #endif

@@ -289,7 +289,7 @@ static void relative_move_pager(hi_ncurses_fpager *pager, off_t move)
 
 static void move_to_next_diff(hi_ncurses_fpager *pager, int times, gboolean bigdiff)
 {
-  hi_diff_hunk *hunk, *hunk2 = NULL;
+  hi_diff_hunk *hunk = NULL, *hunk2 = NULL;
   int i=0;
   int times_abs = abs(times);
   gboolean forwards= FALSE;
