@@ -46,6 +46,12 @@ enum hi_ncurses_colour
   hi_ncurses_colour_yellow
 };
 
+enum command_mode
+{
+  MODE_NORMAL,
+  MODE_REGEX
+};
+
 
 typedef struct hi_location_mode
 {
@@ -91,6 +97,8 @@ typedef struct hi_ncurses
   int help_win_line;
   gboolean show_help;
   WINDOW                *help_win;
+  enum command_mode mode;
+  char *error;
 } hi_ncurses;
 
 
@@ -107,6 +115,7 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager);
 void hi_ncurses_fpager_resize(hi_ncurses_fpager *pager,
                               int height, int width,
                               int y, int x);
+hi_ncurses_fpager_search(hi_ncurses_fpager *pager, char *search);
 gboolean hi_ncurses_fpager_key_event(hi_ncurses_fpager *pager,
                                      int key,
                                      long long buffer_val);

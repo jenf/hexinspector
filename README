@@ -22,6 +22,7 @@ Todo
 
 glib - 2.0.0 or later (For list, hash and balanced binary tree support)
 ncurses - Tested with version 5
+pcre - Perl compatibile regular expresions (Optional)
 
 * Platform *
 
@@ -47,6 +48,7 @@ q/Q                          | Quit
 [buffer] Page Up/Down/Arrows | Move around the file
 [buffer] g/G                 | Goto (Negative value in buffer)
                                act as bytes from EOF
+/                            | Search using a regular expression
                                
 Display modes
 Note that display modes are not applied to both pagers

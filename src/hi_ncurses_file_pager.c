@@ -498,3 +498,16 @@ gboolean hi_ncurses_fpager_key_event(hi_ncurses_fpager *pager,
 
   return claimed;
 }
+
+hi_ncurses_fpager_search(hi_ncurses_fpager *pager, char *search)
+{
+  char *error;
+  off_t offset;
+  gboolean found;
+  
+  found = hi_search_compile_and_exec(pager->file, search, pager->offset, &offset, &pager->curses->error);
+  if (found == TRUE)
+  {
+    set_offset(pager, offset);
+  }
+}

@@ -96,15 +96,26 @@ static void hi_ncurses_redraw_ruler(hi_ncurses *ncurses)
               value32_le, (int32_t)value32_le, value32_le, value32_le);
   }
 
-  mvwprintw(ncurses->ruler,RULER_LINES-1,0,"0x%08x/0x%08x %i/%i (%.2f%%) \"%s\" %s %s %s : Press ? for help",
-            (unsigned int) offset, (unsigned int) file->size,
-            (unsigned int) offset, (unsigned int) file->size,
-            (((double) offset)/file->size)*100,
-            ncurses->buffer,
-            ((ncurses->focused_pager->highlighter != NULL) && (ncurses->focused_pager->highlighter->name != NULL)) ? ncurses->focused_pager->highlighter->name : "",
-            ((ncurses->focused_pager->display_mode != NULL) && (ncurses->focused_pager->display_mode->name != NULL)) ? ncurses->focused_pager->display_mode->name : "",
-            ((ncurses->focused_pager->location_mode != NULL) && (ncurses->focused_pager->location_mode->name != NULL)) ? ncurses->focused_pager->location_mode->name : "");
-
+  if (ncurses->error != NULL)
+  {
+    ncurses->activate_bell = TRUE;
+    wattron(ncurses->ruler, A_REVERSE);
+    mvwprintw(ncurses->ruler, RULER_LINES-1,0, "ERROR: %s", ncurses->error);
+    wattroff(ncurses->ruler, A_REVERSE);
+    ncurses->error = NULL;
+  }
+  else
+  {
+    mvwprintw(ncurses->ruler,RULER_LINES-1,0,"%s \"%s\" 0x%08x/0x%08x %i/%i (%.2f%%) %s %s %s : Press ? for help",
+              ncurses->mode == MODE_NORMAL ? "Buffer:" : "RegEx:",
+              ncurses->buffer,
+              (unsigned int) offset, (unsigned int) file->size,
+              (unsigned int) offset, (unsigned int) file->size,
+              (((double) offset)/file->size)*100,
+              ((ncurses->focused_pager->highlighter != NULL) && (ncurses->focused_pager->highlighter->name != NULL)) ? ncurses->focused_pager->highlighter->name : "",
+              ((ncurses->focused_pager->display_mode != NULL) && (ncurses->focused_pager->display_mode->name != NULL)) ? ncurses->focused_pager->display_mode->name : "",
+              ((ncurses->focused_pager->location_mode != NULL) && (ncurses->focused_pager->location_mode->name != NULL)) ? ncurses->focused_pager->location_mode->name : "");
+  }
   wrefresh(ncurses->ruler);
 }
 
@@ -151,6 +162,8 @@ static void finish(int sig)
   exit(0);
 }
 
+
+
 void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
 {
   hi_ncurses *ncurses;
@@ -165,6 +178,8 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
   ncurses->dst = NULL;
   ncurses->diff = diff;
   ncurses->buffer[0]=0;
+  ncurses->mode = MODE_NORMAL;
+  ncurses->error = NULL;
   
   (void) signal(SIGINT, finish);
   ncurses->window = initscr();
@@ -226,6 +241,53 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
     }
     if (key_claimed == FALSE)
     { 
+      switch (newch)
+      {
+        case 27: /* Escape key, clear the buffer */
+          ncurses->buffer[0] = 0;
+          key_claimed = TRUE;
+          ncurses->mode = MODE_NORMAL;
+          break;
+          
+        case 127:
+        case '\b':
+        case KEY_BACKSPACE:
+          len = strlen(ncurses->buffer);
+          if (len >= 1)
+          {
+            ncurses->buffer[len-1] = 0;
+          }
+          key_claimed = TRUE;
+          break;
+      }
+    }
+    
+    /* Soak up all the key presses */
+    if (key_claimed == FALSE)
+    {
+      if (ncurses->mode == MODE_REGEX)
+      {
+        if (newch == '\n' || newch == '\r')
+        {
+          hi_ncurses_fpager_search(ncurses->focused_pager, ncurses->buffer);
+          ncurses->buffer[0]=0;
+          ncurses->mode = MODE_NORMAL;
+        }
+        else
+        {
+          len = strlen(ncurses->buffer);
+          if (len+1 < KEYBUFFER_LEN)
+          {
+            ncurses->buffer[len]=newch;
+            ncurses->buffer[len+1]=0;          
+          }
+        }
+        key_claimed = TRUE;
+      }
+    }
+    
+    if (key_claimed == FALSE)
+    {
       if (ncurses->focused_pager->linked_pager != NULL)
       {
         key_claimed = hi_ncurses_fpager_slave_key_event(ncurses->focused_pager->linked_pager, newch);
@@ -267,29 +329,20 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
             ncurses->focused_pager = (ncurses->src==ncurses->focused_pager ? ncurses->dst : ncurses->src);
           break;
           
+        case 47 /* / */:
+          ncurses->mode = MODE_REGEX;
+          break;
 
         case KEY_RESIZE:
           /* Need to resize the pagers */
           need_resize = TRUE;
           break;
 
-        case 27: /* Escape key, clear the buffer */
-          ncurses->buffer[0] = 0;
-          break;
 
         case '?': /* Show help */
           ncurses->show_help = !ncurses->show_help;
           break;
           
-        case 127:
-        case '\b':
-        case KEY_BACKSPACE:
-          len = strlen(ncurses->buffer);
-          if (len >= 1)
-          {
-            ncurses->buffer[len-1] = 0;
-          }
-          break;          
         case ERR:
           break;
         default:

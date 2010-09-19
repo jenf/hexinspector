@@ -38,6 +38,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <hi_ncurses.h>
+#include <hi_search.h>
 
 void version(char *program_name)
 {
