@@ -195,6 +195,8 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
   init_pair(hi_ncurses_colour_blue,COLOR_CYAN ,COLOR_BLACK);
   init_pair(hi_ncurses_colour_green,COLOR_GREEN,COLOR_BLACK);
   init_pair(hi_ncurses_colour_yellow,COLOR_YELLOW,COLOR_BLACK);
+  init_pair(hi_ncurses_colour_magenta,COLOR_MAGENTA,COLOR_BLACK);
+  
   hi_ncurses_highlight_init();
   hi_ncurses_display_init();
   hi_ncurses_location_init();

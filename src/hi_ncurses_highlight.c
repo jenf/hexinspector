@@ -65,7 +65,7 @@ static enum hi_ncurses_colour highlight_ctype(unused(hi_file *file),
   if (!isprint(val))
     return hi_ncurses_colour_red;
   if (isdigit(val))
-    return hi_ncurses_colour_green;
+    return hi_ncurses_colour_magenta;
   if (isspace(val))
     return hi_ncurses_colour_yellow;
   return hi_ncurses_colour_normal;

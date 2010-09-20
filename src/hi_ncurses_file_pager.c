@@ -70,6 +70,7 @@ hi_ncurses_fpager *hi_ncurses_fpager_new(hi_ncurses *curses,
   pager->x = x;
   pager->y = y;
   pager->offset = 0;
+  pager->base_offset = 0;
   pager->byte_grouping = 4;
   pager->set_bytes_per_row = 0;
   pager->window = newwin(height , width,y, x);
@@ -142,7 +143,7 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
   {
     for (x=0; x<bytes; x++)
     {
-      offset = pager->offset+x+(pager->set_bytes_per_row == 0 ? pager->bytes_per_row*y : pager->set_bytes_per_row*y);
+      offset = pager->base_offset+x+(pager->set_bytes_per_row == 0 ? pager->bytes_per_row*y : pager->set_bytes_per_row*y);
 
       if (offset < pager->file->size)
       {
@@ -173,7 +174,11 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
             wattron(pager->window, A_REVERSE);
           
           colour = hi_ncurses_colour_normal;
-          if ((highlighter != NULL) && (highlighter->highlight_func != NULL))
+          if (offset == pager->offset)
+          {
+            colour = hi_ncurses_colour_green;
+          }
+          else if ((highlighter != NULL) && (highlighter->highlight_func != NULL))
           {
             colour = highlighter->highlight_func(pager->file, offset, val, highlighter_data);
             

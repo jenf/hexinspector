@@ -43,7 +43,8 @@ enum hi_ncurses_colour
   hi_ncurses_colour_red,
   hi_ncurses_colour_blue,
   hi_ncurses_colour_green,
-  hi_ncurses_colour_yellow
+  hi_ncurses_colour_yellow,
+  hi_ncurses_colour_magenta
 };
 
 enum command_mode
@@ -66,6 +67,7 @@ typedef struct hi_ncurses_fpager
   hi_diff *diff;
   struct hi_ncurses *curses;
   off_t    offset;
+  off_t    base_offset;
   WINDOW  *window;
   int      width;
   int      bytes_per_row;
