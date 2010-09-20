@@ -217,7 +217,9 @@ static void set_offset(hi_ncurses_fpager *pager, off_t offset)
 {
   hi_diff_hunk *hunk;
   double ratio;
+  off_t prev_offset;
   
+  prev_offset = pager->offset;
   pager->offset = offset;
   if (pager->offset < 0)
   {
@@ -228,6 +230,15 @@ static void set_offset(hi_ncurses_fpager *pager, off_t offset)
   {
     pager->offset = pager->file->size;
     pager->curses->activate_bell = TRUE;
+  }
+  
+  if (pager->base_offset > pager->offset)
+  {
+    pager->base_offset = offset;
+  }
+  if (pager->base_offset+((pager->bytes_per_row*(pager->height-2))-1) < pager->offset)
+  {
+    pager->base_offset = pager->offset-((pager->bytes_per_row*(pager->height-2))-1);
   }
   
   /* Make the other pager move to the right position */
