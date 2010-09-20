@@ -29,7 +29,7 @@
 
 #ifndef HI_SEARCH_H
 #define HI_SEARCH_H
-
+#include <hi_file.h>
 gboolean hi_search_compile_and_exec(hi_file *file,
                                     char *pattern,
                                     off_t begin_offset,

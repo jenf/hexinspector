@@ -26,6 +26,7 @@
 /**
  * Search a file for a regular expression
  */
+#include <sys/types.h>
 #include <hi_file.h>
 #include <hi_search.h>
 #include <macros.h>

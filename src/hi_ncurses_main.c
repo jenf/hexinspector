@@ -306,7 +306,7 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
     
     if (FALSE == key_claimed)
     {
-      if (isxdigit(newch) || newch=='x' || newch=='-')
+      if (newch < 255 && (isxdigit(newch) || newch=='x' || newch=='-'))
       {
         len = strlen(ncurses->buffer);
         if (len+1 < KEYBUFFER_LEN)

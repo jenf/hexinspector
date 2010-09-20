@@ -412,6 +412,14 @@ gboolean hi_ncurses_fpager_key_event(hi_ncurses_fpager *pager,
       relative_move_pager(pager, -(pager->bytes_per_row * pager->height-3) * buffer_val);
       pager->curses->buffer[0]=0;
       break;     
+
+    case KEY_HOME:
+      set_offset(pager, 0);
+      break;
+    case KEY_END:
+      set_offset(pager, pager->file->size);
+      break;
+
     case KEY_LEFT:
       relative_move_pager(pager, -1*buffer_val);
       pager->curses->buffer[0]=0;
