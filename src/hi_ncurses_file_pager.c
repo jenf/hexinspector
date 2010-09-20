@@ -31,6 +31,8 @@
 #include <macros.h>
 #include <hi_ncurses_display.h>
 #include <hi_search.h>
+static void set_offset(hi_ncurses_fpager *pager, off_t offset, gboolean centralize);
+
 
 #define BYTES_FOR_BORDER (4)
 static void update_bytes_per_line(hi_ncurses_fpager *pager)
@@ -96,6 +98,8 @@ void hi_ncurses_fpager_resize(hi_ncurses_fpager *pager,
   mvwin(pager->window, y, x);
   box(pager->window, 0, 0);
   werase(pager->window);
+  /* Force a reset of the pager size */
+  set_offset(pager, pager->offset, FALSE);
 }
 
 void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
@@ -170,20 +174,21 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
             
           }
         
-          if (TRUE == diff)
-            wattron(pager->window, A_REVERSE);
+
           
           colour = hi_ncurses_colour_normal;
           if (offset == pager->offset)
           {
             colour = hi_ncurses_colour_green;
+            diff = !diff; /* Flip the sense of diff */
           }
           else if ((highlighter != NULL) && (highlighter->highlight_func != NULL))
           {
             colour = highlighter->highlight_func(pager->file, offset, val, highlighter_data);
             
           }
-        
+          if (TRUE == diff)
+            wattron(pager->window, A_REVERSE);        
           if (colour != hi_ncurses_colour_normal)
           {
             wcolor_set(pager->window, colour, NULL);
@@ -211,9 +216,9 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
       
   wrefresh(pager->window);
 }
-
+#define BYTES_PER_SCREEN(pager) ((pager->bytes_per_row*(pager->height-2))-1)
 /** Set the offset and move the linked pager to the correct location */
-static void set_offset(hi_ncurses_fpager *pager, off_t offset)
+static void set_offset(hi_ncurses_fpager *pager, off_t offset, gboolean centralize)
 {
   hi_diff_hunk *hunk;
   double ratio;
@@ -228,17 +233,36 @@ static void set_offset(hi_ncurses_fpager *pager, off_t offset)
   }
   if (pager->offset >= pager->file->size)
   {
-    pager->offset = pager->file->size;
+    pager->offset = pager->file->size-1;
     pager->curses->activate_bell = TRUE;
   }
   
-  if (pager->base_offset > pager->offset)
+  if (TRUE == centralize)
   {
-    pager->base_offset = offset;
+    if ((pager->base_offset > pager->offset) || (pager->base_offset+BYTES_PER_SCREEN(pager) < pager->offset))
+    {
+      /* Set the base offset to half the screen */
+      pager->base_offset = offset - (BYTES_PER_SCREEN(pager)/2);
+      if (pager->base_offset < 0)
+      {
+        pager->base_offset = 0;
+      }
+      if ((pager->base_offset+BYTES_PER_SCREEN(pager)) >= pager->file->size)
+      {
+        pager->base_offset = pager->file->size - BYTES_PER_SCREEN(pager)-1;
+      }
+    }
   }
-  if (pager->base_offset+((pager->bytes_per_row*(pager->height-2))-1) < pager->offset)
+  else
   {
-    pager->base_offset = pager->offset-((pager->bytes_per_row*(pager->height-2))-1);
+    if (pager->base_offset > pager->offset)
+    {
+      pager->base_offset = offset;
+    }
+    while (pager->base_offset+BYTES_PER_SCREEN(pager) < pager->offset)
+    {
+      pager->base_offset +=pager->bytes_per_row;
+    }
   }
   
   /* Make the other pager move to the right position */
@@ -303,7 +327,7 @@ static void set_offset(hi_ncurses_fpager *pager, off_t offset)
 
 static void relative_move_pager(hi_ncurses_fpager *pager, off_t move)
 {
-  set_offset(pager, pager->offset + move);
+  set_offset(pager, pager->offset + move, FALSE);
 }
 
 static void move_to_next_diff(hi_ncurses_fpager *pager, int times, gboolean bigdiff)
@@ -330,22 +354,22 @@ static void move_to_next_diff(hi_ncurses_fpager *pager, int times, gboolean bigd
       {
         if (pager->file == pager->diff->src)
         {
-          set_offset(pager, hunk->src_end+1);        
+          set_offset(pager, hunk->src_end+1, TRUE);        
         }
         if (pager->file == pager->diff->dst)
         {
-          set_offset(pager, hunk->dst_end+1);        
+          set_offset(pager, hunk->dst_end+1, TRUE);        
         }
       }
       else
       {
         if (pager->file == pager->diff->src)
         {
-          set_offset(pager, hunk->src_start-1);        
+          set_offset(pager, hunk->src_start-1, TRUE);        
         }
         if (pager->file == pager->diff->dst)
         {
-          set_offset(pager, hunk->dst_start-1);        
+          set_offset(pager, hunk->dst_start-1, TRUE);        
         }      
       }
       if (bigdiff == TRUE)
@@ -380,11 +404,11 @@ static void move_to_next_diff(hi_ncurses_fpager *pager, int times, gboolean bigd
     hunk = hi_diff_get_hunk(pager->diff, pager->file, pager->offset);
     if (pager->file == pager->diff->src)
     {
-      set_offset(pager, hunk->src_start);        
+      set_offset(pager, hunk->src_start, TRUE);        
     }
     if (pager->file == pager->diff->dst)
     {
-      set_offset(pager, hunk->dst_start);        
+      set_offset(pager, hunk->dst_start, TRUE);        
     }      
   }
 }
@@ -430,10 +454,10 @@ gboolean hi_ncurses_fpager_key_event(hi_ncurses_fpager *pager,
       break;     
 
     case KEY_HOME:
-      set_offset(pager, 0);
+      set_offset(pager, 0, TRUE);
       break;
     case KEY_END:
-      set_offset(pager, pager->file->size);
+      set_offset(pager, pager->file->size, TRUE);
       break;
 
     case KEY_LEFT:
@@ -510,11 +534,11 @@ gboolean hi_ncurses_fpager_key_event(hi_ncurses_fpager *pager,
       requested_offset = strtoll(pager->curses->buffer, NULL, 0);
       if (buffer_val < 0)
       {
-        set_offset(pager, pager->file->size+requested_offset);
+        set_offset(pager, pager->file->size+requested_offset, TRUE);
       }
       else
       {
-        set_offset(pager, (off_t) buffer_val);
+        set_offset(pager, (off_t) buffer_val, TRUE);
       }
       pager->curses->buffer[0]=0; 
       break;
@@ -534,6 +558,6 @@ void hi_ncurses_fpager_search(hi_ncurses_fpager *pager, char *search)
   found = hi_search_compile_and_exec(pager->file, search, pager->offset, &offset, &pager->curses->error);
   if (found == TRUE)
   {
-    set_offset(pager, offset);
+    set_offset(pager, offset, TRUE);
   }
 }
