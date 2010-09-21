@@ -362,6 +362,7 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
         }
         else
         {
+          DPRINTF("Lost sync at %lx %lx\n",  (unsigned long) srcptr, (unsigned long) dstptr);
           if ((srcptr != working_hunk.src_start) &&
              (dstptr != working_hunk.dst_start))
           {
@@ -563,8 +564,10 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
   /* Add the last working hunk */
   if (mode == DIFF_MODE_SYNC)
   {
-    working_hunk.src_end = srcptr;
-    working_hunk.dst_end = dstptr;
+    working_hunk.src_end = srcptr-1;
+    working_hunk.dst_end = dstptr-1;
+    DPRINTF("%lx\n", (unsigned long) srcptr_new);
+    DPRINTF("EOF SAME\n");
     insert_hunk(diff, &working_hunk);
     if (dstptr != dst->size)
     {
@@ -573,6 +576,7 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
       working_hunk.dst_start = dstptr;
       working_hunk.dst_end = dst->size;
       working_hunk.type = HI_DIFF_TYPE_DIFF;
+      DPRINTF("DST EOF DIFF\n");
       insert_hunk(diff, &working_hunk);
     }
     else if (srcptr != src->size)
@@ -582,6 +586,7 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
       working_hunk.dst_start = dstptr;
       working_hunk.dst_end = dst->size;
       working_hunk.type = HI_DIFF_TYPE_DIFF;
+      DPRINTF("SRC EOF DIFF\n");
       insert_hunk(diff, &working_hunk);
     }
   }
