@@ -249,14 +249,23 @@ hi_diff_hunk *hi_diff_get_hunk(hi_diff *diff,
     search_hunk.type = HI_DIFF_FIND_DST;
   }
   
+  /* Check to see if it's the same hunk as last time */
+  if (compare_diff_hunks(&search_hunk, diff->last_hunk) == 0)
+  {
+
+    return diff->last_hunk;
+  } 
   found = g_tree_lookup(diff->hunks, &search_hunk);
-#if 0
+
   if (NULL != found)
   {
+    diff->last_hunk = found;
+#if 0
     DPRINTF("Found %lu", pos);
     dump_hunk(found);
-  }
 #endif
+  }
+
   return found;
 }
 
