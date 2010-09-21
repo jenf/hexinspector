@@ -38,6 +38,7 @@ typedef struct hi_diff
   hi_file *src;                     /**< Source file */
   hi_file *dst;                     /**< Destination file */
   GTree /*<hi_diff_hunk>*/ *hunks;  /**<List of hunks of type hi_diff_hunk */
+  GList /*<hi_diff_hunk>*/ *working_hunks; /**< List of hunks used when constructing the diff */
 } hi_diff;
 
 /** The various states that a hunk can be in */

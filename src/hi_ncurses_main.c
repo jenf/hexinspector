@@ -68,14 +68,18 @@ static void hi_ncurses_redraw_ruler(hi_ncurses *ncurses)
   offset = ncurses->focused_pager->offset;
   file = ncurses->focused_pager->file;
   
-  value8 = file->memory[offset];
-  convert_to_bitstring(value8, bitstring);
+
   
   werase(ncurses->ruler);
 
-  mvwprintw(ncurses->ruler,0,0,"1b: %s/% 3u/%+ 4i/%#03o/0x%02x/'%c'",
-            bitstring, value8, (signed char) value8, value8, value8,
-            isprint(file->memory[offset]) ? file->memory[offset] : ' ');
+  if (offset < file->size)
+  {
+    value8 = file->memory[offset];
+    convert_to_bitstring(value8, bitstring);
+    mvwprintw(ncurses->ruler,0,0,"1b: %s/% 3u/%+ 4i/%#03o/0x%02x/'%c'",
+              bitstring, value8, (signed char) value8, value8, value8,
+              isprint(file->memory[offset]) ? file->memory[offset] : ' ');
+  }
   if (offset+1 < file->size)
   {
     value16_be = file->memory[offset] | (file->memory[offset+1] << 8);
