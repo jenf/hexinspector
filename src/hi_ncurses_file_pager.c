@@ -149,7 +149,7 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
     {
       offset = pager->base_offset+x+(pager->set_bytes_per_row == 0 ? pager->bytes_per_row*y : pager->set_bytes_per_row*y);
 
-      if (offset < pager->file->size)
+      if ((offset > 0) && (offset < pager->file->size))
       {
           if (x == 0)
           {
@@ -320,6 +320,7 @@ static void set_offset(hi_ncurses_fpager *pager, off_t offset, gboolean centrali
       {
         pager->linked_pager->offset = pager->linked_pager->file->size;
       } 
+      pager->linked_pager->base_offset = pager->linked_pager->offset - (pager->offset-pager->base_offset);
     }
     
   }  
