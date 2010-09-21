@@ -100,15 +100,16 @@ static gint compare_diff_hunks(hi_diff_hunk *hunk1, hi_diff_hunk *hunk2)
       return 0;
     }
     
-    if (hunk1->dst_start-hunk2->dst_start == 0)
+    if ((hunk1->dst_start-hunk2->dst_start) == 0)
     {
       return hunk1->dst_end - hunk2->dst_end;
     }
     return hunk1->dst_start-hunk2->dst_start;
   }
   
-  if (hunk1->src_start-hunk2->src_start == 0)
+  if ((hunk1->src_start-hunk2->src_start) == 0)
   {
+    
     return hunk1->src_end - hunk2->src_end;
   }
   
@@ -140,7 +141,7 @@ void backtrack_hunks(hi_diff *diff)
       hunk->type=HI_DIFF_TYPE_SAME_BACKTRACKED;
       srcptr = hunk->src_start;
       dstptr = hunk->dst_start;
-      while ((srcptr >0) && (dstptr > 0))
+      while ((srcptr >= 0) && (dstptr >= 0))
       {
         if (diff->src->memory[srcptr]!=diff->dst->memory[dstptr])
         {
@@ -165,12 +166,12 @@ void backtrack_hunks(hi_diff *diff)
         
         otherhunk = backlist->data;
 
-        if ((otherhunk->src_start < srcptr) && (otherhunk->dst_start < dstptr))
+        if ((otherhunk->src_start <= srcptr) && (otherhunk->dst_start <= dstptr))
         {
           DPRINTF("Moving back ");
           dump_hunk(otherhunk);
-          otherhunk->src_end = srcptr-1;
-          otherhunk->dst_end = dstptr-1;
+          otherhunk->src_end = srcptr==0 ? 0 : srcptr-1;
+          otherhunk->dst_end = dstptr==0 ? 0 : dstptr-1;
           DPRINTF("To ");
           dump_hunk(otherhunk);
           break;
@@ -248,14 +249,23 @@ hi_diff_hunk *hi_diff_get_hunk(hi_diff *diff,
     search_hunk.type = HI_DIFF_FIND_DST;
   }
   
+  /* Check to see if it's the same hunk as last time */
+  if (compare_diff_hunks(&search_hunk, diff->last_hunk) == 0)
+  {
+
+    return diff->last_hunk;
+  } 
   found = g_tree_lookup(diff->hunks, &search_hunk);
-#if 0
+
   if (NULL != found)
   {
+    diff->last_hunk = found;
+#if 0
     DPRINTF("Found %lu", pos);
     dump_hunk(found);
-  }
 #endif
+  }
+
   return found;
 }
 

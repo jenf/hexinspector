@@ -34,6 +34,12 @@
 static void set_offset(hi_ncurses_fpager *pager, off_t offset, gboolean centralize);
 
 
+enum error_message_index
+{
+  error_message_goto_nobuffer,
+};
+static char *error_messages[] = {"No buffer for goto command"};
+
 #define BYTES_FOR_BORDER (4)
 static void update_bytes_per_line(hi_ncurses_fpager *pager)
 {
@@ -532,14 +538,21 @@ gboolean hi_ncurses_fpager_key_event(hi_ncurses_fpager *pager,
       
     case 'G':
     case 'g':
-      requested_offset = strtoll(pager->curses->buffer, NULL, 0);
-      if (buffer_val < 0)
+      if (pager->curses->buffer[0] == 0)
       {
-        set_offset(pager, pager->file->size+requested_offset, TRUE);
+        pager->curses->error =  error_messages[error_message_goto_nobuffer];
       }
       else
       {
-        set_offset(pager, (off_t) buffer_val, TRUE);
+        requested_offset = strtoll(pager->curses->buffer, NULL, 0);
+        if (buffer_val < 0)
+        {
+          set_offset(pager, pager->file->size+requested_offset, TRUE);
+        }
+        else
+        {
+          set_offset(pager, (off_t) buffer_val, TRUE);
+        }
       }
       pager->curses->buffer[0]=0; 
       break;
