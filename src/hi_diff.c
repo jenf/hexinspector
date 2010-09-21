@@ -123,51 +123,82 @@ struct diff_userdata
 };
 
 /** Go through the indexed hunks converting them to backtracked versions */
-gboolean backtrack_hunks(hi_diff_hunk *hunk,void *value, struct diff_userdata *userdata)
+void backtrack_hunks(hi_diff *diff)
 {
-  hi_diff *diff = userdata->diff;
+  GList *list, *backlist, *tmp;
+  hi_diff_hunk *hunk, *otherhunk;
+  
   off_t srcptr, dstptr;
-  if (hunk->type==HI_DIFF_TYPE_SAME_INDEXED)
+  
+  list = diff->working_hunks;
+  while (list != NULL)
   {
-    hunk->type=HI_DIFF_TYPE_SAME_BACKTRACKED;
-    srcptr = hunk->src_start;
-    dstptr = hunk->dst_start;
-    while ((srcptr >0) && (dstptr > 0))
+    hunk = list->data;
+    
+    if (hunk->type==HI_DIFF_TYPE_SAME_INDEXED)
     {
-      /* Ensure we don't go back into the last diff hunk */
-      if (userdata->last != NULL)
+      hunk->type=HI_DIFF_TYPE_SAME_BACKTRACKED;
+      srcptr = hunk->src_start;
+      dstptr = hunk->dst_start;
+      while ((srcptr >0) && (dstptr > 0))
       {
-        if (userdata->last->type != HI_DIFF_TYPE_DIFF)
+        if (diff->src->memory[srcptr]!=diff->dst->memory[dstptr])
         {
-          if (srcptr < userdata->last->src_end) break;
-          if (dstptr < userdata->last->dst_end) break;
+          break;
         }
+
+        srcptr--;
+        dstptr--;
       }
-      if (diff->src->memory[srcptr]!=diff->dst->memory[dstptr])
+      srcptr+=1;
+      dstptr+=1;
+      
+      DPRINTF("Original %lx %lx New %lx %lx\n",
+              (unsigned long) hunk->src_start, (unsigned long) hunk->dst_start, (unsigned long) srcptr, (unsigned long) dstptr);
+      hunk->src_start = srcptr;
+      hunk->dst_start = dstptr;
+      
+      backlist = g_list_previous(list);
+      while (backlist != NULL)
       {
-        break;
+        tmp = g_list_previous(backlist);
+        
+        otherhunk = backlist->data;
+
+        if ((otherhunk->src_start < srcptr) && (otherhunk->dst_start < dstptr))
+        {
+          DPRINTF("Moving back ");
+          dump_hunk(otherhunk);
+          otherhunk->src_end = srcptr-1;
+          otherhunk->dst_end = dstptr-1;
+          DPRINTF("To ");
+          dump_hunk(otherhunk);
+          break;
+        }
+        else
+        {
+          DPRINTF("Remove ");
+          dump_hunk(otherhunk);
+          diff->working_hunks = g_list_delete_link(diff->working_hunks, backlist);
+        }
+        
+        backlist = tmp;
       }
 
-      srcptr--;
-      dstptr--;
     }
-    srcptr+=1;
-    dstptr+=1;
-    
-    DPRINTF("Original %lx %lx New %lx %lx\n",
-            (unsigned long) hunk->src_start, (unsigned long) hunk->dst_start, (unsigned long) srcptr, (unsigned long) dstptr);
-    hunk->src_start = srcptr;
-    hunk->dst_start = dstptr;
-    if (userdata->last != NULL && userdata->last->type == HI_DIFF_TYPE_DIFF)
-    {
-      userdata->last->src_end = srcptr-1;
-      userdata->last->dst_end = dstptr-1;
-    }
+    list = g_list_next(list);
   }
   
-  userdata->last = hunk;
-  
-  return FALSE;
+  /* Move the data into the binary tree */
+  list = diff->working_hunks;
+  while (list != NULL)
+  {
+    g_tree_insert(diff->hunks, list->data, list->data);
+    list = g_list_next(list);
+    
+  }
+  g_list_free(diff->working_hunks);
+  diff->working_hunks = NULL;
 }
 
 /* insert a hunk into the tree */
@@ -189,7 +220,7 @@ hi_diff_hunk *insert_hunk(hi_diff *diff, hi_diff_hunk *hunk)
   memcpy(new, hunk, sizeof(hi_diff_hunk));
   if (new != NULL)
   {
-      g_tree_insert(diff->hunks, new, new); 
+      diff->working_hunks = g_list_prepend(diff->working_hunks, new); 
   }
   dump_hunk(hunk);
 
@@ -270,6 +301,8 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
     DPRINTF("Failure to allocate memory\n");
     return NULL;
   }
+  diff->working_hunks = NULL;
+  
   diff->hunks = g_tree_new((GCompareFunc)compare_diff_hunks); 
   if (NULL == diff->hunks)
   {
@@ -564,13 +597,11 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
     .last = NULL,
     .list = NULL
   }; 
+  /* Reverse the list */
+  diff->working_hunks = g_list_reverse(diff->working_hunks);
+  
   /* Backtrack the indexed ones */
+  backtrack_hunks(diff);
   
-  g_tree_foreach(diff->hunks, (GTraverseFunc) backtrack_hunks, &userdata);
-  
-#if 0
-  /* Insert the missing diff hunks */
-  insert_missing_diffs(diff);
-#endif
   return diff;
 }
