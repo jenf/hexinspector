@@ -144,7 +144,6 @@ void hi_ncurses_help_redraw(hi_ncurses *ncurses)
 
 gboolean hi_ncurses_help_key_event(hi_ncurses *ncurses, int newch)
 {
-  gboolean key_claimed = TRUE;
   switch (newch)
   {
   case KEY_UP:
@@ -153,17 +152,22 @@ gboolean hi_ncurses_help_key_event(hi_ncurses *ncurses, int newch)
       {
         ncurses->help_win_line = 0;
       }
-    break;
+      break;
   case KEY_DOWN:
       ncurses->help_win_line +=1;
       if (ncurses->help_win_line >= (help_lines-1))
       {
         ncurses->help_win_line = (help_lines-1);
       }      
-    break;
+      break;
+  case 27:
+  case '?':
+      ncurses->show_help = !ncurses->show_help;  
+      break;
+      
   default:
-    key_claimed = FALSE;
-    break;
+      ncurses->activate_bell = TRUE;
+      break;
   }
-  return key_claimed;
+  return TRUE;
 }
