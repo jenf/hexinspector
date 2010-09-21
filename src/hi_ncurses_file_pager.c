@@ -32,6 +32,12 @@
 #include <hi_ncurses_display.h>
 #include <hi_search.h>
 
+enum error_message_index
+{
+  error_message_goto_nobuffer,
+};
+static char *error_messages[] = {"No buffer for goto command"};
+
 #define BYTES_FOR_BORDER (4)
 static void update_bytes_per_line(hi_ncurses_fpager *pager)
 {
@@ -491,14 +497,21 @@ gboolean hi_ncurses_fpager_key_event(hi_ncurses_fpager *pager,
       
     case 'G':
     case 'g':
-      requested_offset = strtoll(pager->curses->buffer, NULL, 0);
-      if (buffer_val < 0)
+      if (pager->curses->buffer[0] == 0)
       {
-        set_offset(pager, pager->file->size+requested_offset);
+        pager->curses->error =  error_messages[error_message_goto_nobuffer];
       }
       else
       {
-        set_offset(pager, (off_t) buffer_val);
+        requested_offset = strtoll(pager->curses->buffer, NULL, 0);
+        if (buffer_val < 0)
+        {
+          set_offset(pager, pager->file->size+requested_offset);
+        }
+        else
+        {
+          set_offset(pager, (off_t) buffer_val);
+        }
       }
       pager->curses->buffer[0]=0; 
       break;
