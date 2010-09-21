@@ -149,7 +149,7 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
     {
       offset = pager->base_offset+x+(pager->set_bytes_per_row == 0 ? pager->bytes_per_row*y : pager->set_bytes_per_row*y);
 
-      if ((offset > 0) && (offset < pager->file->size))
+      if ((offset >= 0) && (offset < pager->file->size))
       {
           if (x == 0)
           {
