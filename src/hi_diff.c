@@ -312,6 +312,7 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
     return NULL;
   }
   diff->working_hunks = NULL;
+  diff->last_hunk = NULL;
   
   diff->hunks = g_tree_new((GCompareFunc)compare_diff_hunks); 
   if (NULL == diff->hunks)
