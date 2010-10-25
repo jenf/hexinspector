@@ -342,12 +342,14 @@ static void set_offset(hi_ncurses_fpager *pager, off_t offset, gboolean centrali
         if (pager->linked_pager->offset >= pager->linked_pager->file->size)
         {
           pager->linked_pager->offset = pager->linked_pager->file->size;
-
+          hunk = hi_diff_get_hunk(pager->diff, pager->file, pager->offset);
+          temp = (pager->diff->src == pager->file ? hunk->src_start : hunk->dst_start) - pager->base_offset;
+          pager->linked_pager->base_offset = (pager->diff->src == pager->file ? hunk->dst_start : hunk->src_start) - temp;
         }
-
-        hunk = hi_diff_get_hunk(pager->diff, pager->file, pager->offset);
-        temp = (pager->diff->src == pager->file ? hunk->src_start : hunk->dst_start) - pager->base_offset;
-        pager->linked_pager->base_offset = (pager->diff->src == pager->file ? hunk->dst_start : hunk->src_start) - temp;
+        else
+        {
+          pager->linked_pager->base_offset = pager->linked_pager->offset - (pager->offset-pager->base_offset);
+        }
       }
 #if 0
       DPRINTF("%lli %lli %lli %lli %llu %llu                ", pager->linked_pager->base_offset, pager->linked_pager->offset, pager->offset, pager->base_offset, 
