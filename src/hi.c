@@ -56,10 +56,14 @@ void help(char *program_name)
   hi_file_get_default_options(&options);
   fprintf(stderr, "Usage: %s [OPTION] <file1> [<file2>]\n", program_name);
   fprintf(stderr, "Hex file viewer/comparer.\n\n"
-         " -h/--help          This help text\n"
-         " -b/--hashbytes=num Number of bytes that are used in each hash, lower=more memory, default %i\n"
+         " -h/--help                This help text\n"
+         " -b/--hashbytes=num       Number of bytes that are used in each hash, lower=more memory, default %i\n"
          " -d/--diff_jump_limit=num Percentage of the file that a diff is allowed to jump, default %f\n"
-         " -m/--minimum_same=num Minimum number of bytes that must be the same in order to be considered back in sync, default %i\n",
+         " -m/--minimum_same=num    Minimum number of bytes that must be the same in order to be considered back in sync, default %i\n"
+         " -a/--algorithm=type      Select an algorithm between:\n"
+         "                            r = Rabin-Karp based (default)\n"
+         "                            s = Simple (faster, but assumes only differences, no insertion or removal of bytes)\n"
+         "",
          options.hashbytes, options.diff_jump_percent, options.minimum_same);
   exit(0);
 }
@@ -71,6 +75,7 @@ int main(int argc, char *argv[])
   hi_file *file = NULL, *file2 = NULL;
   hi_diff *diff = NULL;
   hi_file_options options;
+  enum hi_diff_algorithm algorithm = HI_DIFF_ALG_RABINKARP;
   
   static struct option long_options[] =
   {
@@ -79,6 +84,7 @@ int main(int argc, char *argv[])
     {"diff_jump_limit", required_argument, 0, 'd'},
     {"minimum_same", required_argument, 0, 'm'},
     {"version", no_argument, 0, 'v'},
+    {"algorithm", required_argument, 0, 'a'},
     {0,0,0,0}
   };
   
@@ -87,7 +93,7 @@ int main(int argc, char *argv[])
   while (1)
   {
     int option_index = 0;
-    c = getopt_long(argc, argv, "hvb:d:m:",
+    c = getopt_long(argc, argv, "hvb:d:m:a:",
                     long_options, &option_index);
     
     if (c == -1)
@@ -95,6 +101,20 @@ int main(int argc, char *argv[])
     
     switch (c)
     {
+      case 'a':
+        switch (optarg[0])
+        {
+          case 'r':
+            algorithm = HI_DIFF_ALG_RABINKARP;
+            break;
+          case 's':
+            algorithm = HI_DIFF_ALG_SIMPLE;
+            break;
+          default:
+            help(argv[0]);
+            break;
+        }
+        break;
       case 'h':
         help(argv[0]);
         break;
@@ -166,7 +186,7 @@ int main(int argc, char *argv[])
 
   if (file2 != NULL)
   {
-    diff = hi_diff_calculate(file, file2);    
+    diff = hi_diff_calculate(file, file2, algorithm);
     
   }
   

@@ -47,6 +47,7 @@ enum diff_mode
   DIFF_MODE_SYNC,
   DIFF_MODE_UNSYNCED_NEAR,
   DIFF_MODE_UNSYNCED_FAR,
+  DIFF_MODE_UNSYNCED_SIMPLE,
 };
 
 /* Debug function to dump hunks */
@@ -269,9 +270,110 @@ hi_diff_hunk *hi_diff_get_hunk(hi_diff *diff,
   return found;
 }
 
+static hi_diff *hi_diff_calculate_rabinkarp(hi_file *src, hi_file *dst);
+static hi_diff *hi_diff_calculate_simple(hi_file *src, hi_file *dst);
 
 /** Create the diff lists */
-hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst)
+hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst, enum hi_diff_algorithm algorithm)
+{
+  switch (algorithm)
+  {
+    case HI_DIFF_ALG_RABINKARP:
+      return hi_diff_calculate_rabinkarp(src,dst);
+      break;
+    case HI_DIFF_ALG_SIMPLE:
+      return hi_diff_calculate_simple(src,dst);
+      break;
+  }
+  return NULL;
+}
+
+/* Simple diff algorithm */
+static hi_diff *hi_diff_calculate_simple(hi_file *src, hi_file *dst)
+{
+  enum diff_mode mode = DIFF_MODE_SYNC;
+  hi_diff_hunk working_hunk = {
+    .type = HI_DIFF_TYPE_SAME,
+    .src_start = 0,
+    .dst_start = 0,
+    .src_end = 0,
+    .dst_end = 0
+  };
+  off_t ptr=0;
+  hi_diff *diff;
+
+  /* Create difference structure */
+  diff = malloc(sizeof(hi_diff));
+  if (NULL == diff)
+  {
+    DPRINTF("Failure to allocate memory\n");
+    return NULL;
+  }
+  diff->working_hunks = NULL;
+  diff->last_hunk = NULL;
+
+  diff->hunks = g_tree_new((GCompareFunc)compare_diff_hunks);
+  if (NULL == diff->hunks)
+  {
+    DPRINTF("Failure to create tree\n");
+    return NULL;
+  }
+  diff->src = src;
+  diff->dst = dst;
+
+
+  while ((ptr < src->size) && (ptr < dst->size))
+  {
+    switch (mode)
+    {
+      case DIFF_MODE_SYNC:
+        if (src->memory[ptr] != dst->memory[ptr])
+        {
+          mode = DIFF_MODE_UNSYNCED_SIMPLE;
+          working_hunk.src_end = ptr-1;
+          working_hunk.dst_end = ptr-1;
+
+          insert_hunk(diff, &working_hunk);
+          working_hunk.src_start = ptr;
+          working_hunk.dst_start = ptr;
+          working_hunk.type = HI_DIFF_TYPE_DIFF;
+        }
+        break;
+      case DIFF_MODE_UNSYNCED_SIMPLE:
+        if (src->memory[ptr] != dst->memory[ptr])
+        {
+          mode = DIFF_MODE_SYNC;
+          working_hunk.src_end = ptr-1;
+          working_hunk.dst_end = ptr-1;
+
+          insert_hunk(diff, &working_hunk);
+          working_hunk.src_start = ptr;
+          working_hunk.dst_start = ptr;
+          working_hunk.type = HI_DIFF_TYPE_SAME;
+        }
+    }
+    ptr++;
+  }
+
+  if ((ptr != src->size) && (ptr != dst->size))
+  {
+    working_hunk.src_end = src->size;
+    working_hunk.dst_end = dst->size;
+    
+    insert_hunk(diff, &working_hunk);
+  }
+
+  /* Reverse the list */
+  diff->working_hunks = g_list_reverse(diff->working_hunks);
+  
+  /* Backtrack the indexed ones */
+  backtrack_hunks(diff);
+
+  return diff;
+}
+
+/* Rabin karp string searching algorithm */
+static hi_diff *hi_diff_calculate_rabinkarp(hi_file *src, hi_file *dst)
 {
   off_t srcptr=0, dstptr=0, srcptr_new=0, dstptr_new=0;
   off_t srcptr_search, dstptr_search;
