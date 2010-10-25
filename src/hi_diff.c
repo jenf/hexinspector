@@ -340,7 +340,7 @@ static hi_diff *hi_diff_calculate_simple(hi_file *src, hi_file *dst)
         }
         break;
       case DIFF_MODE_UNSYNCED_SIMPLE:
-        if (src->memory[ptr] != dst->memory[ptr])
+        if (src->memory[ptr] == dst->memory[ptr])
         {
           mode = DIFF_MODE_SYNC;
           working_hunk.src_end = ptr-1;
@@ -351,15 +351,22 @@ static hi_diff *hi_diff_calculate_simple(hi_file *src, hi_file *dst)
           working_hunk.dst_start = ptr;
           working_hunk.type = HI_DIFF_TYPE_SAME;
         }
+        break;
     }
     ptr++;
   }
-
-  if ((ptr != src->size) && (ptr != dst->size))
+  
+  working_hunk.src_end = ptr-1;
+  working_hunk.dst_end = ptr-1;
+  
+  insert_hunk(diff, &working_hunk);
+  if (!((ptr == src->size) && (ptr == dst->size)))
   {
+    working_hunk.src_start = ptr;
+    working_hunk.dst_start = ptr;
     working_hunk.src_end = src->size;
     working_hunk.dst_end = dst->size;
-    
+    working_hunk.type = HI_DIFF_TYPE_DIFF;
     insert_hunk(diff, &working_hunk);
   }
 
