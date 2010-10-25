@@ -352,6 +352,7 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
 
 
         case '?': /* Show help */
+          ncurses->help_win_line=0; /* Force the help to line one when opened */
           ncurses->show_help = !ncurses->show_help;
           break;
           

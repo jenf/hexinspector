@@ -53,6 +53,12 @@ enum hi_diff_type
   HI_DIFF_FIND_DST                /* A bad trick in glib to find the destination easily */
 };
 
+enum hi_diff_algorithm
+{
+  HI_DIFF_ALG_RABINKARP,         /* Rabin Karp algorithm */
+  HI_DIFF_ALG_SIMPLE             /* Simple algorithm no insertion or deletions expected */
+};
+
 /** Structure representing a diff hunk */
 typedef struct hi_diff_hunk
 {
@@ -65,7 +71,7 @@ typedef struct hi_diff_hunk
   
 
 
-hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst);
+hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst, enum hi_diff_algorithm algorithm);
 hi_diff_hunk *hi_diff_get_hunk(hi_diff *diff,
                                hi_file *file,
                                off_t pos);

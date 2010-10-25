@@ -1,6 +1,6 @@
-AC_INIT([hexinspector], [0.8.2])
+AC_INIT([hexinspector], [0.8.3])
 AM_MAINTAINER_MODE
-AM_INIT_AUTOMAKE([0.8.2 no-define foreign])
+AM_INIT_AUTOMAKE([0.8.3 no-define foreign])
 AC_HEADER_STDC
 AC_PROG_CC
 
