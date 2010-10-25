@@ -229,6 +229,7 @@ static void set_offset(hi_ncurses_fpager *pager, off_t offset, gboolean centrali
   hi_diff_hunk *hunk;
   double ratio;
   off_t prev_offset;
+  off_t temp;
   
   prev_offset = pager->offset;
   pager->offset = offset;
@@ -282,7 +283,12 @@ static void set_offset(hi_ncurses_fpager *pager, off_t offset, gboolean centrali
 
         if (hunk->type == HI_DIFF_TYPE_DIFF)
         {
-          if (hunk->src_end - hunk->src_start == 0)
+
+          if (hunk->src_end == hunk->src_start)
+          {
+            ratio = 0.0;
+          }
+          else if (hunk->dst_end == hunk->dst_start)
           {
             ratio = 0.0;
           }
@@ -291,6 +297,7 @@ static void set_offset(hi_ncurses_fpager *pager, off_t offset, gboolean centrali
             ratio = (pager->offset - hunk->src_start) / ((double)(hunk->src_end - hunk->src_start));
           }
           pager->linked_pager->offset = hunk->dst_start + (ratio * (hunk->dst_end - hunk->dst_start));
+//          DPRINTF("%i %f\n", pager->linked_pager->offset, ratio);
         }
         else
         {
@@ -316,17 +323,36 @@ static void set_offset(hi_ncurses_fpager *pager, off_t offset, gboolean centrali
           pager->linked_pager->offset = hunk->src_start+(pager->offset-hunk->dst_start);
         }
       }     
-      
+
       /* Ensure the values are within bounds */
-      if (pager->linked_pager->offset < 0)
+      if (pager->linked_pager->offset < 1)
       {
-        pager->linked_pager->offset = 0;
+        hunk = hi_diff_get_hunk(pager->diff, pager->file, pager->offset);
+
+        if ((pager->diff->src == pager->file ? hunk->dst_end : hunk->src_end) == 0)
+        {
+          hunk = hi_diff_get_hunk(pager->diff, pager->file, (pager->diff->src == pager->file ? hunk->src_end+1 : hunk->dst_end+1));
+          temp = (pager->diff->src == pager->file ? hunk->src_start : hunk->dst_start) - pager->base_offset;
+          pager->linked_pager->base_offset = (pager->diff->src == pager->file ? hunk->dst_start : hunk->src_start) - temp;
+          pager->linked_pager->offset = -1;
+        }
       }
-      if (pager->linked_pager->offset >= pager->linked_pager->file->size)
+      else
       {
-        pager->linked_pager->offset = pager->linked_pager->file->size;
-      } 
-      pager->linked_pager->base_offset = pager->linked_pager->offset - (pager->offset-pager->base_offset);
+        if (pager->linked_pager->offset >= pager->linked_pager->file->size)
+        {
+          pager->linked_pager->offset = pager->linked_pager->file->size;
+
+        }
+
+        hunk = hi_diff_get_hunk(pager->diff, pager->file, pager->offset);
+        temp = (pager->diff->src == pager->file ? hunk->src_start : hunk->dst_start) - pager->base_offset;
+        pager->linked_pager->base_offset = (pager->diff->src == pager->file ? hunk->dst_start : hunk->src_start) - temp;
+      }
+#if 0
+      DPRINTF("%lli %lli %lli %lli %llu %llu                ", pager->linked_pager->base_offset, pager->linked_pager->offset, pager->offset, pager->base_offset, 
+              hunk->src_start, hunk->src_end, temp);
+#endif
     }
     
   }  

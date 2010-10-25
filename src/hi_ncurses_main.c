@@ -231,6 +231,9 @@ void hi_ncurses_main(hi_file *file, hi_file *file2, hi_diff *diff)
   ncurses->focused_pager = ncurses->src;
 
 
+  /* Force the pagers to sync */
+  hi_ncurses_fpager_key_event(ncurses->focused_pager, KEY_RIGHT, 0);
+
   while (FALSE == quit)
   {
     redraw(ncurses, need_resize);    
