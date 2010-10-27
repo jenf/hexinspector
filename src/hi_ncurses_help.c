@@ -71,7 +71,7 @@ void hi_ncurses_help_init(hi_ncurses *ncurses)
 {
   
   ncurses->help_win = newwin(LINES-10, COLS-2, 5, 1);
-  
+  ncurses->show_help = FALSE;
   /* Calculate the number of help lines */
   help_lines = 0;
   while (help_data[help_lines]!=NULL)
