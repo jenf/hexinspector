@@ -329,12 +329,16 @@ static void set_offset(hi_ncurses_fpager *pager, off_t offset, gboolean centrali
       {
         hunk = hi_diff_get_hunk(pager->diff, pager->file, pager->offset);
 
-        if ((pager->diff->src == pager->file ? hunk->dst_end : hunk->src_end) == 0)
+        if (((pager->diff->src == pager->file ? hunk->dst_end : hunk->src_end) == 0) && hunk->type == HI_DIFF_TYPE_DIFF)
         {
           hunk = hi_diff_get_hunk(pager->diff, pager->file, (pager->diff->src == pager->file ? hunk->src_end+1 : hunk->dst_end+1));
           temp = (pager->diff->src == pager->file ? hunk->src_start : hunk->dst_start) - pager->base_offset;
           pager->linked_pager->base_offset = (pager->diff->src == pager->file ? hunk->dst_start : hunk->src_start) - temp;
           pager->linked_pager->offset = -1;
+        }
+        else
+        {
+          pager->linked_pager->base_offset = pager->linked_pager->offset - (pager->offset-pager->base_offset);
         }
       }
       else
