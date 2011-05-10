@@ -368,14 +368,17 @@ static void move_to_next_diff(hi_ncurses_fpager *pager, int times, gboolean bigd
   if ((bigdiff == TRUE) && (hunk != hunk2))
   {
     hunk = hi_diff_get_hunk(pager->diff, pager->file, pager->offset);
-    if (pager->file == pager->diff->src)
+    if (hunk != NULL)
     {
-      set_offset(pager, hunk->src_start);        
+      if (pager->file == pager->diff->src)
+      {
+        set_offset(pager, hunk->src_start);        
+      }
+      if (pager->file == pager->diff->dst)
+      {
+        set_offset(pager, hunk->dst_start);        
+      }      
     }
-    if (pager->file == pager->diff->dst)
-    {
-      set_offset(pager, hunk->dst_start);        
-    }      
   }
 }
 
