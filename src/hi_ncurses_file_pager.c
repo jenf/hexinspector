@@ -250,6 +250,9 @@ static void set_offset(hi_ncurses_fpager *pager, off_t offset, gboolean centrali
     return;
   }
   
+  pager->offset = offset;
+  
+  
   if (TRUE == centralize)
   {
     if ((pager->base_offset > pager->offset) || (pager->base_offset+BYTES_PER_SCREEN(pager) < pager->offset))
