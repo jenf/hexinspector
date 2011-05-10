@@ -37,8 +37,12 @@ static void set_offset(hi_ncurses_fpager *pager, off_t offset, gboolean centrali
 enum error_message_index
 {
   error_message_goto_nobuffer,
+  error_message_eof,
+  error_message_bof
 };
-static char *error_messages[] = {"No buffer for goto command"};
+static char *error_messages[] = {"ERROR: No buffer for goto command",
+                                 "Reached EOF",
+                                 "Reached BOF"};
 
 #define BYTES_FOR_BORDER (4)
 static void update_bytes_per_line(hi_ncurses_fpager *pager)
@@ -232,16 +236,18 @@ static void set_offset(hi_ncurses_fpager *pager, off_t offset, gboolean centrali
   off_t temp;
   
   prev_offset = pager->offset;
-  pager->offset = offset;
-  if (pager->offset < 0)
+  if (offset < 0)
   {
     pager->curses->activate_bell = TRUE;
-    pager->offset = 0;
+    pager->curses->error = error_messages[error_message_bof];
+    return;
   }
-  if (pager->offset >= pager->file->size)
+  
+  if (offset >= pager->file->size)
   {
-    pager->offset = pager->file->size-1;
     pager->curses->activate_bell = TRUE;
+    pager->curses->error = error_messages[error_message_eof];
+    return;
   }
   
   if (TRUE == centralize)
@@ -441,14 +447,17 @@ static void move_to_next_diff(hi_ncurses_fpager *pager, int times, gboolean bigd
   if ((bigdiff == TRUE) && (hunk != hunk2))
   {
     hunk = hi_diff_get_hunk(pager->diff, pager->file, pager->offset);
-    if (pager->file == pager->diff->src)
+    if (hunk != NULL)
     {
+      if (pager->file == pager->diff->src)
+      {
       set_offset(pager, hunk->src_start, TRUE);        
-    }
-    if (pager->file == pager->diff->dst)
-    {
+      }
+      if (pager->file == pager->diff->dst)
+      {
       set_offset(pager, hunk->dst_start, TRUE);        
-    }      
+      }      
+    }
   }
 }
 

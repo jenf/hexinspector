@@ -114,13 +114,13 @@ static void hi_ncurses_redraw_ruler(hi_ncurses *ncurses)
   {
     ncurses->activate_bell = TRUE;
     wattron(ncurses->ruler, A_REVERSE);
-    mvwprintw(ncurses->ruler, RULER_LINES-1,0, "ERROR: %s", ncurses->error);
+    mvwprintw(ncurses->ruler, RULER_LINES-1,0, "%s", ncurses->error);
     wattroff(ncurses->ruler, A_REVERSE);
     ncurses->error = NULL;
   }
   else
   {
-    mvwprintw(ncurses->ruler,RULER_LINES-1,0,"%s \"%s\" %s %s : Press ? for help",
+    mvwprintw(ncurses->ruler,RULER_LINES-1,0,"%s \"%s\" %s %s: Press ? for help",
               ncurses->mode == MODE_NORMAL ? "Buffer:" : "RegEx:",
               ncurses->buffer,
               ((ncurses->focused_pager->highlighter != NULL) && (ncurses->focused_pager->highlighter->name != NULL)) ? ncurses->focused_pager->highlighter->name : "",
