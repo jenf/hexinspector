@@ -35,8 +35,12 @@
 enum error_message_index
 {
   error_message_goto_nobuffer,
+  error_message_eof,
+  error_message_bof
 };
-static char *error_messages[] = {"No buffer for goto command"};
+static char *error_messages[] = {"ERROR: No buffer for goto command",
+                                 "Reached EOF",
+                                 "Reached BOF"};
 
 #define BYTES_FOR_BORDER (4)
 static void update_bytes_per_line(hi_ncurses_fpager *pager)
@@ -219,17 +223,21 @@ static void set_offset(hi_ncurses_fpager *pager, off_t offset)
   hi_diff_hunk *hunk;
   double ratio;
   
+  if (offset < 0)
+  {
+    pager->curses->activate_bell = TRUE;
+    pager->curses->error = error_messages[error_message_bof];
+    return;
+  }
+  
+  if (offset >= pager->file->size)
+  {
+    pager->curses->activate_bell = TRUE;
+    pager->curses->error = error_messages[error_message_eof];
+    return;
+  }
+  
   pager->offset = offset;
-  if (pager->offset < 0)
-  {
-    pager->curses->activate_bell = TRUE;
-    pager->offset = 0;
-  }
-  if (pager->offset >= pager->file->size)
-  {
-    pager->offset = pager->file->size;
-    pager->curses->activate_bell = TRUE;
-  }
   
   /* Make the other pager move to the right position */
   if (NULL != pager->linked_pager)
