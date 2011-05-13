@@ -77,6 +77,7 @@ int main(int argc, char *argv[])
   hi_file_options options;
   enum hi_diff_algorithm algorithm = HI_DIFF_ALG_RABINKARP;
   
+  g_thread_init(NULL);
   static struct option long_options[] =
   {
     {"help", no_argument, 0, 'h'},
