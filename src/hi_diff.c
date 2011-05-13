@@ -34,6 +34,7 @@
 #include <buzhash.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
 #ifdef USE_RABINKARP
 #include <rabinkarp.h>
 
@@ -41,6 +42,14 @@
 /* Useful for development */
 //#define START_WRONG
 //#define DISABLE_NEAR_MATCH
+#define BENCHMARK
+
+/* Prototypes */
+void backtrack_hunks(hi_diff *diff);
+hi_diff_hunk *insert_hunk(hi_diff *diff, hi_diff_hunk *hunk);
+
+/* Module variables */
+static GStaticMutex M_Mutex = G_STATIC_MUTEX_INIT;
 
 enum diff_mode
 {
@@ -70,6 +79,37 @@ static void dump_hunk(hi_diff_hunk *hunk)
           (unsigned long) hunk->src_end,
           (unsigned long) hunk->dst_end); 
 }
+
+#ifdef BENCHMARK
+static int timeval_subtract (struct timeval *result, struct timeval *x, struct timeval *y);
+
+/* Subtract the `struct timeval' values X and Y,
+ storing the result in RESULT.
+ Return 1 if the difference is negative, otherwise 0.  */
+
+static int timeval_subtract (struct timeval *result, struct timeval *x,struct timeval  *y)
+{
+  /* Perform the carry for the later subtraction by updating y. */
+  if (x->tv_usec < y->tv_usec) {
+    int nsec = (y->tv_usec - x->tv_usec) / 1000000 + 1;
+    y->tv_usec -= 1000000 * nsec;
+    y->tv_sec += nsec;
+  }
+  if (x->tv_usec - y->tv_usec > 1000000) {
+    int nsec = (x->tv_usec - y->tv_usec) / 1000000;
+    y->tv_usec += 1000000 * nsec;
+    y->tv_sec -= nsec;
+  }
+  
+  /* Compute the time remaining to wait.
+   tv_usec is certainly positive. */
+  result->tv_sec = x->tv_sec - y->tv_sec;
+  result->tv_usec = x->tv_usec - y->tv_usec;
+  
+  /* Return 1 if result is negative. */
+  return x->tv_sec < y->tv_sec;
+}
+#endif
 
 /** Compare two diff hunks */
 static gint compare_diff_hunks(hi_diff_hunk *hunk1, hi_diff_hunk *hunk2)
@@ -208,6 +248,10 @@ hi_diff_hunk *insert_hunk(hi_diff *diff, hi_diff_hunk *hunk)
 {
   hi_diff_hunk *new;
   DPRINTF("Add hunk ");
+  
+  /* Mutex protection */
+  
+  g_static_mutex_lock(&M_Mutex);
 
   if (hunk->dst_end < hunk->dst_start)
   {
@@ -225,7 +269,8 @@ hi_diff_hunk *insert_hunk(hi_diff *diff, hi_diff_hunk *hunk)
       diff->working_hunks = g_list_prepend(diff->working_hunks, new); 
   }
   dump_hunk(hunk);
-
+  g_static_mutex_unlock(&M_Mutex);
+  
   return new;
 }
 
@@ -288,6 +333,78 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst, enum hi_diff_algorithm al
   return NULL;
 }
 
+typedef struct hi_diff_simple_thread_data
+{
+  off_t startpos;
+  off_t endpos;
+} hi_file_simple_thread_data;
+
+static void hi_diff_calculate_simple_thread(gpointer instance_data,
+                                            gpointer run_data)
+{
+  hi_diff *diff = run_data;
+  hi_file_simple_thread_data *thread_data = instance_data;
+  hi_file *src = diff->src;
+  hi_file *dst = diff->dst;
+  off_t ptr;
+  off_t endpos;
+  enum diff_mode mode = DIFF_MODE_SYNC;
+  
+  hi_diff_hunk working_hunk = {
+    .type = HI_DIFF_TYPE_SAME,
+    .src_start = thread_data->startpos,
+    .dst_start = thread_data->startpos,
+    .src_end = 0,
+    .dst_end = 0
+  }; 
+  
+  ptr=thread_data->startpos;
+  endpos = thread_data->endpos;
+  
+  DPRINTF("Calculate %lu to %lu\n", (unsigned long)thread_data->startpos, (unsigned long)thread_data->endpos);
+  free (instance_data);
+  
+  while ((ptr < endpos))
+  {
+    switch (mode)
+    {
+      case DIFF_MODE_SYNC:
+        if (src->memory[ptr] != dst->memory[ptr])
+        {
+          mode = DIFF_MODE_UNSYNCED_SIMPLE;
+          working_hunk.src_end = ptr-1;
+          working_hunk.dst_end = ptr-1;
+          
+          insert_hunk(diff, &working_hunk);
+          working_hunk.src_start = ptr;
+          working_hunk.dst_start = ptr;
+          working_hunk.type = HI_DIFF_TYPE_DIFF;
+        }
+        break;
+      case DIFF_MODE_UNSYNCED_SIMPLE:
+        if (src->memory[ptr] == dst->memory[ptr])
+        {
+          mode = DIFF_MODE_SYNC;
+          working_hunk.src_end = ptr-1;
+          working_hunk.dst_end = ptr-1;
+          
+          insert_hunk(diff, &working_hunk);
+          working_hunk.src_start = ptr;
+          working_hunk.dst_start = ptr;
+          working_hunk.type = HI_DIFF_TYPE_SAME;
+        }
+        break;
+    }
+    ptr++;
+  }
+  
+  working_hunk.src_end = ptr-1;
+  working_hunk.dst_end = ptr-1;
+  
+  insert_hunk(diff, &working_hunk);
+
+}
+
 /* Simple diff algorithm */
 static hi_diff *hi_diff_calculate_simple(hi_file *src, hi_file *dst)
 {
@@ -299,9 +416,21 @@ static hi_diff *hi_diff_calculate_simple(hi_file *src, hi_file *dst)
     .src_end = 0,
     .dst_end = 0
   };
+  GThreadPool *pool;
+  int max_threads = 4; /* TODO: Pass as a variable */
+  int blocksize = 128*1024; /* TODO: Pass as a variable */
+  hi_file_simple_thread_data *thread_data;
+  
   off_t ptr=0;
+  off_t endptr=0;
   hi_diff *diff;
 
+#ifdef BENCHMARK
+  struct timeval starttime, endtime, difftime;
+  float timing;
+  gettimeofday(&starttime, NULL);
+#endif
+  
   /* Create difference structure */
   diff = malloc(sizeof(hi_diff));
   if (NULL == diff)
@@ -321,45 +450,36 @@ static hi_diff *hi_diff_calculate_simple(hi_file *src, hi_file *dst)
   diff->src = src;
   diff->dst = dst;
 
-
-  while ((ptr < src->size) && (ptr < dst->size))
+  pool = g_thread_pool_new(hi_diff_calculate_simple_thread, (gpointer) diff,
+                           max_threads, FALSE, NULL);
+  if (pool == NULL)
   {
-    switch (mode)
-    {
-      case DIFF_MODE_SYNC:
-        if (src->memory[ptr] != dst->memory[ptr])
-        {
-          mode = DIFF_MODE_UNSYNCED_SIMPLE;
-          working_hunk.src_end = ptr-1;
-          working_hunk.dst_end = ptr-1;
-
-          insert_hunk(diff, &working_hunk);
-          working_hunk.src_start = ptr;
-          working_hunk.dst_start = ptr;
-          working_hunk.type = HI_DIFF_TYPE_DIFF;
-        }
-        break;
-      case DIFF_MODE_UNSYNCED_SIMPLE:
-        if (src->memory[ptr] == dst->memory[ptr])
-        {
-          mode = DIFF_MODE_SYNC;
-          working_hunk.src_end = ptr-1;
-          working_hunk.dst_end = ptr-1;
-
-          insert_hunk(diff, &working_hunk);
-          working_hunk.src_start = ptr;
-          working_hunk.dst_start = ptr;
-          working_hunk.type = HI_DIFF_TYPE_SAME;
-        }
-        break;
-    }
-    ptr++;
+    DPRINTF("Thread pool could not be created\n");
+    return NULL;
   }
   
-  working_hunk.src_end = ptr-1;
-  working_hunk.dst_end = ptr-1;
+  while ((ptr < src->size) && (ptr < dst->size))
+  {
+    endptr = ptr+blocksize;
+    if (endptr > src->size)
+    {
+      endptr=src->size;
+    }
+    if (endptr > dst->size)
+    {
+      endptr=dst->size;
+    }
+    thread_data = malloc(sizeof(hi_file_simple_thread_data));
+    thread_data->startpos = ptr;
+    thread_data->endpos = endptr;
+    
+    DPRINTF("Executing %lu to %lu\n", (unsigned long)ptr, (unsigned long)endptr);
+    g_thread_pool_push(pool, thread_data, NULL);
+    ptr=endptr;
+  }
   
-  insert_hunk(diff, &working_hunk);
+
+
   if (!((ptr == src->size) && (ptr == dst->size)))
   {
     working_hunk.src_start = ptr;
@@ -369,13 +489,21 @@ static hi_diff *hi_diff_calculate_simple(hi_file *src, hi_file *dst)
     working_hunk.type = HI_DIFF_TYPE_DIFF;
     insert_hunk(diff, &working_hunk);
   }
-
+  
+  g_thread_pool_free(pool, FALSE, TRUE);
+                     
   /* Reverse the list */
   diff->working_hunks = g_list_reverse(diff->working_hunks);
   
   /* Backtrack the indexed ones */
   backtrack_hunks(diff);
-
+  
+#ifdef BENCHMARK
+  gettimeofday(&endtime, NULL);
+  timeval_subtract(&difftime, &endtime, &starttime);
+  timing = difftime.tv_sec + ((float) difftime.tv_usec/1000000);
+  printf("Time taken %04f seconds, %lu bytes, %f bytes/sec\n", timing, (unsigned int) ptr, ptr/timing);
+#endif
   return diff;
 }
 
