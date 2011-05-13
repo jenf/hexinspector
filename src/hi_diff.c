@@ -27,7 +27,6 @@
  * Calculate diff on two files
  */
 //#define VERBOSE_DEBUG
-#undef HAVE_DEBUG
 #include <stdio.h>
 #include <hi_file.h>
 #include <hi_diff.h>
@@ -235,10 +234,28 @@ void backtrack_hunks(hi_diff *diff)
   
   /* Move the data into the binary tree */
   list = diff->working_hunks;
+  otherhunk = NULL;
   while (list != NULL)
   {
-    g_tree_insert(diff->hunks, list->data, list->data);
+    hunk=list->data;
+    if ((otherhunk != NULL) &&
+          (otherhunk->type == hunk->type) &&
+          (hunk->src_start == (otherhunk->src_end+1)) &&
+          (hunk->dst_start == (otherhunk->dst_end+1)))
+    {
+      otherhunk->src_end = hunk->src_end;
+      otherhunk->dst_end = hunk->dst_end;
+    }
+    else
+    {
+      dump_hunk(list->data);
+      g_tree_insert(diff->hunks, list->data, list->data);
+      otherhunk=hunk;
+    }
+
+
     list = g_list_next(list);
+
     
   }
   g_list_free(diff->working_hunks);
@@ -493,10 +510,13 @@ static hi_diff *hi_diff_calculate_simple(hi_file *src, hi_file *dst)
     insert_hunk(diff, &working_hunk);
   }
   
+  /* Wait for completion */
   g_thread_pool_free(pool, FALSE, TRUE);
                      
+  DPRINTF("Jobs finished\n");
+  
   /* Reverse the list */
-  diff->working_hunks = g_list_reverse(diff->working_hunks);
+  diff->working_hunks = g_list_sort(diff->working_hunks, compare_diff_hunks);
   
   /* Backtrack the indexed ones */
   backtrack_hunks(diff);
