@@ -710,6 +710,16 @@ static hi_diff *hi_diff_calculate_rabinkarp(hi_file *src, hi_file *dst)
         }
         else
         {
+          /* Calculate the hashes on the destination */
+          if (NULL == dst->buzhashes)
+          {
+            if (FALSE == hi_buzhash_generate(dst))
+            {
+              DPRINTF("Could not generate hashes");
+              return NULL;
+            }
+          }
+          
           VDPRINTF("Unsynced far mode %lu %x\n",(unsigned long) srcptr_new, hash);
           /* Lookup the current hash value in the list */
           value = g_hash_table_lookup(dst->buzhashes, (gpointer) hash);

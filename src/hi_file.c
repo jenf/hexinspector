@@ -109,14 +109,6 @@ hi_file *hi_file_open(char *filename,hi_file_options *options)
     DPRINTF("Couldn't mmap file\n");
     goto free_filename;
   }
-  /* Generate utils */
-  if (TRUE == options->generate_hash)
-  {
-    if (FALSE == hi_buzhash_generate(file))
-    {
-      goto free_mmap;
-    }
-  }
   close(fd);
   return file;
   
