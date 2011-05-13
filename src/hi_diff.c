@@ -27,6 +27,8 @@
  * Calculate diff on two files
  */
 //#define VERBOSE_DEBUG
+#undef HAVE_DEBUG
+#include <stdio.h>
 #include <hi_file.h>
 #include <hi_diff.h>
 #include "hi_priv.h"
@@ -460,6 +462,7 @@ static hi_diff *hi_diff_calculate_simple(hi_file *src, hi_file *dst)
   
   while ((ptr < src->size) && (ptr < dst->size))
   {
+    /* TODO: Allow comparision ways other than just bytes (how memcmp does it) */
     endptr = ptr+blocksize;
     if (endptr > src->size)
     {
@@ -502,7 +505,8 @@ static hi_diff *hi_diff_calculate_simple(hi_file *src, hi_file *dst)
   gettimeofday(&endtime, NULL);
   timeval_subtract(&difftime, &endtime, &starttime);
   timing = difftime.tv_sec + ((float) difftime.tv_usec/1000000);
-  printf("Time taken %04f seconds, %lu mbytes, %f mbytes/sec\n", timing, (unsigned int) ptr /(1024/1024), (ptr/1024/1024)/timing);
+  float mbytes = ptr /1024.0/1024.0;
+  printf("Time taken %04f seconds, %f mbytes, %f mbytes/sec\n", timing, mbytes, mbytes/timing);
 #endif
   return diff;
 }
@@ -533,6 +537,11 @@ static hi_diff *hi_diff_calculate_rabinkarp(hi_file *src, hi_file *dst)
   
 #ifdef START_WRONG
   mode = DIFF_MODE_UNSYNCED_NEAR;
+#endif
+#ifdef BENCHMARK
+  struct timeval starttime, endtime, difftime;
+  float timing;
+  gettimeofday(&starttime, NULL);
 #endif
   
   bytes_jump = (dst->file_options.diff_jump_percent*dst->size)/100;
@@ -856,5 +865,12 @@ static hi_diff *hi_diff_calculate_rabinkarp(hi_file *src, hi_file *dst)
   /* Backtrack the indexed ones */
   backtrack_hunks(diff);
   
+#ifdef BENCHMARK
+  gettimeofday(&endtime, NULL);
+  timeval_subtract(&difftime, &endtime, &starttime);
+  timing = difftime.tv_sec + ((float) difftime.tv_usec/1000000);
+  float mbytes = MIN(src->size, dst->size) /1024.0/1024.0;
+  printf("Time taken %04f seconds, %f mbytes, %f mbytes/sec\n", timing, mbytes, mbytes/timing);
+#endif
   return diff;
 }
