@@ -502,7 +502,7 @@ static hi_diff *hi_diff_calculate_simple(hi_file *src, hi_file *dst)
   gettimeofday(&endtime, NULL);
   timeval_subtract(&difftime, &endtime, &starttime);
   timing = difftime.tv_sec + ((float) difftime.tv_usec/1000000);
-  printf("Time taken %04f seconds, %lu bytes, %f bytes/sec\n", timing, (unsigned int) ptr, ptr/timing);
+  printf("Time taken %04f seconds, %lu mbytes, %f mbytes/sec\n", timing, (unsigned int) ptr /(1024/1024), (ptr/1024/1024)/timing);
 #endif
   return diff;
 }
