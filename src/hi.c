@@ -165,7 +165,6 @@ int main(int argc, char *argv[])
     help(argv[0]);
   }
   
-  options.generate_hash = FALSE;
   file = hi_file_open(argv[optind], &options);
   
   if (NULL == file)
@@ -175,7 +174,6 @@ int main(int argc, char *argv[])
   }
   if ((argc - optind) >=2)
   {
-    options.generate_hash = TRUE;
     file2 = hi_file_open(argv[optind+1], &options);
     if (NULL == file2)
     {

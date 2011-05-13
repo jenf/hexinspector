@@ -42,7 +42,6 @@ void hi_file_get_default_options(hi_file_options *options)
 {
   options->hashbytes = 128;
   options->diff_jump_percent = 5;
-  options->generate_hash = TRUE;
   options->minimum_same = 4;
 }
 

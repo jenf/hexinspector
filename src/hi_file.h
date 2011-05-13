@@ -44,7 +44,6 @@ typedef struct hi_file_options
   uint32_t popvalue;      /**< Value for the hash algorithm */
   float diff_jump_percent;  /**< Maximum percentage of file to jump on a far diff */
   int minimum_same;       /**< Minimum number of same bytes to be considered the same */
-  gboolean generate_hash; /**< Should a buzhash be calculcated for this file? */
 } hi_file_options;
   
 /** Structure representing the file */
