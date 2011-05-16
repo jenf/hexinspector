@@ -1,4 +1,4 @@
-/* hi_buzhash.c: Hexinspector
+/* hi_hash.c: Hexinspector
    Copyright (c) 2010 Jen Freeman
 
    $Id$
@@ -200,9 +200,19 @@ static void hi_hash_generate_thread(gpointer instance_data,
 }
 
 /**
+ * \brief Hash prelude functions
+ */
+gboolean hi_hash_prelude(hi_file *file)
+{
+#ifdef USE_RABINKARP  
+  file->file_options.popvalue = rabinkarp_calculate_popvalue(file->file_options.hashbytes, PRIME, BASE);
+#endif
+}
+
+/**
  * \brief Buzhash generation
  */
-gboolean hi_buzhash_generate(hi_file *file)
+gboolean hi_hash_generate(hi_file *file)
 {
   size_t block_start,i2;
   uint32_t hash=0;
@@ -218,9 +228,6 @@ gboolean hi_buzhash_generate(hi_file *file)
   struct timeval starttime, endtime, difftime;
   float timing;
   gettimeofday(&starttime, NULL);
-#endif
-#ifdef USE_RABINKARP  
-  file->file_options.popvalue = rabinkarp_calculate_popvalue(file->file_options.hashbytes, PRIME, BASE);
 #endif
 
 #ifdef STATS
@@ -279,7 +286,7 @@ static gboolean destroy_hash_value(gpointer key, gpointer value, gpointer data)
 /**
  * \brief Destroy the buzhash data
  */
-void hi_buzhash_destroy(hi_file *file)
+void hi_hash_destroy(hi_file *file)
 {
   if (file->buzhashes != NULL)
   {

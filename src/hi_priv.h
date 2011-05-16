@@ -30,7 +30,8 @@
 #ifndef HI_PRIV_H
 #define HI_PRIV_H
 #include <macros.h>
-gboolean hi_buzhash_generate(hi_file *file);
-void hi_buzhash_destroy(hi_file *file);
+gboolean hi_hash_generate(hi_file *file);
+gboolean hi_hash_prelude(hi_file *file);
+void hi_hash_destroy(hi_file *file);
 
 #endif

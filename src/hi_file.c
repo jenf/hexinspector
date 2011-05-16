@@ -133,7 +133,7 @@ void hi_file_close(hi_file *file)
     return;
   }
   
-  hi_buzhash_destroy(file);
+  hi_hash_destroy(file);
   munmap(file->memory,file->size);
   file->memory = NULL;
   

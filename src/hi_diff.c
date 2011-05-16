@@ -564,15 +564,10 @@ static hi_diff *hi_diff_calculate_rabinkarp(hi_file *src, hi_file *dst)
   gettimeofday(&starttime, NULL);
 #endif
   
-  /* Calculate the hashes on the destination */
-  if (NULL == dst->buzhashes)
-  {
-    if (FALSE == hi_buzhash_generate(dst))
-    {
-      DPRINTF("Could not generate hashes");
-      return NULL;
-    }
-  }  
+  /* Calculate the popvalue and other values that are necessary */
+  hi_hash_prelude(dst);
+  
+
   
   bytes_jump = (dst->file_options.diff_jump_percent*dst->size)/100;
   if (bytes_jump < dst->file_options.hashbytes)
@@ -741,6 +736,15 @@ static hi_diff *hi_diff_calculate_rabinkarp(hi_file *src, hi_file *dst)
         else
         {
 
+          /* Calculate the hashes on the destination */
+          if (NULL == dst->buzhashes)
+          {
+            if (FALSE == hi_hash_generate(dst))
+            {
+              DPRINTF("Could not generate hashes");
+              return NULL;
+            }
+          }  
           
           VDPRINTF("Unsynced far mode %lu %x\n",(unsigned long) srcptr_new, hash);
           /* Lookup the current hash value in the list */
