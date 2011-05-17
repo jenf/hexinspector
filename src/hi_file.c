@@ -79,7 +79,7 @@ hi_file *hi_file_open(char *filename,hi_file_options *options)
 
 
 
-  file = malloc(sizeof(hi_file));
+  file = calloc(sizeof(hi_file), 1);
   if (file == NULL)
   {
     DPRINTF("Couldn't malloc memory\n");
