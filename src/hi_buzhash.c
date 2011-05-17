@@ -93,9 +93,10 @@ static gboolean merge_hashes(gpointer key, off_t *value, gpointer data)
   }
   else
   {
+    
 #if 0
     int i;
-    
+
     for (i=1; i<=value[0]; i++)
     {
       printf("local %x %i %lu\n", key, i, (unsigned long) value[i]);
@@ -105,7 +106,18 @@ static gboolean merge_hashes(gpointer key, off_t *value, gpointer data)
     original = globalvalue;
     globalvalue = realloc(globalvalue, sizeof(off_t)*(value[0]+globalvalue[0]+1));
     VDPRINTF("%x %x %x\n",globalvalue+globalvalue[0]+1, value+1, value[0]*sizeof(off_t));
-    memcpy(globalvalue+globalvalue[0]+1, value+1, value[0]*sizeof(off_t));
+    if (globalvalue[1] < value[1])
+    {
+      memcpy(globalvalue+globalvalue[0]+1, value+1, value[0]*sizeof(off_t));
+    }
+    else
+    {
+      /* Ensure the order of the array is valid */
+      VDPRINTF("Swap order %lu and %lu\n", (long unsigned) globalvalue[1], (long unsigned) value[1]);
+      memmove(globalvalue+value[0]+1, globalvalue+1, globalvalue[0]*sizeof(off_t));
+      memcpy(globalvalue+1, value+1, value[0]*sizeof(off_t));
+
+    }
     globalvalue[0]+=value[0];    
     
 #ifdef STATS
@@ -113,7 +125,7 @@ static gboolean merge_hashes(gpointer key, off_t *value, gpointer data)
 #endif  
     
 #if 0
-    for (i=1; i<=globalvalue[0]; i++)
+    for (i=1; i<=globalvalue[0]+value[0]; i++)
     {
       printf("post %x %i %lu\n", key, i, (unsigned long) globalvalue[i]);
     }
