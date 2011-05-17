@@ -361,13 +361,42 @@ typedef struct hi_diff_simple_thread_data
 /** \brief Find the first difference in a memory block, returning the offset if found, or NULL if len is reached */
 static off_t hi_diff_memcmp_ptr(unsigned char* src, unsigned char* dst, off_t len)
 {
-  int x;
+  int x=0;
+#define OPTIMISED_MEMCMP
+#ifdef OPTIMISED_MEMCMP
+#define op_t   unsigned long int
+#define OPSIZ  (sizeof(op_t))
+  unsigned char *srcptr = src;
+  unsigned char *dstptr = dst;
+  
+  /* /todo : This should word align properly */
+  while (len > OPSIZ)
+  {
+    if (((op_t *)srcptr)[0] != ((op_t *)dstptr)[0])
+      break; /* Will be caught by the next while */
+    srcptr+= OPSIZ;
+    dstptr+= OPSIZ;
+    len-= OPSIZ;
+  }
+  
+  /* Finish the last few bytes */
+  while (len != 0)
+  {
+    if (srcptr[0] != dstptr[0])
+      return (srcptr-src);
+    srcptr++;
+    dstptr++;
+    len--;
+  }
+#else
+  
+  /* Completely unoptimised mechanism for testing */
   for (x=0; x< len; x++)
   {
-    /* \todo Add word based optimisation */
     if (src[x] != dst[x])
       return x;
   }
+#endif
   
   return -1;
 }
@@ -546,7 +575,7 @@ static hi_diff *hi_diff_calculate_simple(hi_file *src, hi_file *dst)
   timeval_subtract(&difftime, &endtime, &starttime);
   timing = difftime.tv_sec + ((float) difftime.tv_usec/1000000);
   float mbytes = ptr /1024.0/1024.0;
-  printf("Time taken %04f seconds, %f mbytes, %f mbytes/sec\n", timing, mbytes, mbytes/timing);
+  printf("Diff Time taken %04f seconds, %f mbytes, %f mbytes/sec\n", timing, mbytes, mbytes/timing);
 #endif
   return diff;
 }
@@ -926,7 +955,7 @@ static hi_diff *hi_diff_calculate_rabinkarp(hi_file *src, hi_file *dst)
   timeval_subtract(&difftime, &endtime, &starttime);
   timing = difftime.tv_sec + ((float) difftime.tv_usec/1000000);
   float mbytes = MIN(src->size, dst->size) /1024.0/1024.0;
-  printf("Time taken %04f seconds, %f mbytes, %f mbytes/sec\n", timing, mbytes, mbytes/timing);
+  printf("Diff Time taken %04f seconds, %f mbytes, %f mbytes/sec\n", timing, mbytes, mbytes/timing);
 #endif
   return diff;
 }
