@@ -268,7 +268,7 @@ gboolean hi_hash_generate(hi_file *file)
   timeval_subtract(&difftime, &endtime, &starttime);
   timing = difftime.tv_sec + ((float) difftime.tv_usec/1000000);
   float mbytes = file->size /1024.0/1024.0;
-  printf("Time taken %04f seconds, %f mbytes, %f mbytes/sec\n", timing, mbytes, mbytes/timing);
+  printf("Hash Time taken %04f seconds, %f mbytes, %f mbytes/sec\n", timing, mbytes, mbytes/timing);
 #endif
 //  exit(1);
   return TRUE;
