@@ -358,6 +358,20 @@ typedef struct hi_diff_simple_thread_data
   off_t endpos;
 } hi_file_simple_thread_data;
 
+/** \brief Find the first difference in a memory block, returning the offset if found, or NULL if len is reached */
+static off_t hi_diff_memcmp_ptr(unsigned char* src, unsigned char* dst, off_t len)
+{
+  int x;
+  for (x=0; x< len; x++)
+  {
+    /* \todo Add word based optimisation */
+    if (src[x] != dst[x])
+      return x;
+  }
+  
+  return -1;
+}
+
 static void hi_diff_calculate_simple_thread(gpointer instance_data,
                                             gpointer run_data)
 {
@@ -365,7 +379,7 @@ static void hi_diff_calculate_simple_thread(gpointer instance_data,
   hi_file_simple_thread_data *thread_data = instance_data;
   hi_file *src = diff->src;
   hi_file *dst = diff->dst;
-  off_t ptr;
+  off_t ptr, tmpptr;
   off_t endpos;
   enum diff_mode mode = DIFF_MODE_SYNC;
   
@@ -388,9 +402,11 @@ static void hi_diff_calculate_simple_thread(gpointer instance_data,
     switch (mode)
     {
       case DIFF_MODE_SYNC:
-        if (src->memory[ptr] != dst->memory[ptr])
+        tmpptr = hi_diff_memcmp_ptr(&(src->memory[ptr]), &(dst->memory[ptr]), endpos-ptr);
+        if (tmpptr != -1)
         {
           mode = DIFF_MODE_UNSYNCED_SIMPLE;
+          ptr+=tmpptr;
           working_hunk.src_end = ptr-1;
           working_hunk.dst_end = ptr-1;
           
@@ -398,6 +414,10 @@ static void hi_diff_calculate_simple_thread(gpointer instance_data,
           working_hunk.src_start = ptr;
           working_hunk.dst_start = ptr;
           working_hunk.type = HI_DIFF_TYPE_DIFF;
+        }
+        else
+        {
+          ptr=endpos;
         }
         break;
       case DIFF_MODE_UNSYNCED_SIMPLE:
@@ -412,9 +432,9 @@ static void hi_diff_calculate_simple_thread(gpointer instance_data,
           working_hunk.dst_start = ptr;
           working_hunk.type = HI_DIFF_TYPE_SAME;
         }
+        ptr++;
         break;
     }
-    ptr++;
   }
   
   working_hunk.src_end = ptr-1;
