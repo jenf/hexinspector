@@ -166,6 +166,16 @@ struct diff_userdata
   GSList *list;
 };
 
+
+typedef struct hi_diff_simple_thread_data
+  {
+    off_t startpos;
+    off_t endpos;
+    struct hi_file_simple_thread_data *next;
+    GList *root;
+  } hi_file_simple_thread_data;
+
+
 /** Go through the indexed hunks converting them to backtracked versions */
 void backtrack_hunks(hi_diff *diff)
 {
@@ -263,15 +273,13 @@ void backtrack_hunks(hi_diff *diff)
   diff->working_hunks = NULL;
 }
 
+
+
 /* insert a hunk into the tree */
-hi_diff_hunk *insert_hunk(hi_diff *diff, hi_diff_hunk *hunk)
+hi_diff_hunk *insert_hunk_threaded(hi_diff *diff, hi_diff_hunk *hunk, hi_file_simple_thread_data *thread_data)
 {
   hi_diff_hunk *new;
-  DPRINTF("Add hunk ");
-
-  /* Mutex protection */
-  
-  g_static_mutex_lock(&M_Mutex);
+  //DPRINTF("Add hunk ");
 
   if (hunk->dst_end < hunk->dst_start)
   {
@@ -283,15 +291,28 @@ hi_diff_hunk *insert_hunk(hi_diff *diff, hi_diff_hunk *hunk)
   }
   
   new = malloc(sizeof(hi_diff_hunk));
-  memcpy(new, hunk, sizeof(hi_diff_hunk));
+
   if (new != NULL)
   {
+    memcpy(new, hunk, sizeof(hi_diff_hunk));
+    if (NULL != thread_data)
+    {
+      thread_data->root = g_list_prepend(thread_data->root, new);
+    }
+    else
+    {
       diff->working_hunks = g_list_prepend(diff->working_hunks, new); 
+    }
   }
-  dump_hunk(hunk);
-  g_static_mutex_unlock(&M_Mutex);
+  //dump_hunk(hunk);
   
   return new;
+}
+
+/* insert a hunk into the tree */
+hi_diff_hunk *insert_hunk(hi_diff *diff, hi_diff_hunk *hunk)
+{
+    return insert_hunk_threaded(diff, hunk, NULL);
 }
 
 /** Retrieve a hunk by position */
@@ -352,12 +373,6 @@ hi_diff *hi_diff_calculate(hi_file *src, hi_file *dst, enum hi_diff_algorithm al
   }
   return NULL;
 }
-
-typedef struct hi_diff_simple_thread_data
-{
-  off_t startpos;
-  off_t endpos;
-} hi_file_simple_thread_data;
 
 /** \brief Find the first difference in a memory block, returning the offset if found, or NULL if len is reached */
 static off_t hi_diff_memcmp_ptr(unsigned char* src, unsigned char* dst, off_t len)
@@ -480,7 +495,6 @@ static void hi_diff_calculate_simple_thread(gpointer instance_data,
   madvise(dst+ptr, endpos-ptr, MADV_WILLNEED); 
 
   DPRINTF("Calculate %lu to %lu\n", (unsigned long)thread_data->startpos, (unsigned long)thread_data->endpos);
-  free (instance_data);
   
   while ((ptr < endpos))
   {
@@ -495,7 +509,7 @@ static void hi_diff_calculate_simple_thread(gpointer instance_data,
           working_hunk.src_end = ptr-1;
           working_hunk.dst_end = ptr-1;
           
-          insert_hunk(diff, &working_hunk);
+          insert_hunk_threaded(diff, &working_hunk, thread_data);
           working_hunk.src_start = ptr;
           working_hunk.dst_start = ptr;
           working_hunk.type = HI_DIFF_TYPE_DIFF;
@@ -514,7 +528,7 @@ static void hi_diff_calculate_simple_thread(gpointer instance_data,
           working_hunk.src_end = ptr-1;
           working_hunk.dst_end = ptr-1;
           
-          insert_hunk(diff, &working_hunk);
+          insert_hunk_threaded(diff, &working_hunk, thread_data);
           working_hunk.src_start = ptr;
           working_hunk.dst_start = ptr;
           working_hunk.type = HI_DIFF_TYPE_SAME;
@@ -530,7 +544,7 @@ static void hi_diff_calculate_simple_thread(gpointer instance_data,
   working_hunk.src_end = ptr-1;
   working_hunk.dst_end = ptr-1;
   
-  insert_hunk(diff, &working_hunk);
+  insert_hunk_threaded(diff, &working_hunk, thread_data);
 
 }
 
@@ -548,7 +562,7 @@ static hi_diff *hi_diff_calculate_simple(hi_file *src, hi_file *dst)
   GThreadPool *pool;
   int max_threads = 4; /* TODO: Pass as a variable */
   int blocksize = 128*1024; /* TODO: Pass as a variable */
-  hi_file_simple_thread_data *thread_data;
+  hi_file_simple_thread_data *thread_data, *prev, *head;
   
   off_t ptr=0;
   off_t endptr=0;
@@ -587,6 +601,7 @@ static hi_diff *hi_diff_calculate_simple(hi_file *src, hi_file *dst)
     return NULL;
   }
   
+  prev = NULL;
   while ((ptr < src->size) && (ptr < dst->size))
   {
     /* TODO: Allow comparision ways other than just bytes (how memcmp does it) */
@@ -602,14 +617,41 @@ static hi_diff *hi_diff_calculate_simple(hi_file *src, hi_file *dst)
     thread_data = malloc(sizeof(hi_file_simple_thread_data));
     thread_data->startpos = ptr;
     thread_data->endpos = endptr;
+    if (NULL != prev)
+    {
+      prev->next = thread_data;
+    }
+    else
+    {
+      head = thread_data;
+    }
+    prev = thread_data;
     
     DPRINTF("Executing %lu to %lu\n", (unsigned long)ptr, (unsigned long)endptr);
+    //hi_diff_calculate_simple_thread(thread_data, diff);
     g_thread_pool_push(pool, thread_data, NULL);
     ptr=endptr;
   }
   
 
 
+
+  
+  /* Wait for completion */
+  g_thread_pool_free(pool, FALSE, TRUE);
+                     
+  DPRINTF("Jobs finished\n");
+  
+  /* Consoledate the list */
+  thread_data = head;
+  while (thread_data != NULL)
+  {
+    diff->working_hunks = g_list_concat(thread_data->root, diff->working_hunks);
+    prev = thread_data->next;
+    free(thread_data);
+    thread_data = prev;
+  }
+  
   if (!((ptr == src->size) && (ptr == dst->size)))
   {
     working_hunk.src_start = ptr;
@@ -620,13 +662,8 @@ static hi_diff *hi_diff_calculate_simple(hi_file *src, hi_file *dst)
     insert_hunk(diff, &working_hunk);
   }
   
-  /* Wait for completion */
-  g_thread_pool_free(pool, FALSE, TRUE);
-                     
-  DPRINTF("Jobs finished\n");
-  
   /* Reverse the list */
-  diff->working_hunks = g_list_sort(diff->working_hunks, compare_diff_hunks);
+  diff->working_hunks = g_list_reverse(diff->working_hunks);
   
   /* Backtrack the indexed ones */
   backtrack_hunks(diff);

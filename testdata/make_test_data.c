@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdlib.h>
+
 enum test_data {
         test_data_zeros,
         test_data_ones,
@@ -32,6 +34,10 @@ int make_test_data(enum test_data data_type, int len)
     memset(pattern, 0, DATALEN);
     pattern[4] = 1;
     break;
+  case test_data_sparse_ones:
+    filename="test_data_sparse_ones";
+    memset(pattern+1024, 1, 512);
+    break;
   case test_data_oddzero_evenone:
     filename="test_data_oddzero_evenone";
     for (i=0; i < DATALEN - (3+6); i+= (3+6))
@@ -39,6 +45,7 @@ int make_test_data(enum test_data data_type, int len)
       memset(pattern+i, 0, 3);
       memset(pattern+i+3, 1, 6);
     }
+    break;
   }
 
   if (filename != NULL)
@@ -65,12 +72,12 @@ int make_test_data(enum test_data data_type, int len)
   }
 }
 
-int main(void)
+int main(int argc, char *argv[])
 {
   enum test_data data;
   
   for (data = 0; data < test_data_last; data++)
   {
-    make_test_data(data, 32*1024*1024);
+    make_test_data(data, atoi(argv[1])*1024*1024);
   }
 }
