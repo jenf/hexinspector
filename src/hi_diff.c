@@ -280,7 +280,7 @@ hi_diff_hunk *insert_hunk_threaded(hi_diff *diff, hi_diff_hunk *hunk, hi_file_si
 {
   hi_diff_hunk *new;
   //DPRINTF("Add hunk ");
-
+  
   if (hunk->dst_end < hunk->dst_start)
   {
     hunk->dst_end = hunk->dst_start;
@@ -502,17 +502,22 @@ static void hi_diff_calculate_simple_thread(gpointer instance_data,
     {
       case DIFF_MODE_SYNC:
         tmpptr = hi_diff_memcmp_ptr(&(src->memory[ptr]), &(dst->memory[ptr]), endpos-ptr);
+
         if (tmpptr != -1)
         {
           mode = DIFF_MODE_UNSYNCED_SIMPLE;
           ptr+=tmpptr;
-          working_hunk.src_end = ptr-1;
-          working_hunk.dst_end = ptr-1;
-          
-          insert_hunk_threaded(diff, &working_hunk, thread_data);
-          working_hunk.src_start = ptr;
-          working_hunk.dst_start = ptr;
-          working_hunk.type = HI_DIFF_TYPE_DIFF;
+          if (tmpptr != 0)
+          {
+
+            working_hunk.src_end = ptr-1;
+            working_hunk.dst_end = ptr-1;
+            
+            insert_hunk_threaded(diff, &working_hunk, thread_data);
+          }
+            working_hunk.src_start = ptr;
+            working_hunk.dst_start = ptr;
+            working_hunk.type = HI_DIFF_TYPE_DIFF;
         }
         else
         {
@@ -632,11 +637,7 @@ static hi_diff *hi_diff_calculate_simple(hi_file *src, hi_file *dst)
     g_thread_pool_push(pool, thread_data, NULL);
     ptr=endptr;
   }
-  
-
-
-
-  
+   
   /* Wait for completion */
   g_thread_pool_free(pool, FALSE, TRUE);
                      

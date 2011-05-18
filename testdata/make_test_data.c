@@ -7,6 +7,7 @@ enum test_data {
         test_data_zeros,
         test_data_ones,
         test_data_alignment1, /* Performance of non-aligned data fetches */
+        test_data_alignment5, /* Performance of non-aligned data fetches */
         test_data_sparse_ones,
         test_data_oddzero_evenone,
         test_data_last
@@ -29,10 +30,15 @@ int make_test_data(enum test_data data_type, int len)
     filename="test_data_ones";
     memset(pattern, 1, DATALEN);
     break;
+  case test_data_alignment5:
+    filename="test_data_alignment5";
+    memset(pattern, 0, DATALEN);
+    pattern[4] = 1;
+    break;
   case test_data_alignment1:
     filename="test_data_alignment1";
     memset(pattern, 0, DATALEN);
-    pattern[4] = 1;
+    pattern[0] = 1;
     break;
   case test_data_sparse_ones:
     filename="test_data_sparse_ones";
