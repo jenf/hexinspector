@@ -36,6 +36,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
+#include <sys/mman.h>
 #ifdef USE_RABINKARP
 #include <rabinkarp.h>
 
@@ -267,7 +268,7 @@ hi_diff_hunk *insert_hunk(hi_diff *diff, hi_diff_hunk *hunk)
 {
   hi_diff_hunk *new;
   DPRINTF("Add hunk ");
-  
+
   /* Mutex protection */
   
   g_static_mutex_lock(&M_Mutex);
@@ -373,7 +374,9 @@ static off_t hi_diff_memcmp_ptr(unsigned char* src, unsigned char* dst, off_t le
   while (len > OPSIZ)
   {
     if (((op_t *)srcptr)[0] != ((op_t *)dstptr)[0])
+    {
       break; /* Will be caught by the next while */
+    }
     srcptr+= OPSIZ;
     dstptr+= OPSIZ;
     len-= OPSIZ;
@@ -383,14 +386,16 @@ static off_t hi_diff_memcmp_ptr(unsigned char* src, unsigned char* dst, off_t le
   while (len != 0)
   {
     if (srcptr[0] != dstptr[0])
+    {
       return (srcptr-src);
+    }
     srcptr++;
     dstptr++;
     len--;
   }
 #else
   
-  /* Completely unoptimised mechanism for testing */
+  /* Simple implementation for testing */
   for (x=0; x< len; x++)
   {
     if (src[x] != dst[x])
@@ -399,6 +404,53 @@ static off_t hi_diff_memcmp_ptr(unsigned char* src, unsigned char* dst, off_t le
 #endif
   
   return -1;
+}
+
+static off_t hi_diff_memdiff_ptr(unsigned char *src, unsigned char *dst, off_t len)
+{
+    int x=0;
+#define OPTIMISED_MEMDIFF
+#ifdef OPTIMISED_MEMDIFF
+#define op4_t  uint32_t
+#define OP4SIZ  (sizeof(op4_t))
+  unsigned char *srcptr = src;
+  unsigned char *dstptr = dst;
+  op4_t value, valuek;
+  
+  /* /todo : This should word align properly */
+  while (len > OP4SIZ)
+  {
+    value = ((op4_t *)srcptr)[0] ^ ((op4_t *)dstptr)[0];
+    
+    if (((value - 0x01010101UL) & (~value) & 0x80808080UL) != 0)
+    {
+      break; /* Will be caught by the next while */
+    }
+    srcptr+= OP4SIZ;
+    dstptr+= OP4SIZ;
+    len-= OP4SIZ;
+  }
+  
+  /* Finish the last few bytes */
+  while (len != 0)
+  {
+    if (srcptr[0] == dstptr[0])
+    {
+      return (srcptr-src);
+    }
+    srcptr++;
+    dstptr++;
+    len--;
+  }
+#else
+    /* Simple implementation for testing */
+    for (x=0; x<len; x++)
+    {
+        if (src[x] == dst[x])
+          return x;
+    }
+#endif
+    return -1;
 }
 
 static void hi_diff_calculate_simple_thread(gpointer instance_data,
@@ -422,7 +474,11 @@ static void hi_diff_calculate_simple_thread(gpointer instance_data,
   
   ptr=thread_data->startpos;
   endpos = thread_data->endpos;
-  
+ 
+  /* Warn the OS that we will need the data now */
+  madvise(src+ptr, endpos-ptr, MADV_WILLNEED); 
+  madvise(dst+ptr, endpos-ptr, MADV_WILLNEED); 
+
   DPRINTF("Calculate %lu to %lu\n", (unsigned long)thread_data->startpos, (unsigned long)thread_data->endpos);
   free (instance_data);
   
@@ -450,9 +506,11 @@ static void hi_diff_calculate_simple_thread(gpointer instance_data,
         }
         break;
       case DIFF_MODE_UNSYNCED_SIMPLE:
-        if (src->memory[ptr] == dst->memory[ptr])
+        tmpptr = hi_diff_memdiff_ptr(&(src->memory[ptr]), &(dst->memory[ptr]), endpos-ptr);
+        if (tmpptr != -1)
         {
           mode = DIFF_MODE_SYNC;
+          ptr+=tmpptr;
           working_hunk.src_end = ptr-1;
           working_hunk.dst_end = ptr-1;
           
@@ -461,7 +519,10 @@ static void hi_diff_calculate_simple_thread(gpointer instance_data,
           working_hunk.dst_start = ptr;
           working_hunk.type = HI_DIFF_TYPE_SAME;
         }
-        ptr++;
+        else
+        {
+          ptr=endpos;
+        }
         break;
     }
   }
