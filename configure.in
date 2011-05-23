@@ -52,6 +52,8 @@ AC_SUBST([NCURSES_LIBS])
 PKG_CHECK_MODULES([PCRE], [libpcre >= 0.20], has_pcre=yes, has_pcre=no)
 AC_SUBST([PCRE_CFLAGS])
 AC_SUBST([PCRE_LIBS])
+AC_PROG_RANLIB
+
 
 if test "$has_pcre" = no; then
  AC_MSG_WARN(Disabling search)
