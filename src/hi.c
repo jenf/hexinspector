@@ -38,7 +38,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <hi_ncurses.h>
-#include <hi_search.h>
+#include <hi_output.h>
 
 void version(char *program_name)
 {
@@ -63,6 +63,8 @@ void help(char *program_name)
          " -a/--algorithm=type      Select an algorithm between:\n"
          "                            r = Rabin-Karp based (default)\n"
          "                            s = Simple (faster, but assumes only differences, no insertion or removal of bytes)\n"
+          " -o/--output=filename     Output diff to file (rather than ncurses)\n"
+          " -c/--context=num         Show num bytes of context surrounding the diff\n"
          "",
          options.hashbytes, options.diff_jump_percent, options.minimum_same);
   exit(0);
@@ -76,6 +78,8 @@ int main(int argc, char *argv[])
   hi_diff *diff = NULL;
   hi_file_options options;
   enum hi_diff_algorithm algorithm = HI_DIFF_ALG_RABINKARP;
+  gboolean output_diff = FALSE;
+  char *output_diff_file = NULL;
   
   g_thread_init(NULL);
   static struct option long_options[] =
@@ -86,6 +90,7 @@ int main(int argc, char *argv[])
     {"minimum_same", required_argument, 0, 'm'},
     {"version", no_argument, 0, 'v'},
     {"algorithm", required_argument, 0, 'a'},
+    {"output", optional_argument, 0, 'o'},
     {0,0,0,0}
   };
   
@@ -94,7 +99,7 @@ int main(int argc, char *argv[])
   while (1)
   {
     int option_index = 0;
-    c = getopt_long(argc, argv, "hvb:d:m:a:",
+    c = getopt_long(argc, argv, "hvb:d:m:a:o::",
                     long_options, &option_index);
     
     if (c == -1)
@@ -155,6 +160,12 @@ int main(int argc, char *argv[])
           help(argv[0]);
         }
         break;
+        
+      case 'o':
+        output_diff_file = optarg;
+        output_diff = TRUE;
+        break;
+        
       default:
         help(argv[0]);
     }
@@ -189,9 +200,24 @@ int main(int argc, char *argv[])
     
   }
   
+  if (FALSE == output_diff) 
+  {
 #if 1
-  hi_ncurses_main(file, file2, diff);
+    hi_ncurses_main(file, file2, diff);
 #endif
+  }
+  else
+  {
+    if (file2 == NULL)
+    {
+      fprintf(stderr,"Cannot output non-diff to file\n");
+      exit(0);
+    }
+    else
+    {
+      hi_output_diff(file, file2, diff, output_diff_file);
+    }
+  }
   hi_file_close(file2);
   hi_file_close(file);
   return 0;
