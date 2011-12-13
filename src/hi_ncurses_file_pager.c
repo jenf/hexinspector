@@ -121,6 +121,7 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
   enum hi_ncurses_colour colour;
   char format_str[256];
   int bytes;
+  enum hi_ncurses_colour *highlight_colours = NULL;
   
   highlighter = pager->highlighter;
   
@@ -148,6 +149,13 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
     bytes = pager->bytes_per_row;
   }
   
+  highlight_colours = calloc((pager->height-2)*bytes, sizeof(enum hi_ncurses_colour));
+  if ((highlighter != NULL) && (highlighter->block_func != NULL))
+  {
+	  highlighter->block_func(pager->file, pager->offset, (pager->height-2)*bytes, highlight_colours);
+  }
+
+
   for (y=0; y< pager->height-2; y++)
   {
     for (x=0; x<bytes; x++)
@@ -182,12 +190,13 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
           if (TRUE == diff)
             wattron(pager->window, A_REVERSE);
           
-          colour = hi_ncurses_colour_normal;
+          colour = highlight_colours[offset-pager->offset];
           if ((highlighter != NULL) && (highlighter->highlight_func != NULL))
           {
             colour = highlighter->highlight_func(pager->file, offset, val, highlighter_data);
             
           }
+
         
           if (colour != hi_ncurses_colour_normal)
           {
@@ -213,6 +222,7 @@ void hi_ncurses_fpager_redraw(hi_ncurses_fpager *pager)
        highlighter->end_func(highlighter_data);
   }
 
+  free(highlight_colours);
       
   wrefresh(pager->window);
 }

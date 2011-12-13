@@ -41,11 +41,18 @@ typedef enum hi_ncurses_colour (*hi_ncurses_highlight_per_byte) (hi_file *file,
 typedef void *(*hi_ncurses_highlight_begin) (hi_file *file);
 typedef void (*hi_ncurses_highlight_end) (void *dataptr);
 
+typedef void (*hi_ncurses_highlight_block) (hi_file *file,
+											off_t offset,
+											size_t window_size,
+											enum hi_ncurses_colour *window);
+
+
 typedef struct hi_ncurses_highlight
 {
   hi_ncurses_highlight_per_byte highlight_func;
   hi_ncurses_highlight_begin    begin_func;
   hi_ncurses_highlight_end      end_func;
+  hi_ncurses_highlight_block    block_func;
   char                          *name;
   char                          *help_string;
 } hi_ncurses_highlight;
